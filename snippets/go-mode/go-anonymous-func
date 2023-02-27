@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: go anonymous func
+# key: gaf
+# --
+go func($1) {
+    $0
+}()

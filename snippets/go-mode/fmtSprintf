@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: fmtSprintf()
+# key: fsf
+# expand-env: ((yas-wrap-around-region nil))
+# --
+fmt.Sprintf("${1:string}",${2:var})$0

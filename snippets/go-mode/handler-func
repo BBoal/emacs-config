@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: handler-func
+# key: hfn
+# --
+http.HandlerFunc("${1:ResponseWriter}", ${2:Request})

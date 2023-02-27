@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name:() method
+# key: rfn
+# expand-env: ((yas-wrap-around-region ?r))
+# --
+${5:// $2 $6}
+func (${1:receiver}) ${2:name}(${3:params}) ${4:returns} {
+    $0
+}

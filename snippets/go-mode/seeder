@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name:seeder 
+# key: seed
+# --
+rand.Seed(time.Now().UnixNano())
+$0

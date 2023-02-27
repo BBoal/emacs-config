@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: Emacs Lisp Template
+# key: elt
+# --
+;;; ${1:`(file-name-nondirectory (buffer-file-name))`} --- ${1:Description}
+;;; Commentary: $2
+;;; Code:
+
+$3
+
+
+(provide '$1)
+;;; $1 ends here
+$0

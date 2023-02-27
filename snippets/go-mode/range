@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: range
+# key: rng
+# expand-env: ((yas-wrap-around-region ?r))
+# --
+for ${1:k},${2:v} := range ${3:param} {
+    $0
+}

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: httpResponseRequest
+# key: hrr
+# --
+func ${1:homepage}(${2:w} http.ResponseWriter, r *http.Request) {
+	renderTemplate($2, "${3:index.html}")
+}
+$0

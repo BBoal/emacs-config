@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: src
+# key:  <s
+# --
+# expand-env: ((yas-wrap-around-region ?r))
+#+begin_src ${1:language}
+    $0
+#+end_src

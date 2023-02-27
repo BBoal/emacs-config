@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: func
+# key: fn
+# expand-env: ((yas-wrap-around-region ?r))
+# --
+${5:// $1 $6}
+func ${1:name} (${2:params}) ${3:(${4:returns})} {
+    $0
+    return ${4:$(get-returns yas-text)}
+}

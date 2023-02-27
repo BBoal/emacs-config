@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: package main
+# key: pkm
+# expand-env: ((yas-wrap-around-region ?r))
+# --
+package main
+
+func main() {
+    $0
+}

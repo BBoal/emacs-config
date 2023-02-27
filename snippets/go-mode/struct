@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: struct
+# key: tst
+# expand-env: ((yas-wrap-around-region ?r))
+# --
+${5:// $1 $3}
+type $1 ${2:$$(yas-choose-value '("struct" "interface"))} {
+    $0
+}

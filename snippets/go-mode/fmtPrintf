@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: fmtPrintf()
+# key: fpf
+# expand-env: ((yas-wrap-around-region nil))
+# --
+fmt.Printf("${1:text}",${2:var})$0

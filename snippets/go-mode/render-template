@@ -1,0 +1,16 @@
+# -*- mode: snippet -*-
+# name: render-template
+# key: rt
+# --
+func renderTemplate(w http.ResponseWriter, page string) {
+	t, err := template.ParseFiles(page)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = t.Execute(w, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}

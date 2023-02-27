@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: defer func
+# key: dfn
+# expand-env: ((yas-wrap-around-region ?r))
+# --
+defer func() {
+    $0
+}()

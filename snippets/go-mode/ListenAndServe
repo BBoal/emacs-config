@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: ListenAndServe
+# key: las
+# --
+log.Println("Starting web server on port $1")
+err := http.ListenAndServe("${1::8888}", ${2:nil})
+if err != nil {
+    log.Fatal(err)
+}

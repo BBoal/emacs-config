@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: test main
+# key: tm
+# --
+func TestMain(m *testing.M) {
+    $0
+    os.Exit(m.Run())
+}

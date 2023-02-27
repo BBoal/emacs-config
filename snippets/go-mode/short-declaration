@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: short declaration
+# key: sd
+# expand-env: ((yas-wrap-around-region ?r))
+# --
+${1:var} := $0

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: logFatal
+# key: lft
+# --
+log.Fatal(${1:err})$0

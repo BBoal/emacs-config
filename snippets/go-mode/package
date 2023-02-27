@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: package
+# key: pk
+# --
+package `(file-name-nondirectory (f-dirname (buffer-file-name)))`
+
+$0

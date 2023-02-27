@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: else {...}
+# key: els
+# expand-env: ((yas-wrap-around-region ?r))
+# --
+else {
+    $0
+}
