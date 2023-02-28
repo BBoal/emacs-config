@@ -17,8 +17,6 @@
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (require 'bb-org-capture)
 
-;; No messages at the beginning
-(setq-default initial-scratch-message nil)
 
 ;; Arranging things
 (setq backup-directory-alist `(("." . ,(expand-file-name ".tmp/backups/"
@@ -34,6 +32,11 @@
 (setq user-full-name    "Bruno Boal"
       user-login-name   "bb"
       user-mail-address "bruno.boal@tutanota.com")
+
+;; Nice welcome message
+(setq-default initial-scratch-message (format ";; Welcome %s! Be disciplined and maintain focus.\n" user-full-name)
+	      kill-do-not-save-duplicates t
+	      )
 
 ;; User preferences
 (setq column-number-mode t
@@ -69,8 +72,9 @@
 (column-number-mode 1)
 (setq scroll-margin 4)
 
-;; Disable exit confirmation
-(setq confirm-kill-emacs nil)
+;; Disable exit and processes confirmation
+(setq confirm-kill-emacs nil
+      confirm-kill-processes nil)
 
 ;; Ctrl-K removes the whole line
 (setq kill-whole-line t)
@@ -151,6 +155,12 @@
   (setq auto-package-update-delete-old-versions t)
   (setq auto-package-update-hide-results t)
   (auto-package-update-maybe))
+
+
+;;;; `beframe'
+(use-package beframe
+  :config
+  (beframe-mode 1))
 
 ;;;; `keycast'
 (use-package keycast
