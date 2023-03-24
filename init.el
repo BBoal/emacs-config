@@ -7,22 +7,38 @@
 ;;; Settings
 ;; Set default font
 (set-face-attribute 'default nil
-		    :family "SudoVarNerdFontPSPLWEAM Nerd Font Mono"
-		    :foundry "JENS"
+		    :family "AardvarkFixed Nerd Font Mono"
+		    :foundry "CYEL"
 		    :slant 'normal
-		    :height 150
 		    :weight 'normal
+		    :height 120
 		    :width 'normal)
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+
+;; Org-mode
+(setq org-directory "~/org.d"
+      org-default-notes-file (concat org-directory "/notes.org")
+      org-export-html-postamble nil
+      org-startup-indented t)
 (require 'bb-org-capture)
+
+;; ediff
+(setq ediff-split-window-function #'split-window-horizontally
+      ediff-window-setup-function #'ediff-setup-windows-plain)
+
+;; Project
+(require 'project)
+
+;; Custom functions/libraries/modules
+(require 'bb-simple)
 
 
 ;; Arranging things
 (setq backup-directory-alist `(("." . ,(expand-file-name ".tmp/backups/"
-							user-emacs-directory))))
+							 user-emacs-directory))))
 (setq auto-save-file-name-transforms `((".*" ,(expand-file-name ".tmp/"
-			    user-emacs-directory) t)))
+								user-emacs-directory) t)))
 (setq-default custom-file (expand-file-name ".custom.el" user-emacs-directory))
 (when (file-exists-p custom-file) ; Don’t forget to load it, we still need it
   (load custom-file))
@@ -35,8 +51,7 @@
 
 ;; Nice welcome message
 (setq-default initial-scratch-message (format ";; Welcome %s! Be disciplined and maintain focus.\n" user-full-name)
-	      kill-do-not-save-duplicates t
-	      )
+	      kill-do-not-save-duplicates t)
 
 ;; User preferences
 (setq column-number-mode t
@@ -46,7 +61,7 @@
       ispell-dictionary nil)
 
 (add-hook 'before-save-hook #'whitespace-cleanup)
-(add-hook 'dired-mode-hook 'diredfl-mode)
+(add-hook 'dired-mode-hook  #'diredfl-mode)
 
 ;; Disabling restrictions
 (put 'erase-buffer 'disabled nil)
@@ -68,7 +83,7 @@
 
 ;; Enable line numbers, relative
 (setq display-line-numbers 'relative)
-; (global-display-line-numbers-mode 1)
+					; (global-display-line-numbers-mode 1)
 (column-number-mode 1)
 (setq scroll-margin 4)
 
@@ -84,7 +99,7 @@
 (put 'dired-find-alternate-file 'disabled nil)
 (put 'upcase-region 'disabled nil)
 
-;; ????
+;; Save clipboard before replace
 (setq save-interprogram-paste-before-kill t)
 
 ;; Changing modeline from "Def" to "Macro"
@@ -108,7 +123,7 @@
 (require 'package)
 (setq package-enable-at-startup nil)
 (add-to-list 'package-archives
-    '("melpa" . "https://melpa.org/packages/")t)
+	     '("melpa" . "https://melpa.org/packages/")t)
 (package-initialize)
 
 ;;;; `use-package'
@@ -121,6 +136,19 @@
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
 
+;;;; `auto-package-update'
+(use-package auto-package-update
+  :config
+  (setq auto-package-update-delete-old-versions t)
+  (setq auto-package-update-hide-results t)
+  (auto-package-update-maybe))
+
+;;;; `substitute'
+(use-package substitute)
+
+;;;; `chemtable'
+(use-package chemtable)
+
 ;;;; `rainbow-mode'
 (use-package rainbow-mode
   :config
@@ -128,13 +156,10 @@
   (setq rainbow-x-colors nil)
   (define-key ctl-x-x-map "c" #'rainbow-mode))
 
-;;;; Project
-(require 'project)
-
 ;;;; `modus-themes'
 (use-package modus-themes
   :config
-    (load-theme hour-sets-modus)
+  (load-theme hour-sets-modus)
 
   ;; Clock in the modeline
   (setq display-time-string-forms
@@ -143,23 +168,40 @@
   (display-time-mode 1))
 
 (setq tab-bar-format                    ; Emacs 28
-	'(tab-bar-format-tabs-groups
-	  tab-bar-format-align-right
-	  tab-bar-format-global))
+      '(tab-bar-format-tabs-groups
+	tab-bar-format-align-right
+	tab-bar-format-global))
 ;;global-mode-string (TODO)
-
-
-;;;; `auto-package-update'
-(use-package auto-package-update
-  :config
-  (setq auto-package-update-delete-old-versions t)
-  (setq auto-package-update-hide-results t)
-  (auto-package-update-maybe))
-
 
 ;;;; `beframe'
 (use-package beframe
   :config
+  (setq beframe-functions-in-frames '(project-prompt-project-dir))
+  (defvar consult-buffer-sources)
+  (declare-function consult--buffer-state "consult")
+
+  (with-eval-after-load 'consult
+    (defface beframe-buffer
+      '((t :inherit font-lock-string-face))
+      "Face for `consult' framed buffers.")
+
+    (defvar beframe--consult-source
+      `( :name     "Frame-specific buffers (current frame)"
+	 :narrow   ?F
+	 :category buffer
+	 :face     beframe-buffer
+	 :history  beframe-history
+	 :items    ,#'beframe--buffer-names
+	 :action   ,#'switch-to-buffer
+	 :state    ,#'consult--buffer-state))
+
+    (add-to-list 'consult-buffer-sources 'beframe--consult-source))
+  (let ((map global-map))
+    (define-key map (kbd "C-x f") #'other-frame-prefix) ; override `set-fill-column'
+    ;; Replace the generic `buffer-menu'.  With a prefix argument, this
+    ;; commands prompts for a frame.  Call the `buffer-menu' via M-x if
+    ;; you absolutely need the global list of buffers.
+    (define-key map (kbd "C-x C-b") #'beframe-buffer-menu))
   (beframe-mode 1))
 
 ;;;; `keycast'
@@ -199,12 +241,12 @@
 (use-package which-key
   :init (which-key-mode)
   :config
-  (setq which-key-idle-delay 1))
+  (setq which-key-idle-delay 0.5))
 
 ;;;; `vertico'
 (use-package vertico
-     :init
-     (vertico-mode))
+  :init
+  (vertico-mode))
 
 ;;;; `savehist'
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
@@ -232,7 +274,7 @@
 	 ("C-M-#" . consult-register)
 	 ;; Other custom bindings
 	 ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-	 ("C-h a" . consult-apropos)            ;; orig. apropos-command
+	 ("C-h a" . consult-apropos)               ;; orig. apropos-command
 	 ;; M-g bindings (goto-map)
 	 ("M-g e" . consult-compile-error)
 	 ("M-g g" . consult-goto-line)             ;; orig. goto-line
@@ -304,7 +346,7 @@
    consult-bookmark consult-recent-file consult-xref
    consult--source-bookmark consult--source-recent-file
    consult--source-project-recent-file
-   :preview-key (kbd "M-."))
+   :preview-key "M-.")
 
   ;; Optionally configure the narrowing key.
   ;; Both < and C-+ work reasonably well.
@@ -337,7 +379,7 @@
   (setq prefix-help-command #'embark-prefix-help-command)
 
   :config
-  ; Hide the mode line of the Embark live/completions buffers
+					; Hide the mode line of the Embark live/completions buffers
   (add-to-list 'display-buffer-alist
 	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
 		 nil
@@ -357,11 +399,6 @@
 (use-package org-modern
   :hook ((org-mode . org-modern-mode)
 	 (org-agenda-finalize . org-modern-agenda)))
-
-(setq org-directory "~/org.d")
-(setq org-default-notes-file (concat org-directory "/notes.org"))
-(setq org-export-html-postamble nil)
-(setq org-startup-indented t)
 
 
 ;;;; `corfu'
@@ -391,8 +428,7 @@
   ;; This is recommended since Dabbrev can be used globally (M-/).
   ;; See also `corfu-excluded-modes'.
   :init
-  (global-corfu-mode)
-)
+  (global-corfu-mode))
 
 ;;;; `dabbrev'
 (use-package dabbrev
@@ -414,8 +450,7 @@
 	 ("M-p k" . cape-keyword)
 	 ("M-p s" . cape-symbol)
 	 ("M-p a" . cape-abbrev)
-	 ("M-p &" . cape-sgml)
-	 )
+	 ("M-p &" . cape-sgml))
   :init
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
@@ -432,9 +467,9 @@
   :init
   (setq yas-snippet-dirs
 	'("~/.emacs.d/snippets"))
-  :hook (prog-mode . yas-minor-mode)
   :config
-  #'(yas-reload-all t)
+  (yas-reload-all)
+  (add-hook 'prog-mode-hook #'yas-minor-mode)
   :custom
   (yas-also-auto-indent-first-line t)
   (yas-also-indent-empty-lines t))
@@ -455,12 +490,12 @@
 (use-package bicycle
   :after outline
   :bind (:map outline-minor-mode-map
-		("C-<tab>" . bicycle-cycle)
-		("<backtab>" . bicycle-cycle-global))
-  :hook ((prog-mode elisp-mode) . (lambda()
-		       #'(outline-minor-mode)
-		       #'(hs-minor-mode))))
-
+	      ("C-<tab>" . bicycle-cycle)
+	      ("<backtab>" . bicycle-cycle-global))
+  :hook ((prog-mode elisp-mode) .
+	 (lambda()
+	   #'(outline-minor-mode)
+	   #'(hs-minor-mode))))
 
 ;;;; `beacon'
 (use-package beacon
@@ -504,8 +539,7 @@
   (highlight-indent-guides-mode t)
   (electric-pair-local-mode t)
   (subword-mode t)
-  (hs-minor-mode t)
-)
+  (hs-minor-mode t))
 
 ;;;;; C++
 ;;;;;; `cpp-auto-include'
@@ -523,13 +557,12 @@
 
   (add-hook 'c++-mode-hook 'personal-programming-hooks)
   :bind (:map c++-mode-map
-	 ("C-c C-c" . compile)
-	 )
+	      ("C-c C-c" . compile))
   :config
   (add-hook 'project-find-functions 'project-find-root)
   (add-hook 'before-save-hook (lambda()
-			 (cpp-auto-include)
-			 #'(eglot-format)))
+				(cpp-auto-include)
+				#'(eglot-format)))
   :custom
   (setq compile-command "g++ -std=c++20 -Wall"))
 
@@ -553,24 +586,17 @@
     (cdr project))
 
   (add-hook 'go-mode-hook (lambda()
-			 (personal-programming-hooks)
-			 (setq-local tab-width 4)))
+			    (personal-programming-hooks)
+			    (setq-local tab-width 4)))
   :bind (:map go-mode-map
-	 ("C-c C-c" . compile)
-	 )
+	      ("C-c C-c" . compile))
   :config
   (add-hook 'project-find-functions 'project-find-go-work)
   (add-hook 'before-save-hook (lambda()
-			 #'(eglot-code-action-organize-imports 0)
-			 #'(eglot-format)))
+				#'(eglot-code-action-organize-imports 0)
+				#'(eglot-format)))
   :custom
-  (setq compile-command "go build -v && go test -v && go vet")
-  ;; (setq gofmt-command "goimports")
-  ;:  load-path "~/go/bin/"
-  ;;  (setenv "GOPATH" "~/go")
-)
-
-
+  (setq compile-command "go build -v && go test -v && go vet"))
 
 ;;; Useful functions
 ;;;; Window Management
@@ -579,14 +605,14 @@
   (interactive)
   (split-window-right)
   (windmove-right))
-(global-set-key (kbd "C-c %")  'split-window-right-and-focus)
+(global-set-key (kbd "C-c -")  'split-window-right-and-focus)
 
 (defun split-window-below-and-focus ()
   "Spawn a new window below the current one and focus it."
   (interactive)
   (split-window-below)
   (windmove-down))
-(global-set-key (kbd "C-c \"") 'split-window-below-and-focus)
+(global-set-key (kbd "C-c \\") 'split-window-below-and-focus)
 
 (defun kill-buffer-and-delete-window ()
   "Kill the current buffer and delete its window."
@@ -596,29 +622,55 @@
     (delete-window)))
 (global-set-key (kbd "C-c q") 'kill-buffer-and-delete-window)
 
+(defun push-mark-no-activate ()
+  "Pushes `point' to `mark-ring' and does not activate the region
+   Equivalent to \\[set-mark-command] when \\[transient-mark-mode] is disabled"
+  (interactive)
+  (push-mark (point) t nil)
+  (message "Pushed mark to ring"))
 
+(defun jump-to-mark ()
+  "Jumps to the local mark, respecting the `mark-ring' order.
+  This is the same as using \\[set-mark-command] with the prefix argument."
+  (interactive)
+  (set-mark-command 1))
+
+(defun exchange-point-and-mark-no-activate ()
+  "Identical to \\[exchange-point-and-mark] but will not activate the region."
+  (interactive)
+  (exchange-point-and-mark)
+  (deactivate-mark nil))
 
 ;;; Keybindings
-(global-set-key (kbd "C-=") 'er/expand-region)
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-(global-set-key (kbd "C-c a") 'org-agenda)
-(global-set-key (kbd "C-c c") 'org-capture)
-(global-set-key (kbd "<f2>") 'revert-buffer)
-(global-set-key (kbd "<f9>") 'menu-bar-mode)
+(global-set-key (kbd "C-=") #'er/expand-region)
+(global-set-key (kbd "<escape>") #'keyboard-escape-quit)
+(global-set-key (kbd "C-c a") #'org-agenda)
+(global-set-key (kbd "C-c c") #'org-capture)
+(global-set-key (kbd "C-c l") #'org-store-link)
+(global-set-key (kbd "<f2>") #'revert-buffer)
+(global-set-key (kbd "<f9>") #'menu-bar-mode)
 (global-set-key (kbd "<f8>") (lambda ()
-				(interactive)
-				(find-file "~/.emacs.d/init.el")))
+			       (interactive)
+			       (find-file "~/.emacs.d/init.el")))
 
-(global-set-key (kbd "C-c 0") 'kill-emacs)
-(global-set-key (kbd "<f12>") 'save-buffer)
-(global-set-key (kbd "<f10>") 'save-buffers-kill-emacs)
+(global-set-key (kbd "C-c 0") #'kill-emacs)
+(global-set-key (kbd "<f12>") #'save-buffer)
+(global-set-key (kbd "<f10>") #'save-buffers-kill-emacs)
 
+(global-set-key (kbd "C-c <up>")    #'windmove-up)
+(global-set-key (kbd "C-c <down>")  #'windmove-down)
+(global-set-key (kbd "C-c <left>")  #'windmove-left)
+(global-set-key (kbd "C-c <right>") #'windmove-right)
 
-(global-set-key (kbd "C-c <up>")    'windmove-up)
-(global-set-key (kbd "C-c <down>")  'windmove-down)
-(global-set-key (kbd "C-c <left>")  'windmove-left)
-(global-set-key (kbd "C-c <right>") 'windmove-right)
+(global-set-key (kbd "C-M-=") #'count-words)
 
+(global-set-key (kbd "C-`") 'push-mark-no-activate)
+(global-set-key (kbd "M-`") 'jump-to-mark)
+(define-key global-map [remap exchange-point-and-mark] 'exchange-point-and-mark-no-activate)
+
+;; (define-key map (kbd "<tab>")    #'log-view-toggle-entry-display)
+;; (define-key map (kbd "<return>") #'log-view-find-revision)
+;; (define-key map (kbd "s")        #'vc-log-search)
 
 
 (provide 'init)

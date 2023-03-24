@@ -1,1 +1,2 @@
-nil
+((magit-diff
+  (("--" "autostart"))))
