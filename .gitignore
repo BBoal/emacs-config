@@ -7,3 +7,6 @@ tmp/
 auto-save-list/
 history
 bookmarks
+transient/history.el
+.org-id-locations
+eln-cache/
