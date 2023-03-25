@@ -1,0 +1,32 @@
+* Yet another Emacs configuration
+
+24 Mar 2023
+I've come to realise that some projects in life are just like bonsai trees.
+We nurture them, tend to them, help them grow and in the process admire the
+reflection of all that dedication, persistence and hard work in ourselves.
+
+*This is the way with Emacs.*
+
+On this learning journey, no Emacs user walks alone. A strong and helpful
+community is always ready to lend a hand, to step in, to collaborate and help in
+whatever question or doubt one might have, to avoid any apparent drowning in the
+vast parenthesis ocean that is Elisp.
+
+In this sense, this repository, simple and small at present date, will reflect
+my progress in this promising and steep adventure.
+
+However, you should not think that my recent adherence to the One True Editor is
+a Herculean task, for I walk this path with a gentle giant. /Protesilaos
+Stavrou/, a renowned contributor in the Emacs community (also an amazing and
+remarkable individual) has agreed to be my /mentor/coach/. His help, guidance,
+and of course, a lot of effort, motivation, reading and a generous amount of
+Ctrl presses on my part, will, over time, shape this project into a strong,
+beautiful and mature bonsai.
+
+Here's Prot's [[https://protesilaos.com/][website]], for you to have a look at (I highly recommend!).
+
+
+* Copyright and licensing
+
+Unless specified, all code is distributed under the terms of the
+GNU General Public License Version 3 or later.
