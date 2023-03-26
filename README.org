@@ -1,6 +1,7 @@
 * Yet another Emacs configuration
 
 24 Mar 2023
+
 I've come to realise that some projects in life are just like bonsai trees.
 We nurture them, tend to them, help them grow and in the process admire the
 reflection of all that dedication, persistence and hard work in ourselves.

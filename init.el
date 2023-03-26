@@ -49,9 +49,6 @@
 (setq ediff-split-window-function #'split-window-horizontally
       ediff-window-setup-function #'ediff-setup-windows-plain)
 
-;; Project
-(require 'project)
-
 ;; Custom functions/libraries/modules
 (require 'bb-simple)
 
@@ -134,11 +131,6 @@
 ;; Custom themes are ok
 (setq custom-safe-themes t)
 
-(setq history-length 1000)
-(put 'minibuffer-history 'history-length 500)
-(put 'kill-ring 'history-length 25)
-
-
 ;;; Packages
 
 ;;;; Initializing
@@ -164,6 +156,48 @@
   (setq auto-package-update-delete-old-versions t)
   (setq auto-package-update-hide-results t)
   (auto-package-update-maybe))
+
+
+;;;; `project'
+(use-package project)
+
+;;;; `tempel'
+(use-package tempel
+  ;; Require trigger prefix before template name when completing.
+  ;; :custom
+  ;; (tempel-trigger-prefix "<")
+
+  :bind (("ç" . tempel-expand) ;; Alternative tempel-complete
+	 ("Ç" . tempel-complete)
+	 ("M-ç" . tempel-insert)
+	 ("º" . tempel-next)
+	 ("ª" . tempel-previous))
+
+  :init
+  (setq tempel-path (expand-file-name "tempel-templates" user-emacs-directory))
+  ;; Setup completion at point
+  (defun tempel-setup-capf ()
+    ;; Add the Tempel Capf to `completion-at-point-functions'.
+    ;; `tempel-expand' only triggers on exact matches. Alternatively use
+    ;; `tempel-complete' if you want to see all matches, but then you
+    ;; should also configure `tempel-trigger-prefix', such that Tempel
+    ;; does not trigger too often when you don't expect it. NOTE: We add
+    ;; `tempel-expand' *before* the main programming mode Capf, such
+    ;; that it will be tried first.
+    (setq-local completion-at-point-functions
+		(cons #'tempel-expand
+		      completion-at-point-functions)))
+
+					;(add-hook 'prog-mode-hook 'tempel-setup-capf)
+					;(add-hook 'text-mode-hook 'tempel-setup-capf)
+					;(add-hook 'org-mode-hook  'tempel-setup-capf)
+
+  ;; Optionally make the Tempel templates available to Abbrev,
+  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+					;(add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+  ;; (global-tempel-abbrev-mode)
+  :hook ((prog-mode . tempel-abbrev-mode)
+	 ((prog-mode text-mode org-mode go-mode) . 'tempel-setup-capf)))
 
 ;;;; `substitute'
 (use-package substitute)
@@ -273,6 +307,9 @@
 ;;;; `savehist'
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
+  :config
+  (setq	history-delete-duplicates t
+	history-length 1000)
   :init
   (savehist-mode))
 
@@ -387,7 +424,7 @@
 
 ;;;; `marginalia'
 (use-package marginalia
-  :config
+  :init
   (marginalia-mode))
 
 ;;;; `embark'
@@ -442,7 +479,7 @@
   ;; (corfu-scroll-margin 5)        ;; Use scroll margin
   :bind
   (:map corfu-map
-	("ç" . yas-expand)
+	;;("M-ç" . tempel-complete)
 	("J" . corfu-next)
 	("K" . corfu-previous))
 
@@ -483,18 +520,18 @@
   (add-to-list 'completion-at-point-functions #'cape-symbol))
 
 ;;;; `yasnippet'
-(use-package yasnippet
-  :defer t
-  :bind ("ç" . yas-expand)
-  :init
-  (setq yas-snippet-dirs
-	'("~/.emacs.d/snippets"))
-  :config
-  (yas-reload-all)
-  (add-hook 'prog-mode-hook #'yas-minor-mode)
-  :custom
-  (yas-also-auto-indent-first-line t)
-  (yas-also-indent-empty-lines t))
+;; (use-package yasnippet
+;;   :defer t
+;;   :bind ("ç" . yas-expand)
+;;   :init
+;;   (setq yas-snippet-dirs
+;;	'("~/.emacs.d/snippets"))
+;;   :config
+;;   (yas-reload-all)
+;;   (add-hook 'prog-mode-hook #'yas-minor-mode)
+;;   :custom
+;;   (yas-also-auto-indent-first-line t)
+;;   (yas-also-indent-empty-lines t))
 
 ;;;; `eglot'
 (use-package eglot
@@ -547,6 +584,11 @@
 	      'flymake-mode))
   (minions-mode 1))
 
+
+(use-package envrc
+  :init
+  (envrc-global-mode))
+
 ;;;; ---
 ;;;; PROGRAMMING LANGUAGES
 ;;;;;; `editorconfig'
@@ -583,7 +625,7 @@
   :config
   (add-hook 'project-find-functions 'project-find-root)
   (add-hook 'before-save-hook (lambda()
-				(cpp-auto-include)
+				#'(cpp-auto-include)
 				#'(eglot-format)))
   :custom
   (setq compile-command "g++ -std=c++20 -Wall"))
@@ -599,21 +641,22 @@
 ;;;;;; `go-mode'
 (use-package go-mode
   :init
-  (add-to-list 'exec-path "~/go/bin")
-  (defun project-find-go-work (dir)
+  ; (add-to-list 'exec-path "~/go/bin")
+  (defun project-find-go-module (dir)
     (when-let ((root (locate-dominating-file dir "go.mod")))
-      (cons 'go-mod root)))
+      (cons 'go-module root)))
 
-  (cl-defmethod project-root ((project (head go-mod)))
+  (cl-defmethod project-root ((project (head go-module)))
     (cdr project))
 
-  (add-hook 'go-mode-hook (lambda()
-			    (personal-programming-hooks)
-			    (setq-local tab-width 4)))
+  (add-hook 'project-find-functions #'project-find-go-module)
+
   :bind (:map go-mode-map
 	      ("C-c C-c" . compile))
   :config
-  (add-hook 'project-find-functions 'project-find-go-work)
+  (add-hook 'go-mode-hook (lambda()
+			    (personal-programming-hooks)
+			    (setq-local tab-width 4)))
   (add-hook 'before-save-hook (lambda()
 				#'(eglot-code-action-organize-imports 0)
 				#'(eglot-format)))
