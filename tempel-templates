@@ -152,13 +152,10 @@ org-mode
 
 go-mode
 
-;; function
-(fn "// " (p "name" name) " " (p "description") n "func " name "("(p "args")") " "("(p "returns" returns)")"" {" n> (r> "BODY") n> "return " p n "}" n q )
+(fn "// " (p "name" name) " " p n "func " name "(" p ") " (s returns)" {" n> (r> "BODY") n> (when (bound-and-true-p returns) (concat "return " returns)) n "}" n q )
 
-;; append
 (append (p "var" var) " = append(" var "," (p "value") ")" )
 
-;; benchmark func
 (benchf "func Benchmark" (p "name") "(b *testing.B) {" n> "for "(p "i" i) ":= 0;" i "< b.N; " i "++ {" n> (r> "BODY") n> "}" n "}" q )
 
 

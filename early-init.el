@@ -30,8 +30,9 @@
 (scroll-bar-mode -1)               ; disable scrollbar
 (menu-bar-mode -1)                 ; disable menubar
 (tool-bar-mode -1)                 ; disable toolbar
-;(tooltip-mode -1)                  ; disable tooltips
+;;(tooltip-mode -1)                  ; disable tooltips
 (set-fringe-mode 10)               ; give some breathing room
+
 (setq gc-cons-threshold (* 1024 1024 1024))
 
 (if (and (> (string-to-number(format-time-string "%H")) 6 )

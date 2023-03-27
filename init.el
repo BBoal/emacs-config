@@ -25,8 +25,10 @@
 ;;; Code:
 
 
-;;; ---
-;;; Settings
+;;;;;;;;;;;;;;
+;; Settings ;;
+;;;;;;;;;;;;;;
+
 ;; Set default font
 (set-face-attribute 'default nil
 		    :family "AardvarkFixed Nerd Font Mono"
@@ -36,6 +38,7 @@
 		    :height 120
 		    :width 'normal)
 
+;; Adding dirs to load-path
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
 ;; Org-mode
@@ -82,9 +85,6 @@
 (add-hook 'before-save-hook #'whitespace-cleanup)
 (add-hook 'dired-mode-hook  #'diredfl-mode)
 
-;; Disabling restrictions
-(put 'erase-buffer 'disabled nil)
-
 ;; Sentences do not end with a double space
 (setq-default sentence-end-double-space nil)
 
@@ -102,8 +102,6 @@
 
 ;; Enable line numbers, relative
 (setq display-line-numbers 'relative)
-					; (global-display-line-numbers-mode 1)
-(column-number-mode 1)
 (setq scroll-margin 4)
 
 ;; Disable exit and processes confirmation
@@ -113,7 +111,8 @@
 ;; Ctrl-K removes the whole line
 (setq kill-whole-line t)
 
-;; No warnings
+;; No warnings and restrictions
+(put 'erase-buffer 'disabled nil)
 (put 'narrow-to-region 'disabled nil)
 (put 'dired-find-alternate-file 'disabled nil)
 (put 'upcase-region 'disabled nil)
@@ -131,7 +130,10 @@
 ;; Custom themes are ok
 (setq custom-safe-themes t)
 
-;;; Packages
+
+;;;;;;;;;;;;;;
+;; Packages ;;
+;;;;;;;;;;;;;;
 
 ;;;; Initializing
 (require 'package)
@@ -141,12 +143,10 @@
 (package-initialize)
 
 ;;;; `use-package'
-;; If there are no archived package contents, refresh them
 (when (not package-archive-contents)
   (package-refresh-contents))
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
-
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
 
@@ -160,44 +160,6 @@
 
 ;;;; `project'
 (use-package project)
-
-;;;; `tempel'
-(use-package tempel
-  ;; Require trigger prefix before template name when completing.
-  ;; :custom
-  ;; (tempel-trigger-prefix "<")
-
-  :bind (("ç" . tempel-expand) ;; Alternative tempel-complete
-	 ("Ç" . tempel-complete)
-	 ("M-ç" . tempel-insert)
-	 ("º" . tempel-next)
-	 ("ª" . tempel-previous))
-
-  :init
-  (setq tempel-path (expand-file-name "tempel-templates" user-emacs-directory))
-  ;; Setup completion at point
-  (defun tempel-setup-capf ()
-    ;; Add the Tempel Capf to `completion-at-point-functions'.
-    ;; `tempel-expand' only triggers on exact matches. Alternatively use
-    ;; `tempel-complete' if you want to see all matches, but then you
-    ;; should also configure `tempel-trigger-prefix', such that Tempel
-    ;; does not trigger too often when you don't expect it. NOTE: We add
-    ;; `tempel-expand' *before* the main programming mode Capf, such
-    ;; that it will be tried first.
-    (setq-local completion-at-point-functions
-		(cons #'tempel-expand
-		      completion-at-point-functions)))
-
-					;(add-hook 'prog-mode-hook 'tempel-setup-capf)
-					;(add-hook 'text-mode-hook 'tempel-setup-capf)
-					;(add-hook 'org-mode-hook  'tempel-setup-capf)
-
-  ;; Optionally make the Tempel templates available to Abbrev,
-  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
-					;(add-hook 'prog-mode-hook #'tempel-abbrev-mode)
-  ;; (global-tempel-abbrev-mode)
-  :hook ((prog-mode . tempel-abbrev-mode)
-	 ((prog-mode text-mode org-mode go-mode) . 'tempel-setup-capf)))
 
 ;;;; `substitute'
 (use-package substitute)
@@ -333,7 +295,7 @@
 	 ("C-M-#" . consult-register)
 	 ;; Other custom bindings
 	 ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-	 ("C-h a" . consult-apropos)               ;; orig. apropos-command
+	 ("C-h a" . apropos)                       ;; orig. apropos-command
 	 ;; M-g bindings (goto-map)
 	 ("M-g e" . consult-compile-error)
 	 ("M-g g" . consult-goto-line)             ;; orig. goto-line
@@ -424,7 +386,7 @@
 
 ;;;; `marginalia'
 (use-package marginalia
-  :init
+  :config
   (marginalia-mode))
 
 ;;;; `embark'
@@ -453,12 +415,10 @@
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
-
 ;;;; `org-modern'
 (use-package org-modern
   :hook ((org-mode . org-modern-mode)
 	 (org-agenda-finalize . org-modern-agenda)))
-
 
 ;;;; `corfu'
 (use-package corfu
@@ -468,18 +428,16 @@
   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
   (corfu-auto t)                 ;; Enable auto completion
   (corfu-auto-delay 0.1)
-  (corfu-auto-prefix 4)
+  (corfu-auto-prefix 3)
   (corfu-separator ?\s)          ;; Orderless field separator
   (corfu-quit-at-boundary t)     ;; Never quit at completion boundary
   (corfu-quit-no-match t)        ;;  quit, even if there is no match
-  ;; (corfu-preview-current nil) ;; Disable current candidate preview
+  (corfu-preview-current nil)    ;; Disable current candidate preview
   (corfu-preselect-first nil)    ;; Disable candidate preselection
-  (corfu-on-exact-match t)       ;; Configure handling of exact matches
-  ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
-  ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+  (corfu-on-exact-match nil)       ;; Configure handling of exact matches
+  (corfu-scroll-margin 2)        ;; Use scroll margin
   :bind
   (:map corfu-map
-	;;("M-ç" . tempel-complete)
 	("J" . corfu-next)
 	("K" . corfu-previous))
 
@@ -519,6 +477,46 @@
   (add-to-list 'completion-at-point-functions #'cape-abbrev)
   (add-to-list 'completion-at-point-functions #'cape-symbol))
 
+;;;; `tempel'
+(use-package tempel
+  ;; Require trigger prefix before template name when completing.
+  ;; :custom
+  ;; (tempel-trigger-prefix "<")
+
+  :hook ((prog-mode . tempel-abbrev-mode)
+	 ((prog-mode text-mode org-mode go-mode) . tempel-setup-capf))
+
+  :bind (("ç" . tempel-expand) ;; Alternative tempel-complete
+	 ("Ç" . tempel-complete)
+	 ("M-ç" . tempel-insert)
+	 ("º" . tempel-next)
+	 ("ª" . tempel-previous))
+
+  :init
+  (setq tempel-path (expand-file-name "tempel-templates" user-emacs-directory))
+  ;; Setup completion at point
+  (defun tempel-setup-capf ()
+    ;; Add the Tempel Capf to `completion-at-point-functions'.
+    ;; `tempel-expand' only triggers on exact matches. Alternatively use
+    ;; `tempel-complete' if you want to see all matches, but then you
+    ;; should also configure `tempel-trigger-prefix', such that Tempel
+    ;; does not trigger too often when you don't expect it. NOTE: We add
+    ;; `tempel-expand' *before* the main programming mode Capf, such
+    ;; that it will be tried first.
+    (setq-local completion-at-point-functions
+		(cons #'tempel-complete
+		      completion-at-point-functions)))
+
+  ;;(add-hook 'prog-mode-hook 'tempel-setup-capf)
+  ;;(add-hook 'text-mode-hook 'tempel-setup-capf)
+  ;;(add-hook 'org-mode-hook  'tempel-setup-capf)
+
+  ;; Optionally make the Tempel templates available to Abbrev,
+  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+					;(add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+  ;; (global-tempel-abbrev-mode)
+)
+
 ;;;; `yasnippet'
 ;; (use-package yasnippet
 ;;   :defer t
@@ -535,10 +533,10 @@
 
 ;;;; `eglot'
 (use-package eglot
-  :defer t
+  :hook ((go-mode c++-mode) . eglot-ensure)
   :init
-  (add-hook 'go-mode-hook 'eglot-ensure)
-  (add-hook 'c++-mode-hook 'eglot-ensure)
+  ;; (add-hook 'go-mode-hook 'eglot-ensure)
+  ;; (add-hook 'c++-mode-hook 'eglot-ensure)
   (corfu-popupinfo-mode t))
 
 ;;;; `consult-eglot'
@@ -574,6 +572,7 @@
 ;; TODO: Check how to integrate with CLI tool
 ;; (use-package chezmoi)
 
+;;;; `minions'
 (use-package minions
   :config
   (setq minions-mode-line-lighter ";")
@@ -584,28 +583,29 @@
 	      'flymake-mode))
   (minions-mode 1))
 
-
+;;;; `envrc'
 (use-package envrc
-  :init
+  :config
   (envrc-global-mode))
 
-;;;; ---
-;;;; PROGRAMMING LANGUAGES
 ;;;;;; `editorconfig'
 (use-package editorconfig
   :config
   (editorconfig-mode t))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; PROGRAMMING LANGUAGES ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;; personal-programming-hooks function
 (defun personal-programming-hooks ()
   "Useful hooks for programming."
   (interactive)
   (highlight-indent-guides-mode t)
-  (electric-pair-local-mode t)
   (subword-mode t)
   (hs-minor-mode t))
 
-;;;;; C++
 ;;;;;; `cpp-auto-include'
 (use-package cpp-auto-include)
 
@@ -619,16 +619,19 @@
   (cl-defmethod project-root ((project (head CMakeLists)))
     (cdr project))
 
-  (add-hook 'c++-mode-hook 'personal-programming-hooks)
+  (add-hook 'project-find-functions 'project-find-root)
+
+  :hook ((c++-mode . personal-programming-hooks)
+	 (before-save . (lambda() #'(cpp-auto-include) #'(eglot-format))))
+  ;;  (add-hook 'c++-mode-hook 'personal-programming-hooks)
   :bind (:map c++-mode-map
 	      ("C-c C-c" . compile))
-  :config
-  (add-hook 'project-find-functions 'project-find-root)
-  (add-hook 'before-save-hook (lambda()
-				#'(cpp-auto-include)
-				#'(eglot-format)))
+  ;; :config
+  ;; (add-hook 'before-save-hook (lambda()
+  ;;				#'(cpp-auto-include)
+  ;;				#'(eglot-format)))
   :custom
-  (setq compile-command "g++ -std=c++20 -Wall"))
+  (setq-local compile-command "g++ -std=c++20 -Wall"))
 
 ;;;;;; `clang-capf'
 (use-package clang-capf
@@ -637,11 +640,10 @@
   :config
   (add-to-list 'completion-at-point-functions #'clang-capf))
 
-;;;;; Go
 ;;;;;; `go-mode'
 (use-package go-mode
   :init
-  ; (add-to-list 'exec-path "~/go/bin")
+					; (add-to-list 'exec-path "~/go/bin")
   (defun project-find-go-module (dir)
     (when-let ((root (locate-dominating-file dir "go.mod")))
       (cons 'go-module root)))
@@ -653,18 +655,19 @@
 
   :bind (:map go-mode-map
 	      ("C-c C-c" . compile))
-  :config
-  (add-hook 'go-mode-hook (lambda()
-			    (personal-programming-hooks)
-			    (setq-local tab-width 4)))
-  (add-hook 'before-save-hook (lambda()
-				#'(eglot-code-action-organize-imports 0)
-				#'(eglot-format)))
+  :hook
+  ((go-mode . personal-programming-hooks)
+   (before-save . (lambda() #'(eglot-code-action-organize-imports 0) #'(eglot-format))))
   :custom
-  (setq compile-command "go build -v && go test -v && go vet"))
+  (setq-local compile-command "go build -v && go test -v && go vet"
+	      tab-width 4))
 
-;;; Useful functions
-;;;; Window Management
+
+;;;;;;;;;;;;;;;;;;;;;;
+;; Useful functions ;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; Window Management
 (defun split-window-right-and-focus ()
   "Spawn a new window right of the current one and focus it."
   (interactive)
@@ -706,7 +709,11 @@
   (exchange-point-and-mark)
   (deactivate-mark nil))
 
-;;; Keybindings
+
+;;;;;;;;;;;;;;;;;
+;; Keybindings ;;
+;;;;;;;;;;;;;;;;;
+
 (global-set-key (kbd "C-=") #'er/expand-region)
 (global-set-key (kbd "<escape>") #'keyboard-escape-quit)
 (global-set-key (kbd "C-c a") #'org-agenda)
@@ -717,6 +724,7 @@
 (global-set-key (kbd "<f8>") (lambda ()
 			       (interactive)
 			       (find-file "~/.emacs.d/init.el")))
+(global-set-key (kbd "<f7>") #'display-line-numbers-mode)
 
 (global-set-key (kbd "C-c 0") #'kill-emacs)
 (global-set-key (kbd "<f12>") #'save-buffer)
