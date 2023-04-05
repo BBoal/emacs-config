@@ -1,4 +1,4 @@
-;;; init.el --- BB's config -*- lexical-binding: t -*-
+								  ;;; init.el --- BB's config -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2023  Bruno Boal <bruno.boal@tutanota.com>
 ;; Author: Bruno Boal <bruno.boal@tutanota.com>
@@ -48,7 +48,7 @@
 (setq backup-directory-alist `(("." . ,(expand-file-name ".tmp/backups/"
                                                          user-emacs-directory))))
 (setq auto-save-file-name-transforms `((".*" ,(expand-file-name ".tmp/"
-                                user-emacs-directory) t)))
+																user-emacs-directory) t)))
 (setq-default custom-file (expand-file-name ".custom.el" user-emacs-directory))
 (when (file-exists-p custom-file) ; Don’t forget to load it, we still need it
   (load custom-file))
@@ -59,9 +59,14 @@
       user-mail-address "bruno.boal@tutanota.com")
 
 ;; Nice welcome message
+;; (setq-default initial-scratch-message
+;;               (format ";; %s\n;; Init: %s\n;; %s, be disciplined and maintain focus.\n"
+;;                       (emacs-version) (emacs-init-time) user-full-name))
 (setq-default initial-scratch-message
-              (format ";; %s\n;; Init: %s\n;; %s, be disciplined and maintain focus.\n"
-                      (emacs-version) (emacs-init-time) user-full-name))
+			  (let ((emacs-version (replace-regexp-in-string "\s\(.*\)\n" "" (emacs-version))))
+				(format ";; %s\n;; Initialization in %s\n;; %s, be disciplined and maintain focus.\n\n"
+						emacs-version (emacs-init-time "%.3fs") user-full-name)))
+				;;(center-region (point-min) (point-max))))
 
 ;; User preferences
 (setq delete-by-moving-to-trash t
@@ -504,7 +509,9 @@
     "Enable Corfu in the minibuffer if MCT or Vertico is not active.
 Useful for prompts such as `eval-expression' and `shell-command'."
     (unless (bound-and-true-p vertico--input)
-                   (corfu-mode 1)))
+	  (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+                  corfu-popupinfo-delay nil)
+      (corfu-mode 1)))
 
   :hook (minibuffer-setup . contrib/corfu-enable-always-in-minibuffer)
   :custom
@@ -512,13 +519,13 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (corfu-max-width 80)
   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
   (corfu-auto t)                 ;; Enable auto completion
-  (corfu-auto-delay 0.1)
+  (corfu-auto-delay 1)
   (corfu-auto-prefix 3)
   (corfu-separator ?\s)          ;; Orderless field separator
-  (corfu-quit-at-boundary t)     ;; Never quit at completion boundary
-  (corfu-quit-no-match t)        ;;  quit, even if there is no match
+  (corfu-quit-at-boundary 'separator)     ;; Never quit at completion boundary
+  (corfu-quit-no-match 'separator)        ;;  quit, even if there is no match
   (corfu-preview-current nil)    ;; Disable current candidate preview
-  (corfu-preselect-first nil)    ;; Disable candidate preselection
+  (corfu-preselect 'prompt)      ;; Disable candidate preselection
   (corfu-on-exact-match nil)     ;; Configure handling of exact matches
   (corfu-scroll-margin 2)        ;; Use scroll margin
   :bind
@@ -563,18 +570,18 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (add-to-list 'completion-at-point-functions #'cape-symbol))
 
 ;;;; `yasnippet'
-(use-package yasnippet
-  :bind (:map yas-minor-mode-map
-			  ("ç" . yas-expand))
-  :hook (prog-mode . yas-minor-mode)
-  :init
-  (setq yas-snippet-dirs
-        '("~/.emacs.d/snippets"))
-  :config
-  (setq yas-also-auto-indent-first-line t
-        yas-also-indent-empty-lines t)
-    :custom
-  (yas-reload-all))
+;; (use-package yasnippet
+;;   :bind (:map yas-minor-mode-map
+;; 			  ("ç" . yas-expand))
+;;   :hook (prog-mode . yas-minor-mode)
+;;   :init
+;;   (setq yas-snippet-dirs
+;;         '("~/.emacs.d/snippets"))
+;;   :config
+;;   (setq yas-also-auto-indent-first-line t
+;;         yas-also-indent-empty-lines t)
+;;     :custom
+;;   (yas-reload-all))
 
 ;;;; TODO List of LSP locations
 ;;;; `eglot'
