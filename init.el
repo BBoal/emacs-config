@@ -31,40 +31,27 @@
 
 ;; Set default font
 (set-face-attribute 'default nil
-		    :family "AardvarkFixed Nerd Font Mono"
-		    :foundry "CYEL"
-		    :slant 'normal
-		    :weight 'normal
-		    :height 120
-		    :width 'normal)
+                    :family "AardvarkFixed Nerd Font Mono"
+                    :foundry "CYEL"
+                    :slant 'normal
+                    :weight 'normal
+                    :height 120
+                    :width 'normal)
 
 ;; Adding dirs to load-path
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
-;; Org-mode
-(setq org-directory "~/org.d"
-      org-default-notes-file (concat org-directory "/notes.org")
-      org-export-html-postamble nil
-      org-startup-indented t)
-(require 'bb-org-capture)
-
-;; ediff
-(setq ediff-split-window-function #'split-window-horizontally
-      ediff-window-setup-function #'ediff-setup-windows-plain)
-
 ;; Custom functions/libraries/modules
 (require 'bb-simple)
 
-
 ;; Arranging things
 (setq backup-directory-alist `(("." . ,(expand-file-name ".tmp/backups/"
-							 user-emacs-directory))))
+                                                         user-emacs-directory))))
 (setq auto-save-file-name-transforms `((".*" ,(expand-file-name ".tmp/"
-								user-emacs-directory) t)))
+                                user-emacs-directory) t)))
 (setq-default custom-file (expand-file-name ".custom.el" user-emacs-directory))
 (when (file-exists-p custom-file) ; Don’t forget to load it, we still need it
   (load custom-file))
-(setq delete-by-moving-to-trash t)
 
 ;; User info
 (setq user-full-name    "Bruno Boal"
@@ -72,24 +59,44 @@
       user-mail-address "bruno.boal@tutanota.com")
 
 ;; Nice welcome message
-(setq-default initial-scratch-message (format ";; Welcome %s! Be disciplined and maintain focus.\n" user-full-name)
-	      kill-do-not-save-duplicates t)
+(setq-default initial-scratch-message
+              (format ";; %s\n;; Init: %s\n;; %s, be disciplined and maintain focus.\n"
+                      (emacs-version) (emacs-init-time) user-full-name))
 
 ;; User preferences
-(setq column-number-mode t
+(setq delete-by-moving-to-trash t
+      column-number-mode t
       display-time-24hr-format t
       display-time-mode t
       electric-pair-mode t
-      ispell-dictionary nil)
+      ispell-dictionary nil
+      sentence-end-double-space t
+      sentence-end-without-period nil
+      colon-double-space nil
+      use-hard-newlines nil
+      adaptive-fill-mode t)
 
-(add-hook 'before-save-hook #'whitespace-cleanup)
-(add-hook 'dired-mode-hook  #'diredfl-mode)
+(setq-default tab-always-indent 'complete
+              tab-first-completion 'word-or-paren-or-punct
+              tab-width 4
+              indent-tabs-mode t
+              kill-do-not-save-duplicates t)
 
-;; Sentences do not end with a double space
-(setq-default sentence-end-double-space nil)
+;; Hooks
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
+(add-hook 'text-mode-hook #'auto-fill-mode)
 
-;; Text scrolls progressively
-(setq scroll-conservatively 1000)
+;; First time you will have to select everything and do M-x tabify
+;; (defun bb/tabs-not-spaces ()
+;;   (setq-local tab-width 4)
+;;   (indent-tabs-mode 1))
+;; (add-hook 'sh-mode-hook #'bb/tabs-not-spaces)
+
+;; Select text is replaced with input
+(delete-selection-mode 1)
+
+;; Text scrolls progressively (trying default of 0) TRYME
+(setq scroll-conservatively 101)
 
 ;; Cursor covers the actual space of a character
 (setq x-stretch-cursor t)
@@ -98,10 +105,11 @@
 (setq visible-bell t)
 
 ;; One letter answers
-(fset 'yes-or-no-p 'y-or-n-p)
+;;;(fset 'yes-or-no-p 'y-or-n-p)
+(setq use-short-answers t)
 
 ;; Enable line numbers, relative
-(setq display-line-numbers 'relative)
+(setq display-line-numbers 'visual)
 (setq scroll-margin 4)
 
 ;; Disable exit and processes confirmation
@@ -127,6 +135,9 @@
 ;; Automatically loads the files if they change in another process
 (global-auto-revert-mode 1)
 
+;; File name shadow mode
+(file-name-shadow-mode t)
+
 ;; Custom themes are ok
 (setq custom-safe-themes t)
 
@@ -137,26 +148,57 @@
 
 ;;;; Initializing
 (require 'package)
-(setq package-enable-at-startup nil)
 (add-to-list 'package-archives
-	     '("melpa" . "https://melpa.org/packages/")t)
+             '("melpa" . "https://melpa.org/packages/")t)
+
+;; Highest number gets priority (what is not mentioned gets priority 0)
+(setq package-archive-priorities
+      '(("gnu" . 2)
+        ("nongnu" . 1)))
+
 (package-initialize)
 
 ;;;; `use-package'
 (when (not package-archive-contents)
   (package-refresh-contents))
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
+
+(when (< emacs-major-version 29)
+  (unless (package-installed-p 'use-package)
+    (package-install 'use-package)))
+
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
 
 ;;;; `auto-package-update'
 (use-package auto-package-update
+  :hook (auto-package-update-after . package-autoremove)
+  :init
+  (setq auto-package-update-delete-old-versions t
+        auto-package-update-hide-results t
+        auto-package-update-interval 2)
   :config
-  (setq auto-package-update-delete-old-versions t)
-  (setq auto-package-update-hide-results t)
   (auto-package-update-maybe))
 
+
+;;;; `lin'
+(use-package lin
+  :config
+  (setq lin-face 'lin-red)
+  (lin-global-mode))
+
+;;;; `ediff'
+(use-package ediff
+  :ensure nil
+  :config
+  (setq ediff-split-window-function #'split-window-horizontally
+        ediff-window-setup-function #'ediff-setup-windows-plain))
+
+;;;; `magit'
+(use-package magit
+  :bind ("C-c s" . magit-status))
+
+;;;; `nov'
+(use-package nov)
 
 ;;;; `project'
 (use-package project)
@@ -167,12 +209,24 @@
 ;;;; `chemtable'
 (use-package chemtable)
 
+;;;; `wgrep'
+;; Make grep buffers editable TODO
+(use-package wgrep
+  :bind (:map grep-mode-map
+    ("e" . wgrep-change-to-wgrep-mode)
+    ("C-x C-q" . wgrep-change-to-wgrep-mode)
+    ("C-c C-c" . wgrep-finish-edit))
+  :config
+  (setq wgrep-auto-save-buffer t
+		wgrep-change-readonly-file t))
+
 ;;;; `rainbow-mode'
 (use-package rainbow-mode
+  :bind (:map ctl-x-x-map
+			  ("c" . rainbow-mode))
   :config
-  (setq rainbow-ansi-colors nil)
-  (setq rainbow-x-colors nil)
-  (define-key ctl-x-x-map "c" #'rainbow-mode))
+  (setq rainbow-ansi-colors nil
+		rainbow-x-colors nil))
 
 ;;;; `modus-themes'
 (use-package modus-themes
@@ -181,14 +235,14 @@
 
   ;; Clock in the modeline
   (setq display-time-string-forms
-	'((propertize (concat " " 24-hours ":" minutes " ")
-		      'face 'keycast-key)))
+        '((propertize (concat " " 24-hours ":" minutes " ")
+                      'face 'keycast-key)))
   (display-time-mode 1))
 
 (setq tab-bar-format                    ; Emacs 28
       '(tab-bar-format-tabs-groups
-	tab-bar-format-align-right
-	tab-bar-format-global))
+        tab-bar-format-align-right
+        tab-bar-format-global))
 ;;global-mode-string (TODO)
 
 ;;;; `beframe'
@@ -205,13 +259,13 @@
 
     (defvar beframe--consult-source
       `( :name     "Frame-specific buffers (current frame)"
-	 :narrow   ?F
-	 :category buffer
-	 :face     beframe-buffer
-	 :history  beframe-history
-	 :items    ,#'beframe--buffer-names
-	 :action   ,#'switch-to-buffer
-	 :state    ,#'consult--buffer-state))
+         :narrow   ?F
+         :category buffer
+         :face     beframe-buffer
+         :history  beframe-history
+         :items    ,#'beframe--buffer-names
+         :action   ,#'switch-to-buffer
+         :state    ,#'consult--buffer-state))
 
     (add-to-list 'consult-buffer-sources 'beframe--consult-source))
   (let ((map global-map))
@@ -228,8 +282,8 @@
   (defun prot/keycast-current-window-p ()
     "Return non-nil if selected WINDOW modeline can show keycast."
     (and (not (minibufferp))
-	 (not (null mode-line-format))
-	 (eq (selected-window) (old-selected-window))))
+         (not (null mode-line-format))
+         (eq (selected-window) (old-selected-window))))
   (setq keycast-mode-line-window-predicate #'prot/keycast-current-window-p)
   (setq keycast-separator-width 1)
   (setq keycast-mode-line-remove-tail-elements nil)
@@ -238,12 +292,12 @@
     (keycast-mode -1))
 
   (dolist (input '(self-insert-command
-		   org-self-insert-command))
+                   org-self-insert-command))
     (add-to-list 'keycast-substitute-alist `(,input "." "Typing…")))
 
   (dolist (event '(mouse-event-p
-		   mouse-movement-p
-		   mwheel-scroll))
+                   mouse-movement-p
+                   mwheel-scroll))
     (add-to-list 'keycast-substitute-alist `(,event nil))))
 
 ;;;; `highlight-indent-guides'
@@ -255,14 +309,37 @@
 (use-package avy
   :bind ("C-ç" . avy-goto-char-2))
 
+;;;; `diredfl'
+(use-package diredfl
+  :hook (dired-mode . diredfl-mode))
+
 ;;;; `which-key'
 (use-package which-key
-  :init (which-key-mode)
+  :bind (:map which-key-mode-map
+              ("C-x <tab>" . which-key-C-h-dispatch)
+              ("C-c <tab>" . which-key-C-h-dispatch)
+              ("C-h <tab>" . which-key-C-h-dispatch))
   :config
-  (setq which-key-idle-delay 0.5))
+  (setq which-key-sort-order 'which-key-local-then-key-order
+        ;; which-key-popup-type 'side-window
+        ;; which-key-side-window-location 'right
+        ;; which-key-side-window-max-width 0.35
+        which-key-use-C-h-commands nil
+        ;; FIXME
+        ;; which-key-paging-prefixes '("C-x" "C-c" "C-h")
+        ;; which-key-paging-key "<tab>"
+        which-key-idle-delay 0.2)
+  :init
+  (which-key-mode)
+  (which-key-setup-side-window-right-bottom))
 
 ;;;; `vertico'
 (use-package vertico
+  ;; This works with `file-name-shadow-mode'.  When you are in a
+  ;; sub-directory and use, say, `find-file' to go to your home '~/' or
+  ;; root '/' directory, Vertico will clear the old path to keep only
+  ;; your current input. Works with pasting as well.
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
   :init
   (vertico-mode))
 
@@ -271,7 +348,7 @@
 (use-package savehist
   :config
   (setq	history-delete-duplicates t
-	history-length 1000)
+        history-length 1000)
   :init
   (savehist-mode))
 
@@ -279,54 +356,54 @@
 (use-package consult
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
-	 ("C-c h" . consult-history)
-	 ("C-c m" . consult-mode-command)
-	 ("C-c k" . consult-kmacro)
-	 ;; C-x bindings (ctl-x-map)
-	 ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
-	 ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-	 ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
-	 ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
-	 ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
-	 ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
-	 ;; Custom M-# bindings for fast register access
-	 ("M-#" . consult-register-load)
-	 ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
-	 ("C-M-#" . consult-register)
-	 ;; Other custom bindings
-	 ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-	 ("C-h a" . apropos)                       ;; orig. apropos-command
-	 ;; M-g bindings (goto-map)
-	 ("M-g e" . consult-compile-error)
-	 ("M-g g" . consult-goto-line)             ;; orig. goto-line
-	 ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
-	 ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
-	 ("M-g m" . consult-mark)
-	 ("M-g k" . consult-global-mark)
-	 ("M-g i" . consult-imenu)
-	 ("M-g I" . consult-imenu-multi)
-	 ;; M-s bindings (search-map)
-	 ("M-s d" . consult-find)
-	 ("M-s D" . consult-locate)
-	 ("M-s g" . consult-grep)
-	 ("M-s G" . consult-git-grep)
-	 ("M-s r" . consult-ripgrep)
-	 ("M-s l" . consult-line)
-	 ("M-s L" . consult-line-multi)
-	 ("M-s m" . consult-multi-occur)
-	 ("M-s k" . consult-keep-lines)
-	 ("M-s u" . consult-focus-lines)
-	 ;; Isearch integration
-	 ("M-s e" . consult-isearch-history)
-	 :map isearch-mode-map
-	 ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
-	 ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-	 ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-	 ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
-	 ;; Minibuffer history
-	 :map minibuffer-local-map
-	 ("M-s" . consult-history)                 ;; orig. next-matching-history-element
-	 ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+         ("C-c h" . consult-history)
+         ("C-c m" . consult-mode-command)
+         ("C-c k" . consult-kmacro)
+         ;; C-x bindings (ctl-x-map)
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ("C-h a" . apropos)                       ;; orig. apropos-command
+         ;; M-g bindings (goto-map)
+         ("M-g e" . consult-compile-error)
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings (search-map)
+         ("M-s d" . consult-find)
+         ("M-s D" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s m" . consult-multi-occur)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+         ;; Minibuffer history
+         :map minibuffer-local-map
+         ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+         ("M-r" . consult-history))                ;; orig. previous-matching-history-element
 
   ;; Enable automatic preview at point in the *Completions* buffer. This is
   ;; relevant when you use the default completion UI.
@@ -339,7 +416,7 @@
   ;; preview for `consult-register', `consult-register-load',
   ;; `consult-register-store' and the Emacs built-ins.
   (setq register-preview-delay 0.5
-	register-preview-function #'consult-register-format)
+        register-preview-function #'consult-register-format)
 
   ;; Optionally tweak the register preview window.
   ;; This adds thin lines, sorting and hides the mode line of the window.
@@ -347,7 +424,7 @@
 
   ;; Use Consult to select xref locations with preview
   (setq xref-show-xrefs-function #'consult-xref
-	xref-show-definitions-function #'consult-xref)
+        xref-show-definitions-function #'consult-xref)
 
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
@@ -382,7 +459,7 @@
 (use-package orderless
   :custom
   (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion)))))
+  (completion-category-overrides '((file (styles basic partial-completion orderless)))))
 
 ;;;; `marginalia'
 (use-package marginalia
@@ -398,13 +475,12 @@
   :init
   ;; Optionally replace the key help with a completing-read interface
   (setq prefix-help-command #'embark-prefix-help-command)
-
   :config
-					; Hide the mode line of the Embark live/completions buffers
+  ;; Hide the mode line of the Embark live/completions buffers
   (add-to-list 'display-buffer-alist
-	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-		 nil
-		 (window-parameters (mode-line-format . none)))))
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
 
 ;;;; `embark-consult'
 (use-package embark-consult
@@ -418,10 +494,19 @@
 ;;;; `org-modern'
 (use-package org-modern
   :hook ((org-mode . org-modern-mode)
-	 (org-agenda-finalize . org-modern-agenda)))
+         (org-agenda-finalize . org-modern-agenda)))
 
 ;;;; `corfu'
 (use-package corfu
+  :config
+  ;; Adapted from Corfu's manual.
+  (defun contrib/corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if MCT or Vertico is not active.
+Useful for prompts such as `eval-expression' and `shell-command'."
+    (unless (bound-and-true-p vertico--input)
+                   (corfu-mode 1)))
+
+  :hook (minibuffer-setup . contrib/corfu-enable-always-in-minibuffer)
   :custom
   (corfu-min-width 40)
   (corfu-max-width 80)
@@ -434,12 +519,12 @@
   (corfu-quit-no-match t)        ;;  quit, even if there is no match
   (corfu-preview-current nil)    ;; Disable current candidate preview
   (corfu-preselect-first nil)    ;; Disable candidate preselection
-  (corfu-on-exact-match nil)       ;; Configure handling of exact matches
+  (corfu-on-exact-match nil)     ;; Configure handling of exact matches
   (corfu-scroll-margin 2)        ;; Use scroll margin
   :bind
   (:map corfu-map
-	("J" . corfu-next)
-	("K" . corfu-previous))
+        ("J" . corfu-next)
+        ("K" . corfu-previous))
 
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since Dabbrev can be used globally (M-/).
@@ -451,7 +536,7 @@
 (use-package dabbrev
   ;; Swap M-/ and C-M-/
   :bind (("M-/" . dabbrev-completion)
-	 ("C-M-/" . dabbrev-expand))
+         ("C-M-/" . dabbrev-expand))
   :custom
   (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
 
@@ -460,14 +545,14 @@
   ;; Bind dedicated completion commands
   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
   :bind (("M-p p" . completion-at-point) ;; capf
-	 ("M-p t" . complete-tag)        ;; etags
-	 ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
-	 ("M-p h" . cape-history)
-	 ("M-p f" . cape-file)
-	 ("M-p k" . cape-keyword)
-	 ("M-p s" . cape-symbol)
-	 ("M-p a" . cape-abbrev)
-	 ("M-p &" . cape-sgml))
+         ("M-p t" . complete-tag)        ;; etags
+         ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("M-p h" . cape-history)
+         ("M-p f" . cape-file)
+         ("M-p k" . cape-keyword)
+         ("M-p s" . cape-symbol)
+         ("M-p a" . cape-abbrev)
+         ("M-p &" . cape-sgml))
   :init
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
@@ -477,67 +562,26 @@
   (add-to-list 'completion-at-point-functions #'cape-abbrev)
   (add-to-list 'completion-at-point-functions #'cape-symbol))
 
-;;;; `tempel'
-(use-package tempel
-  ;; Require trigger prefix before template name when completing.
-  ;; :custom
-  ;; (tempel-trigger-prefix "<")
-
-  :hook ((prog-mode . tempel-abbrev-mode)
-	 ((prog-mode text-mode org-mode go-mode) . tempel-setup-capf))
-
-  :bind (("ç" . tempel-expand) ;; Alternative tempel-complete
-	 ("Ç" . tempel-complete)
-	 ("M-ç" . tempel-insert)
-	 ("º" . tempel-next)
-	 ("ª" . tempel-previous))
-
-  :init
-  (setq tempel-path (expand-file-name "tempel-templates" user-emacs-directory))
-  ;; Setup completion at point
-  (defun tempel-setup-capf ()
-    ;; Add the Tempel Capf to `completion-at-point-functions'.
-    ;; `tempel-expand' only triggers on exact matches. Alternatively use
-    ;; `tempel-complete' if you want to see all matches, but then you
-    ;; should also configure `tempel-trigger-prefix', such that Tempel
-    ;; does not trigger too often when you don't expect it. NOTE: We add
-    ;; `tempel-expand' *before* the main programming mode Capf, such
-    ;; that it will be tried first.
-    (setq-local completion-at-point-functions
-		(cons #'tempel-complete
-		      completion-at-point-functions)))
-
-  ;;(add-hook 'prog-mode-hook 'tempel-setup-capf)
-  ;;(add-hook 'text-mode-hook 'tempel-setup-capf)
-  ;;(add-hook 'org-mode-hook  'tempel-setup-capf)
-
-  ;; Optionally make the Tempel templates available to Abbrev,
-  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
-					;(add-hook 'prog-mode-hook #'tempel-abbrev-mode)
-  ;; (global-tempel-abbrev-mode)
-)
-
 ;;;; `yasnippet'
-;; (use-package yasnippet
-;;   :defer t
-;;   :bind ("ç" . yas-expand)
-;;   :init
-;;   (setq yas-snippet-dirs
-;;	'("~/.emacs.d/snippets"))
-;;   :config
-;;   (yas-reload-all)
-;;   (add-hook 'prog-mode-hook #'yas-minor-mode)
-;;   :custom
-;;   (yas-also-auto-indent-first-line t)
-;;   (yas-also-indent-empty-lines t))
+(use-package yasnippet
+  :bind (:map yas-minor-mode-map
+			  ("ç" . yas-expand))
+  :hook (prog-mode . yas-minor-mode)
+  :init
+  (setq yas-snippet-dirs
+        '("~/.emacs.d/snippets"))
+  :config
+  (setq yas-also-auto-indent-first-line t
+        yas-also-indent-empty-lines t)
+    :custom
+  (yas-reload-all))
 
+;;;; TODO List of LSP locations
 ;;;; `eglot'
 (use-package eglot
   :hook ((go-mode c++-mode) . eglot-ensure)
-  :init
-  ;; (add-hook 'go-mode-hook 'eglot-ensure)
-  ;; (add-hook 'c++-mode-hook 'eglot-ensure)
-  (corfu-popupinfo-mode t))
+  :config
+  (setq corfu-popupinfo-mode t))
 
 ;;;; `consult-eglot'
 (use-package consult-eglot
@@ -547,12 +591,12 @@
 (use-package bicycle
   :after outline
   :bind (:map outline-minor-mode-map
-	      ("C-<tab>" . bicycle-cycle)
-	      ("<backtab>" . bicycle-cycle-global))
+              ("C-<tab>" . bicycle-cycle)
+              ("<backtab>" . bicycle-cycle-global))
   :hook ((prog-mode elisp-mode) .
-	 (lambda()
-	   #'(outline-minor-mode)
-	   #'(hs-minor-mode))))
+         (lambda()
+           #'(outline-minor-mode)
+           #'(hs-minor-mode))))
 
 ;;;; `beacon'
 (use-package beacon
@@ -579,8 +623,8 @@
   ;; NOTE: This will be expanded whenever I find a mode that should not
   ;; be hidden
   (setq minions-prominent-modes
-	(list 'defining-kbd-macro
-	      'flymake-mode))
+        (list 'defining-kbd-macro
+              'flymake-mode))
   (minions-mode 1))
 
 ;;;; `envrc'
@@ -593,6 +637,19 @@
   :config
   (editorconfig-mode t))
 
+;;;; `org'
+(use-package org
+  :ensure nil
+  :config
+(setq org-directory "~/org.d"
+      org-default-notes-file (concat org-directory "/notes.org")
+      org-export-html-postamble nil
+      org-startup-indented t
+      org-src-preserve-indentation t
+      org-src-tab-acts-natively nil
+      org-edit-src-content-indentation 0)
+:custom
+(require 'bb-org-capture))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PROGRAMMING LANGUAGES ;;
@@ -622,10 +679,10 @@
   (add-hook 'project-find-functions 'project-find-root)
 
   :hook ((c++-mode . personal-programming-hooks)
-	 (before-save . (lambda() #'(cpp-auto-include) #'(eglot-format))))
+         (before-save . (lambda() #'(cpp-auto-include) #'(eglot-format))))
   ;;  (add-hook 'c++-mode-hook 'personal-programming-hooks)
   :bind (:map c++-mode-map
-	      ("C-c C-c" . compile))
+              ("C-c C-c" . compile))
   ;; :config
   ;; (add-hook 'before-save-hook (lambda()
   ;;				#'(cpp-auto-include)
@@ -643,7 +700,7 @@
 ;;;;;; `go-mode'
 (use-package go-mode
   :init
-					; (add-to-list 'exec-path "~/go/bin")
+                                        ; (add-to-list 'exec-path "~/go/bin")
   (defun project-find-go-module (dir)
     (when-let ((root (locate-dominating-file dir "go.mod")))
       (cons 'go-module root)))
@@ -654,13 +711,13 @@
   (add-hook 'project-find-functions #'project-find-go-module)
 
   :bind (:map go-mode-map
-	      ("C-c C-c" . compile))
+              ("C-c C-c" . compile))
   :hook
   ((go-mode . personal-programming-hooks)
    (before-save . (lambda() #'(eglot-code-action-organize-imports 0) #'(eglot-format))))
   :custom
   (setq-local compile-command "go build -v && go test -v && go vet"
-	      tab-width 4))
+              tab-width 4))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -722,9 +779,10 @@
 (global-set-key (kbd "<f2>") #'revert-buffer)
 (global-set-key (kbd "<f9>") #'menu-bar-mode)
 (global-set-key (kbd "<f8>") (lambda ()
-			       (interactive)
-			       (find-file "~/.emacs.d/init.el")))
-(global-set-key (kbd "<f7>") #'display-line-numbers-mode)
+                               (interactive)
+                               (find-file "~/.emacs.d/init.el")))
+
+(global-set-key (kbd "<f7>") #'bb-simple-cycle-display-line-numbers)
 
 (global-set-key (kbd "C-c 0") #'kill-emacs)
 (global-set-key (kbd "<f12>") #'save-buffer)
@@ -747,5 +805,4 @@
 
 
 (provide 'init)
-;;; ---
 ;;; init.el ends here
