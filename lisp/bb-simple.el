@@ -29,155 +29,152 @@
 
 (defcustom bb-search-todo-keywords
 	(concat "TODO\\|FIXME\\|NOTE\\|REVIEW"
-					"\\|HACK\\|WARNING\\|DEPRECATED\\|BUG")
+			"\\|HACK\\|WARNING\\|DEPRECATED\\|BUG")
 	"Regexp with search to-do keywords."
 	:type 'string
 	:group 'bb-search)
 
 (defun bb-search-occur-todo-keywords (&optional context)
-	"Produce Occur buffer with `bb-search-todo-keywords'.
+  "Produce Occur buffer with `bb-search-todo-keywords'.
 With optional numeric prefix argument for CONTEXT, show as many
 lines before and after each match.
 
-When called from Lisp CONTEXT must satisfy `natnump'.    A faulty
+When called from Lisp CONTEXT must satisfy `natnump'.  A faulty
 value is read as 0.
 
 Also see `bb-search-grep-todo-keywords'."
-	(interactive "P")
-	(let* ((case-fold-search nil)
-				 (num (cond
-							 (current-prefix-arg
-								(prefix-numeric-value current-prefix-arg))
-							 (t (if (natnump context) context 0))))
-				 (buf-name (format "*keywords in <%s>*" (buffer-name))))
-		(occur-1 bb-search-todo-keywords num (list (current-buffer)) buf-name)))
+  (interactive "P")
+  (let* ((case-fold-search nil)
+		 (num (cond
+			   (current-prefix-arg
+				(prefix-numeric-value current-prefix-arg))
+			   (t (if (natnump context) context 0))))
+		 (buf-name (format "*keywords in <%s>*" (buffer-name))))
+	(occur-1 bb-search-todo-keywords num (list (current-buffer)) buf-name)))
 
 (defvar bb-common-url-regexp
-	(concat
-	 "~?\\<\\([-a-zA-Z0-9+&@#/%?=~_|!:,.;]*\\)"
-	 "[.@]"
-	 "\\([-a-zA-Z0-9+&@#/%?=~_|!:,.;]+\\)/?\\>")
-	"Regular expression to match (most?) URLs or email addresses.")
+  (concat
+   "~?\\<\\([-a-zA-Z0-9+&@#/%?=~_|!:,.;]*\\)"
+   "[.@]"
+   "\\([-a-zA-Z0-9+&@#/%?=~_|!:,.;]+\\)/?\\>")
+  "Regular expression to match (most?) URLs or email addresses.")
 
 (defun bb-simple--pos-url-on-line (&optional char)
-	"Return position of `bb-common-url-regexp' on line or at CHAR."
-	(save-excursion
-		(goto-char (or char (line-beginning-position)))
-		(re-search-forward bb-common-url-regexp (line-end-position) :noerror)))
+  "Return position of `bb-common-url-regexp' on line or at CHAR."
+  (save-excursion
+	(goto-char (or char (line-beginning-position)))
+	(re-search-forward bb-common-url-regexp (line-end-position) :noerror)))
 
 ;;;###autoload
 (defun bb-simple-escape-url-line (&optional char)
-	"Escape all URLs or email addresses on the current line.
+  "Escape all URLs or email addresses on the current line.
 By default, start operating from `line-beginning-position' to the
 end of the current line. With optional CHAR as a buffer
 position, operate from CHAR to the end of the line."
-	(interactive)
-	(when-let ((regexp-end (bb-simple--pos-url-on-line char)))
-		(save-excursion
-			(goto-char regexp-end)
-			(unless (looking-at ">")
-				(insert ">")
-				(search-backward "\s")
-				(forward-char 1)
-				(insert "<")))
-		(bb-simple-escape-url-line (1+ regexp-end))))
+  (interactive)
+  (when-let ((regexp-end (bb-simple--pos-url-on-line char)))
+	(save-excursion
+	  (goto-char regexp-end)
+	  (unless (looking-at ">")
+		(insert ">")
+		(search-backward "\s")
+		(forward-char 1)
+		(insert "<")))
+	(bb-simple-escape-url-line (1+ regexp-end))))
 
 ;;;###autoload
 (defun bb-simple-escape-url-region (beg end)
-	"Apply `bb-simple-escape-url' on a region lines between BEG and END."
-	(interactive
-	 (if (region-active-p)
-			 (list (region-beginning) (region-end))
-		 (error "There is no region!")))
-	(unless (> end beg)
-		(cl-rotatef end beg))
-	(save-excursion
-		(goto-char beg)
-		(setq beg (line-beginning-position))
-		(while (<= beg end)
-			(bb-simple-escape-url-line beg)
-			(beginning-of-line 2)
-			(setq beg (point)))))
+  "Apply `bb-simple-escape-url' on a region lines between BEG and END."
+  (interactive
+   (if (region-active-p)
+	   (list (region-beginning) (region-end))
+	 (error "There is no region!")))
+  (unless (> end beg)
+	(cl-rotatef end beg))
+  (save-excursion
+	(goto-char beg)
+	(setq beg (line-beginning-position))
+	(while (<= beg end)
+	  (bb-simple-escape-url-line beg)
+	  (beginning-of-line 2)
+	  (setq beg (point)))))
 
 ;;;###autoload
 (defun bb-simple-escape-url-dwim ()
-	(interactive)
-	(call-interactively
-	 (if (region-active-p)
-			 #'bb-simple-escape-url-region
-		 #'bb-simple-escape-url-line)))
+  (interactive)
+  (call-interactively
+   (if (region-active-p)
+	   #'bb-simple-escape-url-region
+	 #'bb-simple-escape-url-line)))
 
 ;;;###autoload
 (defun bb-simple-cycle-display-line-numbers ()
-	(interactive)
-	(if display-line-numbers
-			(display-line-numbers-mode 'toggle)
-		(setq-local display-line-numbers 'visual)))
+  (interactive)
+  (if display-line-numbers
+	  (display-line-numbers-mode 'toggle)
+	(setq-local display-line-numbers 'visual)))
 
 ;;;###autoload
 (defun bb-simple-indent-tabs-spaces-rest ()
-	(interactive)
-	(setq-local whitespace-style '( indentation::space face tabs spaces
-																	trailing lines space-before-tab newline
-																	empty space-after-tab space-mark tab-mark
-																	newline-mark missing-newline-at-eof)
-							tab-width 2)
-	(untabify (point-min) (point-max))
-	(indent-tabs-mode nil))
+  (interactive)
+  (setq-local whitespace-style '( indentation::space face tabs spaces
+								  trailing lines space-before-tab newline
+								  empty space-after-tab space-mark tab-mark
+								  newline-mark missing-newline-at-eof)
+		      tab-width 2)
+  (untabify (point-min) (point-max))
+  (indent-tabs-mode nil))
 
-;; ---------------------------------------
-
-;; # Local Variables:
-;; # eval: (delete 'indentation whitespace-style)
-;; # eval: (add-to-list 'whitespace-style 'indentation::tab)
-;; # eval: (indent-tabs-mode t)
-;; # tab-width: 4
-;; # End:
 
 (defun bb-simple-add-to-list-elements (receiver-list elements)
-	(mapc
-	 (lambda (element)
-		 (add-to-list receiver-list element))
-	 elements))
+  "Add the ELEMENTS to the RECEIVER-LIST"
+  (mapc
+   (lambda (element)
+     (add-to-list receiver-list element))
+   elements))
 
 (defun bb-simple--indent (tabs-or-spaces width)
-	(mapc
-	 (lambda (element)
-		 (delete element whitespace-style))
-	 '(indentation space-after-tab space-before-tab))
-	(if (string= tabs-or-spaces "tabs")
-			(progn
-				(bb-simple-add-to-list-elements
-				 'whitespace-style '(indentation::tab space-after-tab::tab space-before-tab::tab))
-				(indent-tabs-mode 1))
-		(bb-simple-add-to-list-elements
-		 'whitespace-style '(indentation::space space-after-tab::space space-before-tab::space))
-		(indent-tabs-mode -1))
-	(setq-local tab-width width))
+  "Removes values in `'whitespace-style' that would have precedence over user
+options. Then, new values are set accordingly TABS-OR-SPACES and WIDTH, adjusting
+`tab-width' as well as `indent-tabs-mode'."
+  (mapc
+   (lambda (element)
+     (delete element whitespace-style))
+   '(indentation space-after-tab space-before-tab))
+  (if (string= tabs-or-spaces "tabs")
+      (progn
+	    (bb-simple-add-to-list-elements
+	     'whitespace-style '(indentation::tab space-after-tab::tab space-before-tab::tab))
+	    (indent-tabs-mode 1))
+    (bb-simple-add-to-list-elements
+     'whitespace-style '(indentation::space space-after-tab::space space-before-tab::space))
+    (indent-tabs-mode -1))
+       (setq-local tab-width width))
 
 (defun bb-simple--style-prompt()
   "Simple prompt for getting user choice of tabs or spaces"
   (completing-read "Indentation: tabs or spaces? "
-				   '(tabs spaces) nil :require-match))
+		           '(tabs spaces) nil :require-match))
 
 (defun bb-simple--tab-width-prompt()
   "Simple prompt for getting tab-width value"
   (read-number "tab-width: "))
 
 (defun bb-simple-indent-tabs-or-spaces(style width)
+  "Indents buffer with user choices STYLE and WIDTH obtained from
+helper functions."
   (interactive
-   (list
-	(bb-simple--style-prompt)
-	(bb-simple--tab-width-prompt)))
-  (bb-simple--indent
-   (if (string= style "tabs")
-	   "tabs"
-	 "spaces")
-   width)
+   (let ((style (bb-simple--style-prompt)))
+     (list
+      style
+      (if (string= style "tabs")
+	      (bb-simple--tab-width-prompt)
+	    (default-value 'tab-width)))))
+  (bb-simple--indent style width)
   (let ((min (point-min))
-		(max (point-max)))
-	(indent-region min max 0)
-	(indent-region min max)))
+	    (max (point-max)))
+    (indent-region min max 0)
+    (indent-region min max)))
 
 
 (provide 'bb-simple)

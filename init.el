@@ -1,4 +1,4 @@
-								  ;;; init.el --- BB's config -*- lexical-binding: t -*-
+;;; init.el --- BB's config -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2023  Bruno Boal <bruno.boal@tutanota.com>
 ;; Author: Bruno Boal <bruno.boal@tutanota.com>
@@ -39,17 +39,21 @@
                     :width 'normal)
 
 ;; Adding dirs to load-path
-(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+(add-to-list 'load-path "~/.emacs.d/lisp")
 
 ;; Custom functions/libraries/modules
 (require 'bb-simple)
 
-;; Arranging things
-(setq backup-directory-alist `(("." . ,(expand-file-name ".tmp/backups/"
-                                                         user-emacs-directory))))
-(setq auto-save-file-name-transforms `((".*" ,(expand-file-name ".tmp/"
-																user-emacs-directory) t)))
-(setq-default custom-file (expand-file-name ".custom.el" user-emacs-directory))
+;; Auxiliary files written in .tmp/ dir
+;;; https://www.gnu.org/software/emacs/manual/html_node/efaq/Not-writing-files-to-the-current-directory.html
+(setq lock-file-name-transforms
+      '(("\\`/.*/\\([^/]+\\)\\'" "~/.emacs.d/.tmp/\\1" t)))
+(setq auto-save-file-name-transforms
+      '(("\\`/.*/\\([^/]+\\)\\'" "~/.emacs.d/.tmp/\\1" t)))
+(setq backup-directory-alist
+      '((".*" . "~/.emacs.d/.tmp/backups/")))
+
+(setq-default custom-file "~/.emacs.d/.custom.el")
 (when (file-exists-p custom-file) ; Don’t forget to load it, we still need it
   (load custom-file))
 
@@ -59,14 +63,11 @@
       user-mail-address "bruno.boal@tutanota.com")
 
 ;; Nice welcome message
-;; (setq-default initial-scratch-message
-;;               (format ";; %s\n;; Init: %s\n;; %s, be disciplined and maintain focus.\n"
-;;                       (emacs-version) (emacs-init-time) user-full-name))
 (setq-default initial-scratch-message
-			  (let ((emacs-version (replace-regexp-in-string "\s\(.*\)\n" "" (emacs-version))))
-				(format ";; %s\n;; Initialization in %s\n;; %s, be disciplined and maintain focus.\n\n"
-						emacs-version (emacs-init-time "%.3fs") user-full-name)))
-				;;(center-region (point-min) (point-max))))
+              (let ((emacs-version (replace-regexp-in-string "\s\(.*\)\n" "" (emacs-version))))
+                (format ";; %s\n;; Initialization in %s\n;; %s, be disciplined and maintain focus.\n\n"
+                        emacs-version (emacs-init-time "%.3fs") user-full-name)))
+;;(center-region (point-min) (point-max))))    FIXME
 
 ;; User preferences
 (setq delete-by-moving-to-trash t
@@ -81,9 +82,11 @@
       use-hard-newlines nil
       adaptive-fill-mode t)
 
-(setq-default tab-always-indent 'complete
+(setq-default fill-column 100
+			  tab-always-indent 'complete
               tab-first-completion 'word-or-paren-or-punct
               tab-width 4
+              scroll-margin 4
               indent-tabs-mode t
               kill-do-not-save-duplicates t)
 
@@ -91,14 +94,12 @@
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-hook 'text-mode-hook #'auto-fill-mode)
 
-;; First time you will have to select everything and do M-x tabify
-;; (defun bb/tabs-not-spaces ()
-;;   (setq-local tab-width 4)
-;;   (indent-tabs-mode 1))
-;; (add-hook 'sh-mode-hook #'bb/tabs-not-spaces)
-
 ;; Select text is replaced with input
-(delete-selection-mode 1)
+(delete-selection-mode t)
+
+;; Disable bidirectional reordering to improve performance of file with long lines TODO
+(setq bidi-inhibit-bpa t)
+(setq-default bidi-paragraph-direction 'left-to-right)
 
 ;; Text scrolls progressively (trying default of 0) TRYME
 (setq scroll-conservatively 101)
@@ -112,10 +113,6 @@
 ;; One letter answers
 ;;;(fset 'yes-or-no-p 'y-or-n-p)
 (setq use-short-answers t)
-
-;; Enable line numbers, relative
-(setq display-line-numbers 'visual)
-(setq scroll-margin 4)
 
 ;; Disable exit and processes confirmation
 (setq confirm-kill-emacs nil
@@ -137,8 +134,14 @@
 (setq mode-line-defining-kbd-macro
       (propertize " Macro" 'face 'mode-line-emphasis))
 
+;; Specify which files should be reverted without query
+(setq revert-without-query '(".*"))
+
+;; Automatically focus help buffer
+(setq help-window-select t)
+
 ;; Automatically loads the files if they change in another process
-(global-auto-revert-mode 1)
+(global-auto-revert-mode t)
 
 ;; File name shadow mode
 (file-name-shadow-mode t)
@@ -215,23 +218,23 @@
 (use-package chemtable)
 
 ;;;; `wgrep'
-;; Make grep buffers editable TODO
+;; Make grep buffers editable
 (use-package wgrep
   :bind (:map grep-mode-map
-    ("e" . wgrep-change-to-wgrep-mode)
-    ("C-x C-q" . wgrep-change-to-wgrep-mode)
-    ("C-c C-c" . wgrep-finish-edit))
+              ("e" . wgrep-change-to-wgrep-mode)
+              ("C-x C-q" . wgrep-change-to-wgrep-mode)
+              ("C-c C-c" . wgrep-finish-edit))
   :config
   (setq wgrep-auto-save-buffer t
-		wgrep-change-readonly-file t))
+        wgrep-change-readonly-file t))
 
 ;;;; `rainbow-mode'
 (use-package rainbow-mode
   :bind (:map ctl-x-x-map
-			  ("c" . rainbow-mode))
+              ("c" . rainbow-mode))
   :config
   (setq rainbow-ansi-colors nil
-		rainbow-x-colors nil))
+        rainbow-x-colors nil))
 
 ;;;; `modus-themes'
 (use-package modus-themes
@@ -252,6 +255,12 @@
 
 ;;;; `beframe'
 (use-package beframe
+  :bind (:map global-map
+              ("C-x f" . other-frame-preffix)  ; override `set-fill-column'
+              ;; Replace the generic `buffer-menu'.  With a prefix argument, this
+              ;; commands prompts for a frame.  Call the `buffer-menu' via M-x if
+              ;; you absolutely need the global list of buffers.
+              ("C-x C-b" . beframe-buffer-menu))
   :config
   (setq beframe-functions-in-frames '(project-prompt-project-dir))
   (defvar consult-buffer-sources)
@@ -273,13 +282,7 @@
          :state    ,#'consult--buffer-state))
 
     (add-to-list 'consult-buffer-sources 'beframe--consult-source))
-  (let ((map global-map))
-    (define-key map (kbd "C-x f") #'other-frame-prefix) ; override `set-fill-column'
-    ;; Replace the generic `buffer-menu'.  With a prefix argument, this
-    ;; commands prompts for a frame.  Call the `buffer-menu' via M-x if
-    ;; you absolutely need the global list of buffers.
-    (define-key map (kbd "C-x C-b") #'beframe-buffer-menu))
-  (beframe-mode 1))
+  (beframe-mode))
 
 ;;;; `keycast'
 (use-package keycast
@@ -293,7 +296,7 @@
   (setq keycast-separator-width 1)
   (setq keycast-mode-line-remove-tail-elements nil)
   (if (not (keycast--mode-active-p))
-      (keycast-mode-line-mode 1)
+      (keycast-mode 1)
     (keycast-mode -1))
 
   (dolist (input '(self-insert-command
@@ -305,26 +308,23 @@
                    mwheel-scroll))
     (add-to-list 'keycast-substitute-alist `(,event nil))))
 
-;;;; `highlight-indent-guides'
+;;;; `highlight-indent-guides'  ;;; TODO
 (use-package highlight-indent-guides
   :init
-  (setq highlight-indent-guides-method 'character))
-
-;;;; `avy'
-(use-package avy
-  :bind ("C-ç" . avy-goto-char-2))
+  (setq highlight-indent-guides-method 'fill))
 
 ;;;; `diredfl'
 (use-package diredfl
   :hook (dired-mode . diredfl-mode))
 
-;;;; `which-key'
+;;;; `which-key'  ;;; TODO
 (use-package which-key
-  :bind (:map which-key-mode-map
-              ("C-x <tab>" . which-key-C-h-dispatch)
-              ("C-c <tab>" . which-key-C-h-dispatch)
-              ("C-h <tab>" . which-key-C-h-dispatch))
   :config
+  (dolist (keychords '("C-x <tab>"
+                       "C-c <tab>"
+                       "C-h <tab>"))
+    (define-key which-key-mode-map (kbd keychords) 'which-key-C-h-dispatch))
+
   (setq which-key-sort-order 'which-key-local-then-key-order
         ;; which-key-popup-type 'side-window
         ;; which-key-side-window-location 'right
@@ -509,7 +509,7 @@
     "Enable Corfu in the minibuffer if MCT or Vertico is not active.
 Useful for prompts such as `eval-expression' and `shell-command'."
     (unless (bound-and-true-p vertico--input)
-	  (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+      (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
                   corfu-popupinfo-delay nil)
       (corfu-mode 1)))
 
@@ -519,7 +519,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (corfu-max-width 80)
   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
   (corfu-auto t)                 ;; Enable auto completion
-  (corfu-auto-delay 1)
+  (corfu-auto-delay 0.3)
   (corfu-auto-prefix 3)
   (corfu-separator ?\s)          ;; Orderless field separator
   (corfu-quit-at-boundary 'separator)     ;; Never quit at completion boundary
@@ -583,12 +583,19 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 ;;     :custom
 ;;   (yas-reload-all))
 
-;;;; TODO List of LSP locations
+;;;; TODO List/table with LSP engines
 ;;;; `eglot'
 (use-package eglot
-  :hook ((go-mode c++-mode) . eglot-ensure)
+  :hook ((go-mode c++-mode haskell-mode) . eglot-ensure)
   :config
-  (setq corfu-popupinfo-mode t))
+  (setq-default eglot-workspace-configuration
+                '((haskell
+                   (plugin
+                    (stan
+                     (globalOn . :json-false))))))  ;; disable stan
+  (setq corfu-popupinfo-mode t
+		eglot-autoshutdown t
+		eglot-confirm-server-initiated-edits nil))
 
 ;;;; `consult-eglot'
 (use-package consult-eglot
@@ -642,21 +649,23 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 ;;;;;; `editorconfig'
 (use-package editorconfig
   :config
-  (editorconfig-mode t))
+  (editorconfig-mode))
 
 ;;;; `org'
 (use-package org
   :ensure nil
   :config
-(setq org-directory "~/org.d"
-      org-default-notes-file (concat org-directory "/notes.org")
-      org-export-html-postamble nil
-      org-startup-indented t
-      org-src-preserve-indentation t
-      org-src-tab-acts-natively nil
-      org-edit-src-content-indentation 0)
-:custom
-(require 'bb-org-capture))
+  (setq org-directory "~/org.d"
+        org-agenda-files (directory-files-recursively
+                          (concat org-directory "/agenda.d/") "\\.org\\'")
+        org-default-notes-file (concat org-directory "/notes.org")
+        org-export-html-postamble nil
+        org-startup-indented t
+        org-src-preserve-indentation t
+        org-src-tab-acts-natively nil
+        org-edit-src-content-indentation 0)
+  :custom
+  (require 'bb-org-capture))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PROGRAMMING LANGUAGES ;;
@@ -707,7 +716,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 ;;;;;; `go-mode'
 (use-package go-mode
   :init
-                                        ; (add-to-list 'exec-path "~/go/bin")
+  ;; (add-to-list 'exec-path "~/go/bin")
   (defun project-find-go-module (dir)
     (when-let ((root (locate-dominating-file dir "go.mod")))
       (cons 'go-module root)))
@@ -725,6 +734,14 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :custom
   (setq-local compile-command "go build -v && go test -v && go vet"
               tab-width 4))
+
+(use-package haskell-mode)
+
+(use-package ormolu
+ :hook (haskell-mode . ormolu-format-on-save-mode)
+ :bind
+ (:map haskell-mode-map
+   ("C-c r" . ormolu-format-buffer)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -756,14 +773,14 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 (defun push-mark-no-activate ()
   "Pushes `point' to `mark-ring' and does not activate the region
-   Equivalent to \\[set-mark-command] when \\[transient-mark-mode] is disabled"
+Equivalent to \\[set-mark-command] when \\[transient-mark-mode] is disabled"
   (interactive)
   (push-mark (point) t nil)
   (message "Pushed mark to ring"))
 
 (defun jump-to-mark ()
   "Jumps to the local mark, respecting the `mark-ring' order.
-  This is the same as using \\[set-mark-command] with the prefix argument."
+This is the same as using \\[set-mark-command] with the prefix argument."
   (interactive)
   (set-mark-command 1))
 
@@ -783,17 +800,18 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (global-set-key (kbd "C-c a") #'org-agenda)
 (global-set-key (kbd "C-c c") #'org-capture)
 (global-set-key (kbd "C-c l") #'org-store-link)
-(global-set-key (kbd "<f2>") #'revert-buffer)
-(global-set-key (kbd "<f9>") #'menu-bar-mode)
-(global-set-key (kbd "<f8>") (lambda ()
-                               (interactive)
-                               (find-file "~/.emacs.d/init.el")))
 
-(global-set-key (kbd "<f7>") #'bb-simple-cycle-display-line-numbers)
 
 (global-set-key (kbd "C-c 0") #'kill-emacs)
 (global-set-key (kbd "<f12>") #'save-buffer)
 (global-set-key (kbd "<f10>") #'save-buffers-kill-emacs)
+(global-set-key (kbd "<f9>") #'menu-bar-mode)
+(global-set-key (kbd "<f8>") (lambda ()
+                               (interactive)
+                               (find-file "~/.emacs.d/init.el")))
+(global-set-key (kbd "<f7>") #'bb-simple-cycle-display-line-numbers)
+(global-set-key (kbd "<f6>") #'whitespace-mode)
+(global-set-key (kbd "<f2>") #'revert-buffer)
 
 (global-set-key (kbd "C-c <up>")    #'windmove-up)
 (global-set-key (kbd "C-c <down>")  #'windmove-down)

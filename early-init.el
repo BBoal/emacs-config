@@ -26,12 +26,13 @@
 (setq package-enable-at-startup nil
       inhibit-startup-message   t
       frame-resize-pixelwise    t  ; fine resize
+      load-prefer-newer         t
       package-native-compile    t) ; native compile packages
 
 (scroll-bar-mode -1)               ; disable scrollbar
 (menu-bar-mode -1)                 ; disable menubar
 (tool-bar-mode -1)                 ; disable toolbar
-;;(tooltip-mode -1)                  ; disable tooltips
+(tooltip-mode -1)                  ; help text in echo area
 (set-fringe-mode 10)               ; give some breathing room
 
 (setq gc-cons-threshold (* 1024 1024 1024))
