@@ -23,6 +23,9 @@
 ;;; Commentary:
 ;;; Code:
 
+;; Disabling the custom file.
+(setq-default custom-file (make-temp-file "emacs-custom-"))
+
 (setq package-enable-at-startup nil
       inhibit-startup-message   t
       frame-resize-pixelwise    t  ; fine resize
