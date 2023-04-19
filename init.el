@@ -53,10 +53,6 @@
 (setq backup-directory-alist
       '((".*" . "~/.emacs.d/.tmp/backups/")))
 
-(setq-default custom-file "~/.emacs.d/.custom.el")
-(when (file-exists-p custom-file) ; Don’t forget to load it, we still need it
-  (load custom-file))
-
 ;; User info
 (setq user-full-name    "Bruno Boal"
       user-login-name   "bb"
@@ -74,7 +70,6 @@
       column-number-mode t
       display-time-24hr-format t
       display-time-mode t
-      electric-pair-mode t
       ispell-dictionary nil
       sentence-end-double-space t
       sentence-end-without-period nil
@@ -92,6 +87,8 @@
 
 ;; Hooks
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
+(add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
+(add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'text-mode-hook #'auto-fill-mode)
 
 ;; Select text is replaced with input
@@ -156,13 +153,14 @@
 
 ;;;; Initializing
 (require 'package)
-(add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/")t)
+(setq package-archives
+	  '(("elpa" . "https://elpa.gnu.org/packages/")
+        ("melpa" . "https://melpa.org/packages/")))
 
 ;; Highest number gets priority (what is not mentioned gets priority 0)
 (setq package-archive-priorities
-      '(("gnu" . 2)
-        ("nongnu" . 1)))
+      '(("elpa" . 2)
+		("melpa" . 1)))
 
 (package-initialize)
 
@@ -187,6 +185,8 @@
   :config
   (auto-package-update-maybe))
 
+;;;; `vterm'
+(use-package vterm)
 
 ;;;; `lin'
 (use-package lin
@@ -308,16 +308,11 @@
                    mwheel-scroll))
     (add-to-list 'keycast-substitute-alist `(,event nil))))
 
-;;;; `highlight-indent-guides'  ;;; TODO
-(use-package highlight-indent-guides
-  :init
-  (setq highlight-indent-guides-method 'fill))
-
 ;;;; `diredfl'
 (use-package diredfl
   :hook (dired-mode . diredfl-mode))
 
-;;;; `which-key'  ;;; TODO
+;;;; `which-key'
 (use-package which-key
   :config
   (dolist (keychords '("C-x <tab>"
@@ -326,13 +321,7 @@
     (define-key which-key-mode-map (kbd keychords) 'which-key-C-h-dispatch))
 
   (setq which-key-sort-order 'which-key-local-then-key-order
-        ;; which-key-popup-type 'side-window
-        ;; which-key-side-window-location 'right
-        ;; which-key-side-window-max-width 0.35
         which-key-use-C-h-commands nil
-        ;; FIXME
-        ;; which-key-paging-prefixes '("C-x" "C-c" "C-h")
-        ;; which-key-paging-key "<tab>"
         which-key-idle-delay 0.2)
   :init
   (which-key-mode)
@@ -519,7 +508,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (corfu-max-width 80)
   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
   (corfu-auto t)                 ;; Enable auto completion
-  (corfu-auto-delay 0.3)
+  (corfu-auto-delay 1)
   (corfu-auto-prefix 3)
   (corfu-separator ?\s)          ;; Orderless field separator
   (corfu-quit-at-boundary 'separator)     ;; Never quit at completion boundary
@@ -570,30 +559,30 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (add-to-list 'completion-at-point-functions #'cape-symbol))
 
 ;;;; `yasnippet'
-;; (use-package yasnippet
-;;   :bind (:map yas-minor-mode-map
-;; 			  ("ç" . yas-expand))
-;;   :hook (prog-mode . yas-minor-mode)
-;;   :init
-;;   (setq yas-snippet-dirs
-;;         '("~/.emacs.d/snippets"))
-;;   :config
-;;   (setq yas-also-auto-indent-first-line t
-;;         yas-also-indent-empty-lines t)
-;;     :custom
-;;   (yas-reload-all))
+(use-package yasnippet
+  :bind (:map yas-minor-mode-map
+			  ("ç" . yas-expand))
+  :hook (prog-mode . yas-minor-mode)
+  :init
+  (setq yas-snippet-dirs
+        '("~/.emacs.d/snippets"))
+
+  :config
+  (setq yas-also-auto-indent-first-line t
+        yas-also-indent-empty-lines t)
+  (yas-reload-all))
 
 ;;;; TODO List/table with LSP engines
 ;;;; `eglot'
 (use-package eglot
-  :hook ((go-mode c++-mode haskell-mode) . eglot-ensure)
+  :after envrc
+  :hook ((go-mode
+		  c++-mode
+		  haskell-mode
+		  python-mode ) . eglot-ensure)
   :config
-  (setq-default eglot-workspace-configuration
-                '((haskell
-                   (plugin
-                    (stan
-                     (globalOn . :json-false))))))  ;; disable stan
   (setq corfu-popupinfo-mode t
+		corfu-popupinfo-delay 1.0
 		eglot-autoshutdown t
 		eglot-confirm-server-initiated-edits nil))
 
@@ -664,8 +653,8 @@ Useful for prompts such as `eval-expression' and `shell-command'."
         org-src-preserve-indentation t
         org-src-tab-acts-natively nil
         org-edit-src-content-indentation 0)
-  :custom
   (require 'bb-org-capture))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PROGRAMMING LANGUAGES ;;
@@ -675,12 +664,10 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (defun personal-programming-hooks ()
   "Useful hooks for programming."
   (interactive)
-  (highlight-indent-guides-mode t)
+  (electric-pair-local-mode t)
   (subword-mode t)
   (hs-minor-mode t))
 
-;;;;;; `cpp-auto-include'
-(use-package cpp-auto-include)
 
 ;;;;;; `cc-mode'
 (use-package cc-mode
@@ -696,15 +683,13 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
   :hook ((c++-mode . personal-programming-hooks)
          (before-save . (lambda() #'(cpp-auto-include) #'(eglot-format))))
-  ;;  (add-hook 'c++-mode-hook 'personal-programming-hooks)
   :bind (:map c++-mode-map
               ("C-c C-c" . compile))
-  ;; :config
-  ;; (add-hook 'before-save-hook (lambda()
-  ;;				#'(cpp-auto-include)
-  ;;				#'(eglot-format)))
-  :custom
+  :config
   (setq-local compile-command "g++ -std=c++20 -Wall"))
+
+;;;;;; `cpp-auto-include'
+(use-package cpp-auto-include)
 
 ;;;;;; `clang-capf'
 (use-package clang-capf
@@ -712,6 +697,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :hook (c-mode c++-mode objc-mode)
   :config
   (add-to-list 'completion-at-point-functions #'clang-capf))
+
 
 ;;;;;; `go-mode'
 (use-package go-mode
@@ -731,17 +717,40 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :hook
   ((go-mode . personal-programming-hooks)
    (before-save . (lambda() #'(eglot-code-action-organize-imports 0) #'(eglot-format))))
-  :custom
+  :config
   (setq-local compile-command "go build -v && go test -v && go vet"
               tab-width 4))
 
-(use-package haskell-mode)
 
+;;;;;; `haskell-mode'
+(use-package haskell-mode
+  :hook
+  (haskell-mode . personal-programming-hooks)
+  :config
+  (setq-default eglot-workspace-configuration
+                '((haskell
+                   (plugin
+                    (stan
+                     (globalOn . :json-false))))))  ;; disable stan
+  (haskell-indent-mode t))
+
+;;;;;; `ormolu'
 (use-package ormolu
  :hook (haskell-mode . ormolu-format-on-save-mode)
  :bind
  (:map haskell-mode-map
    ("C-c r" . ormolu-format-buffer)))
+
+
+;;;;;; `python-mode'
+(use-package python-mode
+  :hook ((python-mode . personal-programming-hooks)
+		 (python-mode . flymake-ruff-load))
+  :config
+  (python-black-on-save-mode t))
+
+;;;;;; `flymake-ruff'
+(use-package flymake-ruff)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -790,6 +799,20 @@ This is the same as using \\[set-mark-command] with the prefix argument."
   (exchange-point-and-mark)
   (deactivate-mark nil))
 
+;; https://www.emacswiki.org/emacs/BackwardDeleteWord
+(defun delete-word (arg)
+  "Delete characters forward until encountering the end of a word.
+With argument, do this that many times."
+  (interactive "p")
+  (if (use-region-p)
+      (delete-region (region-beginning) (region-end))
+    (delete-region (point) (progn (forward-word arg) (point)))))
+
+(defun backward-delete-word (arg)
+  "Delete characters backward until encountering the end of a word.
+With argument, do this that many times."
+  (interactive "p")
+  (delete-word (- arg)))
 
 ;;;;;;;;;;;;;;;;;
 ;; Keybindings ;;
@@ -819,6 +842,7 @@ This is the same as using \\[set-mark-command] with the prefix argument."
 (global-set-key (kbd "C-c <right>") #'windmove-right)
 
 (global-set-key (kbd "C-M-=") #'count-words)
+(global-set-key (kbd "M-DEL") #'backward-delete-word)
 
 (global-set-key (kbd "C-`") 'push-mark-no-activate)
 (global-set-key (kbd "M-`") 'jump-to-mark)
