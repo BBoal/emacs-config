@@ -12,3 +12,4 @@ transient/history.el
 eln-cache/
 .last-package-update-day
 tutorial/
+*.bak
