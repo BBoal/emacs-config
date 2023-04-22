@@ -623,6 +623,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :hook ((go-mode
 		  c++-mode
 		  haskell-mode
+		  lua-mode
 		  python-mode ) . eglot-ensure)
   :config
   (setq corfu-popupinfo-mode t
@@ -821,9 +822,11 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 ;;;;; `anaconda-mode'
 (use-package anaconda-mode)
 
+;;;; `live-py-mode'
+(use-package live-py-mode)
 
-
-
+;;;; `lua-mode'
+(use-package lua-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Useful functions ;;
