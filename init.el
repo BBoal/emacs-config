@@ -56,7 +56,7 @@
 ;; User info
 (setq user-full-name    "Bruno Boal"
       user-login-name   "bb"
-      user-mail-address "bruno.boal@tutanota.com")
+      user-mail-address "egomet@bboal.com")
 
 ;; Nice welcome message
 (setq-default initial-scratch-message
@@ -90,6 +90,7 @@
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'text-mode-hook #'auto-fill-mode)
+(add-hook 'prog-mode-hook #'highlight-indent-guides-mode)
 
 ;; Select text is replaced with input
 (delete-selection-mode t)
@@ -123,6 +124,12 @@
 (put 'narrow-to-region 'disabled nil)
 (put 'dired-find-alternate-file 'disabled nil)
 (put 'upcase-region 'disabled nil)
+(setq safe-local-variable-values
+	  '((eval add-to-list 'whitespace-style 'indentation::tab)
+		(eval delete 'indentation whitespace-style)
+		(display-line-numbers . visual)
+		(eval indent-tabs-mode t)))
+
 
 ;; Save clipboard before replace
 (setq save-interprogram-paste-before-kill t)
@@ -146,6 +153,8 @@
 ;; Custom themes are ok
 (setq custom-safe-themes t)
 
+;; Notmuch
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/")
 
 ;;;;;;;;;;;;;;
 ;; Packages ;;
@@ -184,6 +193,28 @@
         auto-package-update-interval 2)
   :config
   (auto-package-update-maybe))
+
+;;;; `smtpmail'
+(use-package smtpmail
+  :ensure nil
+  :config
+  (setq smtpmail-default-smtp-server "smtp.mailbox.org"
+        smtpmail-smtp-server "smtp.mailbox.org"
+        smtpmail-stream-type 'ssl
+        smtpmail-smtp-service 465
+        smtpmail-queue-mail nil))
+
+;;;; `sendmail'
+(use-package sendmail
+  :ensure nil
+  :config
+  (setq send-mail-function 'smtpmail-send-it))
+
+;;;; `notmuch'
+(use-package notmuch
+  :config
+  (setq notmuch-identities '("Bruno Boal <bruno.boal@mailbox.org>")
+		notmuch-fcc-dirs   '(("bruno.boal@mailbox.org" . "mailbox/Sent"))))
 
 ;;;; `vterm'
 (use-package vterm)
@@ -252,6 +283,9 @@
         tab-bar-format-align-right
         tab-bar-format-global))
 ;;global-mode-string (TODO)
+
+;;;; `ef-themes'
+(use-package ef-themes)
 
 ;;;; `beframe'
 (use-package beframe
@@ -572,10 +606,20 @@ Useful for prompts such as `eval-expression' and `shell-command'."
         yas-also-indent-empty-lines t)
   (yas-reload-all))
 
+;;;; `consult-yasnippet'
+(use-package consult-yasnippet
+  :after (consult yasnippet))
+
 ;;;; TODO List/table with LSP engines
 ;;;; `eglot'
 (use-package eglot
   :after envrc
+  :bind (:map eglot-mode-map
+			  ("C-c r" . eglot-rename)
+			  ("C-c o" . eglot-code-action-organize-imports)
+			  ("C-c h" . eldoc)
+			  ("C-c f" . eglot-code-action-quickfix)
+			  ("C-c i" . eglot-code-action-inline))
   :hook ((go-mode
 		  c++-mode
 		  haskell-mode
@@ -583,6 +627,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :config
   (setq corfu-popupinfo-mode t
 		corfu-popupinfo-delay 1.0
+		eglot-sync-connect nil
 		eglot-autoshutdown t
 		eglot-confirm-server-initiated-edits nil))
 
@@ -635,7 +680,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :config
   (envrc-global-mode))
 
-;;;;;; `editorconfig'
+;;;; `editorconfig'
 (use-package editorconfig
   :config
   (editorconfig-mode))
@@ -655,6 +700,18 @@ Useful for prompts such as `eval-expression' and `shell-command'."
         org-edit-src-content-indentation 0)
   (require 'bb-org-capture))
 
+;;;; `expand-region'
+(use-package expand-region
+  :bind ("C-=" . er/expand-region))
+
+;; TODO try mc/insert-numbers
+;;;; `multiple-cursors'
+(use-package multiple-cursors
+  :bind (("C-S-c C-S-c" . mc/edit-lines)
+		 ( "C->" . mc/mark-next-like-this)
+		 ( "C-<" . mc/mark-previous-like-this)
+		 ("C-c C-<" . mc/mark-all-like-this)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PROGRAMMING LANGUAGES ;;
@@ -668,6 +725,15 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (subword-mode t)
   (hs-minor-mode t))
 
+;;;; `highlight-indent-guides'
+(use-package highlight-indent-guides
+  :config
+  (setq highlight-indent-guides-method #'character
+		highlight-indent-guides-responsive #'top))
+
+;;;;;; `dhall-mode'
+(use-package dhall-mode
+  :mode "\\.dhall\\'")
 
 ;;;;;; `cc-mode'
 (use-package cc-mode
@@ -752,6 +818,12 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 ;;;;;; `flymake-ruff'
 (use-package flymake-ruff)
 
+;;;;; `anaconda-mode'
+(use-package anaconda-mode)
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Useful functions ;;
@@ -818,7 +890,6 @@ With argument, do this that many times."
 ;; Keybindings ;;
 ;;;;;;;;;;;;;;;;;
 
-(global-set-key (kbd "C-=") #'er/expand-region)
 (global-set-key (kbd "<escape>") #'keyboard-escape-quit)
 (global-set-key (kbd "C-c a") #'org-agenda)
 (global-set-key (kbd "C-c c") #'org-capture)
