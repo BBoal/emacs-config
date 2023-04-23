@@ -26,6 +26,9 @@
 ;; Disabling the custom file.
 (setq-default custom-file (make-temp-file "emacs-custom-"))
 
+;; Do not show compilation warnings
+(setq warning-suppress-types '((comp)))
+
 (setq package-enable-at-startup nil
       inhibit-startup-message   t
       frame-resize-pixelwise    t  ; fine resize
