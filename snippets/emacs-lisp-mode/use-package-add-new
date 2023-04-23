@@ -1,0 +1,20 @@
+# -*- mode: snippet -*-
+# name: Add a new package
+# key: upa
+# --
+;;;; `$1'
+(use-package ${1:name}
+  ${2::init	$3}
+  ${4::bind (:map ${5:map-mode}
+  		 ( $6 ))}
+  ${7::hook ( $8 )}
+  ${9::config
+  ( $10 )}
+  ${0:$$(progn
+			(goto-char yas-snippet-beg)
+			(forward-line)
+			(delete-blank-lines)
+			(goto-char yas-snippet-end)
+			(previous-line)
+			(move-end-of-line 1)
+			(insert ")"))}
