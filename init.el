@@ -89,6 +89,7 @@
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
+(add-hook 'sh-mode-hook #'shfmt-on-save-mode)
 (add-hook 'text-mode-hook #'auto-fill-mode)
 (add-hook 'prog-mode-hook #'highlight-indent-guides-mode)
 
@@ -216,6 +217,9 @@
   (setq notmuch-identities '("Bruno Boal <bruno.boal@mailbox.org>")
 		notmuch-fcc-dirs   '(("bruno.boal@mailbox.org" . "mailbox/Sent"))))
 
+;;;; `pass'
+(use-package pass)
+
 ;;;; `vterm'
 (use-package vterm)
 
@@ -236,6 +240,9 @@
 (use-package magit
   :bind ("C-c s" . magit-status))
 
+;;;; `magit-annex'
+(use-package magit-annex)
+
 ;;;; `nov'
 (use-package nov)
 
@@ -244,6 +251,9 @@
 
 ;;;; `substitute'
 (use-package substitute)
+
+;;;; `pdf-tools'
+(use-package pdf-tools)
 
 ;;;; `chemtable'
 (use-package chemtable)
@@ -355,7 +365,11 @@
     (define-key which-key-mode-map (kbd keychords) 'which-key-C-h-dispatch))
 
   (setq which-key-sort-order 'which-key-local-then-key-order
+		which-key-max-description-length 0.75
+		which-key-show-remaining-keys t
         which-key-use-C-h-commands nil
+		which-key-side-window-max-height 0.333
+		which-key-side-window-max-width 0.4
         which-key-idle-delay 0.2)
   :init
   (which-key-mode)
@@ -636,6 +650,10 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package consult-eglot
   :after (consult eglot))
 
+
+;;;; `shfmt'
+(use-package shfmt)
+
 ;;;; `bicycle'
 (use-package bicycle
   :after outline
@@ -816,6 +834,9 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :config
   (python-black-on-save-mode t))
 
+;;;; `python-black'
+(use-package python-black)
+
 ;;;;;; `flymake-ruff'
 (use-package flymake-ruff)
 
@@ -824,6 +845,12 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `live-py-mode'
 (use-package live-py-mode)
+
+;;;; `poetry'
+(use-package poetry)
+
+;;;; `pyimport'
+;;(use-package pyimport)
 
 ;;;; `lua-mode'
 (use-package lua-mode)
