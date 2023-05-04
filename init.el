@@ -35,7 +35,7 @@
                     :foundry "CYEL"
                     :slant 'normal
                     :weight 'normal
-                    :height 120
+                    :height 125
                     :width 'normal)
 
 ;; Adding dirs to load-path
@@ -83,15 +83,14 @@
               tab-width 4
               scroll-margin 4
               indent-tabs-mode t
-              kill-do-not-save-duplicates t)
+              kill-do-not-save-duplicates t
+			  large-file-warning-threshold 30000000)
 
 ;; Hooks
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
-(add-hook 'sh-mode-hook #'shfmt-on-save-mode)
 (add-hook 'text-mode-hook #'auto-fill-mode)
-(add-hook 'prog-mode-hook #'highlight-indent-guides-mode)
 
 ;; Select text is replaced with input
 (delete-selection-mode t)
@@ -244,7 +243,12 @@
 (use-package magit-annex)
 
 ;;;; `nov'
-(use-package nov)
+(use-package nov
+  :config
+  (defun my-nov-font-setup ()
+  (face-remap-add-relative 'variable-pitch :family "AardvarkFixed Nerd Font Mono"
+                           :height 120))
+(add-hook 'nov-mode-hook 'my-nov-font-setup))
 
 ;;;; `project'
 (use-package project)
@@ -650,10 +654,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package consult-eglot
   :after (consult eglot))
 
-
-;;;; `shfmt'
-(use-package shfmt)
-
 ;;;; `bicycle'
 (use-package bicycle
   :after outline
@@ -742,6 +742,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (interactive)
   (electric-pair-local-mode t)
   (subword-mode t)
+  (highlight-indent-guides-mode t)
   (hs-minor-mode t))
 
 ;;;; `highlight-indent-guides'
@@ -916,6 +917,17 @@ With argument, do this that many times."
   (interactive "p")
   (delete-word (- arg)))
 
+(defun bb/kill-beg-line()
+  "Kills until the beginning of the text in current line.
+If no text exists between point and the start of the line,
+kills the text before point."
+	(interactive)
+	(let ((end (point)))
+	  (beginning-of-line-text)
+	  (if (= end (point))
+		  (kill-line 0)
+		(kill-region (point) end))))
+
 ;;;;;;;;;;;;;;;;;
 ;; Keybindings ;;
 ;;;;;;;;;;;;;;;;;
@@ -944,10 +956,11 @@ With argument, do this that many times."
 
 (global-set-key (kbd "C-M-=") #'count-words)
 (global-set-key (kbd "M-DEL") #'backward-delete-word)
+(global-set-key (kbd "M-k") #'bb/kill-beg-line)
 
-(global-set-key (kbd "C-`") 'push-mark-no-activate)
-(global-set-key (kbd "M-`") 'jump-to-mark)
-(define-key global-map [remap exchange-point-and-mark] 'exchange-point-and-mark-no-activate)
+(global-set-key (kbd "C-`") #'push-mark-no-activate)
+(global-set-key (kbd "M-`") #'jump-to-mark)
+(define-key global-map [remap exchange-point-and-mark] #'exchange-point-and-mark-no-activate)
 
 ;; (define-key map (kbd "<tab>")    #'log-view-toggle-entry-display)
 ;; (define-key map (kbd "<return>") #'log-view-find-revision)
