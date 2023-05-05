@@ -30,13 +30,15 @@
 ;;;;;;;;;;;;;;
 
 ;; Set default font
-(set-face-attribute 'default nil
-                    :family "AardvarkFixed Nerd Font Mono"
-                    :foundry "CYEL"
-                    :slant 'normal
-                    :weight 'normal
-                    :height 125
-                    :width 'normal)
+;; (set-face-attribute 'default nil
+;;                     :family "AardvarkFixed Nerd Font Mono"
+;;                     :foundry "CYEL"
+;;                     :slant 'normal
+;;                     :weight 'normal
+;;                     :height 130
+;;                     :width 'normal)
+
+(set-frame-font "AardvarkFixed Nerd Font Mono 13" nil t t)
 
 ;; Adding dirs to load-path
 (add-to-list 'load-path "~/.emacs.d/lisp")
@@ -46,12 +48,10 @@
 
 ;; Auxiliary files written in .tmp/ dir
 ;;; https://www.gnu.org/software/emacs/manual/html_node/efaq/Not-writing-files-to-the-current-directory.html
-(setq lock-file-name-transforms
-      '(("\\`/.*/\\([^/]+\\)\\'" "~/.emacs.d/.tmp/\\1" t)))
+(setq lock-file-name-transforms nil)
+(setq backup-directory-alist nil)
 (setq auto-save-file-name-transforms
       '(("\\`/.*/\\([^/]+\\)\\'" "~/.emacs.d/.tmp/\\1" t)))
-(setq backup-directory-alist
-      '((".*" . "~/.emacs.d/.tmp/backups/")))
 
 ;; User info
 (setq user-full-name    "Bruno Boal"
@@ -247,7 +247,7 @@
   :config
   (defun my-nov-font-setup ()
   (face-remap-add-relative 'variable-pitch :family "AardvarkFixed Nerd Font Mono"
-                           :height 120))
+                           :height 130))
 (add-hook 'nov-mode-hook 'my-nov-font-setup))
 
 ;;;; `project'
@@ -928,6 +928,33 @@ kills the text before point."
 		  (kill-line 0)
 		(kill-region (point) end))))
 
+(defun bb/newline-below()
+  "Inserts a new and indented line after the current one. Places
+point at the beginning of the newly created line."
+  (interactive)
+  (move-end-of-line nil)
+  (newline-and-indent))
+
+(defun bb/newline-above()
+    "Inserts a new and indented line before the current one. Places
+point at the beginning of the newly created line."
+  (interactive)
+  (move-beginning-of-line nil)
+  (newline-and-indent)
+  (forward-line -1))
+
+(defun bb/newline(arg)
+  "Inserts a new and indented line with ARG lines in between from
+the current line. Places point at the beginning of the newly created line."
+  (interactive "p")
+  (forward-line arg)
+  (when (< arg 0)
+	(forward-line -1))
+  (if (= (line-number-at-pos) 1)
+	  (bb/newline-above)
+	(bb/newline-below)))
+
+
 ;;;;;;;;;;;;;;;;;
 ;; Keybindings ;;
 ;;;;;;;;;;;;;;;;;
@@ -957,6 +984,11 @@ kills the text before point."
 (global-set-key (kbd "C-M-=") #'count-words)
 (global-set-key (kbd "M-DEL") #'backward-delete-word)
 (global-set-key (kbd "M-k") #'bb/kill-beg-line)
+
+(global-set-key (kbd "C-o") #'bb/newline-below)
+(global-set-key (kbd "M-o") #'bb/newline-above)
+(global-set-key (kbd "C-c o") #'bb/newline)
+
 
 (global-set-key (kbd "C-`") #'push-mark-no-activate)
 (global-set-key (kbd "M-`") #'jump-to-mark)
