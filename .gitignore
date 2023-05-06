@@ -4,6 +4,7 @@ tmp/
 .tmp/
 *#*#*
 **/#*#*
+**/*~
 auto-save-list/
 history
 bookmarks
@@ -14,3 +15,8 @@ eln-cache/
 tutorial/
 *.bak
 projects
+*.elc
+nov-places
+multisession/
+tramp
+.mc-lists.el
