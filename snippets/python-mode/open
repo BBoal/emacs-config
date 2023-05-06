@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: open file
+# key: open
+# expand-env: ((yas-indent-line 'fixed))
+# contributor: Bruno Boal <egomet@bboal.com>
+# --
+with open("${1:file}"${2:,"${3:mode}"}) as ${4:var}:
+    $0
