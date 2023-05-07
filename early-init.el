@@ -1,9 +1,9 @@
 ;;; early-init.el --- Emacs pre-initialisation config -*- lexical-binding: t -*-
 
-;; Copyright (c) 2023  Bruno Boal <bruno.boal@tutanota.com>
-;; Author: Bruno Boal <bruno.boal@tutanota.com>
+;; Copyright (c) 2023  Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
 ;; URL: https://github.com/BBoal/emacs-config
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "29.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -27,22 +27,55 @@
 (setq-default custom-file (make-temp-file "emacs-custom-"))
 
 ;; Do not show compilation warnings
-(setq warning-suppress-types '((comp)))
+(setq warning-suppress-types '((use-package) (bytecomp) (comp)))
 
-(setq package-enable-at-startup nil
-      inhibit-startup-message   t
-      frame-resize-pixelwise    t  ; fine resize
-      load-prefer-newer         t
-      package-native-compile    t) ; native compile packages
+;; garbage collection setup
+(let ((normal-gc-cons-threshold (* 64 1024 1024))
+      (init-gc-cons-threshold (* 512 1024 1024)))
+  (setq gc-cons-threshold init-gc-cons-threshold)
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+			  (setq gc-cons-threshold normal-gc-cons-threshold))))
 
-(scroll-bar-mode -1)               ; disable scrollbar
-(menu-bar-mode -1)                 ; disable menubar
-(tool-bar-mode -1)                 ; disable toolbar
-(tooltip-mode -1)                  ; help text in echo area
-(set-fringe-mode 10)               ; give some breathing room
 
-(setq gc-cons-threshold (* 1024 1024 1024))
+;; User info
+(setq user-full-name    "Bruno Boal"
+      user-login-name   "bb"
+      user-mail-address "egomet@bboal.com")
 
+(setq package-enable-at-startup   	    nil
+	  package-quickstart                t
+	  use-dialog-box              	    nil
+      inhibit-startup-screen     	    t
+	  inhibit-startup-buffer-menu       t
+      frame-resize-pixelwise            t
+	  frame-inhibit-implied-resize      t
+      load-prefer-newer                 t
+	  garbage-collection-messages       t
+      package-native-compile            t)
+
+(eval '(setq inhibit-startup-echo-area-message user-full-name))
+
+
+;; setting the UI
+(scroll-bar-mode -1)     ; disable scrollbar
+(menu-bar-mode   -1)     ; disable menubar
+(tool-bar-mode   -1)     ; disable toolbar
+(tooltip-mode    -1)     ; help text in echo area
+(set-fringe-mode 10)     ; give some breathing room
+
+(defun bb-emacs-invisible-dividers (_theme)
+  "Make windows dividers for THEME invisible."
+  (let ((bg (face-background 'default)))
+	(custom-set-faces
+	 `(fringe ((t :background ,bg :foreground ,bg)))
+	 `(window-divider ((t :background ,bg :foreground ,bg)))
+  	 `(window-divider-first-pixel ((t :background ,bg :foreground ,bg)))
+  	 `(window-divider-last-pixel ((t :background ,bg :foreground ,bg))))))
+
+(add-hook 'enable-theme-functions #'bb-emacs-invisible-dividers)
+
+;; Setting themes and avoid flash of light during startup
 (if (and (> (string-to-number(format-time-string "%H")) 6 )
          (< (string-to-number(format-time-string "%H")) 18))
     (progn

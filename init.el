@@ -1,9 +1,9 @@
 ;;; init.el --- BB's config -*- lexical-binding: t -*-
 
-;; Copyright (c) 2023  Bruno Boal <bruno.boal@tutanota.com>
-;; Author: Bruno Boal <bruno.boal@tutanota.com>
+;; Copyright (c) 2023  Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
 ;; URL: https://github.com/BBoal/emacs-config
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "29.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -30,52 +30,59 @@
 ;;;;;;;;;;;;;;
 
 ;; Set default font
-;; (set-face-attribute 'default nil
-;;                     :family "AardvarkFixed Nerd Font Mono"
-;;                     :foundry "CYEL"
-;;                     :slant 'normal
-;;                     :weight 'normal
-;;                     :height 130
-;;                     :width 'normal)
+(set-face-attribute 'default nil
+                    :family "AardvarkFixed Nerd Font Mono"
+                    :foundry "CYEL"
+                    :slant 'normal
+                    :weight 'normal
+                    :height 130
+                    :width 'normal)
 
-(set-frame-font "AardvarkFixed Nerd Font Mono 13" nil t t)
-
-;; Adding dirs to load-path
-(add-to-list 'load-path "~/.emacs.d/lisp")
+;;(set-frame-font "AardvarkFixed Nerd Font Mono 13" nil t t)
 
 ;; Custom functions/libraries/modules
+(add-to-list 'load-path "~/.emacs.d/lisp")
 (require 'bb-simple)
 
-;; Auxiliary files written in .tmp/ dir
 ;;; https://www.gnu.org/software/emacs/manual/html_node/efaq/Not-writing-files-to-the-current-directory.html
-(setq lock-file-name-transforms nil)
-(setq backup-directory-alist nil)
-(setq auto-save-file-name-transforms
-      '(("\\`/.*/\\([^/]+\\)\\'" "~/.emacs.d/.tmp/\\1" t)))
-
-;; User info
-(setq user-full-name    "Bruno Boal"
-      user-login-name   "bb"
-      user-mail-address "egomet@bboal.com")
+(setq create-lockfiles nil
+	  make-backup-files nil
+	  auto-save-file-name-transforms
+	  `(("\\`/.*/\\([^/]+\\)\\'"
+		 ,(concat (locate-user-emacs-file ".tmp")"/\\1") t)))
 
 ;; Nice welcome message
 (setq-default initial-scratch-message
               (let ((emacs-version (replace-regexp-in-string "\s\(.*\)\n" "" (emacs-version))))
                 (format ";; %s\n;; Initialization in %s\n;; %s, be disciplined and maintain focus.\n\n"
                         emacs-version (emacs-init-time "%.3fs") user-full-name)))
-;;(center-region (point-min) (point-max))))    FIXME
 
 ;; User preferences
-(setq delete-by-moving-to-trash t
-      column-number-mode t
-      display-time-24hr-format t
-      display-time-mode t
-      ispell-dictionary nil
-      sentence-end-double-space t
-      sentence-end-without-period nil
-      colon-double-space nil
-      use-hard-newlines nil
-      adaptive-fill-mode t)
+(setq column-number-mode t
+	  display-time-24hr-format t
+	  display-time-mode t
+	  ispell-dictionary nil
+	  sentence-end-double-space t
+	  sentence-end-without-period nil
+	  colon-double-space nil
+	  use-hard-newlines nil
+	  adaptive-fill-mode t
+	  bidi-inhibit-bpa t
+	  scroll-conservatively 101
+	  x-stretch-cursor t
+	  ring-bell-function 'ignore
+	  use-short-answers t
+	  confirm-kill-emacs nil
+      confirm-kill-processes nil
+	  save-interprogram-paste-before-kill t
+	  mode-line-defining-kbd-macro
+			(propertize " Macro" 'face 'mode-line-emphasis)
+	  revert-without-query '(".*")
+	  help-window-select t
+	  kill-whole-line t
+	  custom-safe-themes t
+	  frame-title-format '(multiple-frames "%b"
+										   ("" "Emacs - %b ")))
 
 (setq-default fill-column 100
 			  tab-always-indent 'complete
@@ -84,65 +91,32 @@
               scroll-margin 4
               indent-tabs-mode t
               kill-do-not-save-duplicates t
-			  large-file-warning-threshold 30000000)
+			  bidi-paragraph-direction 'left-to-right
+			  large-file-warning-threshold (* 30 1048 1048))
 
 ;; Hooks
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
-(add-hook 'text-mode-hook #'auto-fill-mode)
-
-;; Select text is replaced with input
-(delete-selection-mode t)
-
-;; Disable bidirectional reordering to improve performance of file with long lines TODO
-(setq bidi-inhibit-bpa t)
-(setq-default bidi-paragraph-direction 'left-to-right)
-
-;; Text scrolls progressively (trying default of 0) TRYME
-(setq scroll-conservatively 101)
-
-;; Cursor covers the actual space of a character
-(setq x-stretch-cursor t)
-
-;; No annoying sounds
-(setq visible-bell t)
-
-;; One letter answers
-;;;(fset 'yes-or-no-p 'y-or-n-p)
-(setq use-short-answers t)
-
-;; Disable exit and processes confirmation
-(setq confirm-kill-emacs nil
-      confirm-kill-processes nil)
-
-;; Ctrl-K removes the whole line
-(setq kill-whole-line t)
+(add-hook 'text-mode-hook #'turn-on-auto-fill)
 
 ;; No warnings and restrictions
-(put 'erase-buffer 'disabled nil)
-(put 'narrow-to-region 'disabled nil)
-(put 'dired-find-alternate-file 'disabled nil)
-(put 'upcase-region 'disabled nil)
+(dolist (unrestricted '(erase-buffer
+						narrow-to-region
+						narrow-to-page
+						dired-find-alternate-file
+						upcase-region
+						downcase-region))
+(put unrestricted 'disabled nil))
+
 (setq safe-local-variable-values
 	  '((eval add-to-list 'whitespace-style 'indentation::tab)
 		(eval delete 'indentation whitespace-style)
 		(display-line-numbers . visual)
 		(eval indent-tabs-mode t)))
 
-
-;; Save clipboard before replace
-(setq save-interprogram-paste-before-kill t)
-
-;; Changing modeline from "Def" to "Macro"
-(setq mode-line-defining-kbd-macro
-      (propertize " Macro" 'face 'mode-line-emphasis))
-
-;; Specify which files should be reverted without query
-(setq revert-without-query '(".*"))
-
-;; Automatically focus help buffer
-(setq help-window-select t)
+;; Select text is replaced with input
+(delete-selection-mode t)
 
 ;; Automatically loads the files if they change in another process
 (global-auto-revert-mode t)
@@ -150,11 +124,6 @@
 ;; File name shadow mode
 (file-name-shadow-mode t)
 
-;; Custom themes are ok
-(setq custom-safe-themes t)
-
-;; Notmuch
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/")
 
 ;;;;;;;;;;;;;;
 ;; Packages ;;
@@ -168,8 +137,8 @@
 
 ;; Highest number gets priority (what is not mentioned gets priority 0)
 (setq package-archive-priorities
-      '(("elpa" . 2)
-		("melpa" . 1)))
+      '(("melpa" . 2)
+		("elpa" . 1)))
 
 (package-initialize)
 
@@ -177,12 +146,9 @@
 (when (not package-archive-contents)
   (package-refresh-contents))
 
-(when (< emacs-major-version 29)
-  (unless (package-installed-p 'use-package)
-    (package-install 'use-package)))
-
 (require 'use-package-ensure)
-(setq use-package-always-ensure t)
+(setq use-package-always-ensure t
+  	  use-package-always-defer t)
 
 ;;;; `auto-package-update'
 (use-package auto-package-update
@@ -196,7 +162,6 @@
 
 ;;;; `smtpmail'
 (use-package smtpmail
-  :ensure nil
   :config
   (setq smtpmail-default-smtp-server "smtp.mailbox.org"
         smtpmail-smtp-server "smtp.mailbox.org"
@@ -206,12 +171,12 @@
 
 ;;;; `sendmail'
 (use-package sendmail
-  :ensure nil
   :config
   (setq send-mail-function 'smtpmail-send-it))
 
 ;;;; `notmuch'
 (use-package notmuch
+  :load-path "/usr/share/emacs/site-lisp/"
   :config
   (setq notmuch-identities '("Bruno Boal <bruno.boal@mailbox.org>")
 		notmuch-fcc-dirs   '(("bruno.boal@mailbox.org" . "mailbox/Sent"))))
@@ -230,7 +195,6 @@
 
 ;;;; `ediff'
 (use-package ediff
-  :ensure nil
   :config
   (setq ediff-split-window-function #'split-window-horizontally
         ediff-window-setup-function #'ediff-setup-windows-plain))
@@ -244,6 +208,7 @@
 
 ;;;; `nov'
 (use-package nov
+  :mode ("\\.epub\\'" . nov-mode)
   :config
   (defun my-nov-font-setup ()
   (face-remap-add-relative 'variable-pitch :family "AardvarkFixed Nerd Font Mono"
@@ -283,13 +248,14 @@
 
 ;;;; `modus-themes'
 (use-package modus-themes
+  :demand t
   :config
   (load-theme hour-sets-modus)
 
   ;; Clock in the modeline
   (setq display-time-string-forms
         '((propertize (concat " " 24-hours ":" minutes " ")
-                      'face 'keycast-key)))
+                      'face #'keycast-key)))
   (display-time-mode 1))
 
 (setq tab-bar-format                    ; Emacs 28
@@ -334,6 +300,7 @@
 
 ;;;; `keycast'
 (use-package keycast
+  :demand t
   :config
   (defun prot/keycast-current-window-p ()
     "Return non-nil if selected WINDOW modeline can show keycast."
@@ -509,7 +476,7 @@
 
 ;;;; `marginalia'
 (use-package marginalia
-  :config
+  :init
   (marginalia-mode))
 
 ;;;; `embark'
@@ -628,7 +595,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package consult-yasnippet
   :after (consult yasnippet))
 
-;;;; TODO List/table with LSP engines
 ;;;; `eglot'
 (use-package eglot
   :after envrc
@@ -692,7 +658,8 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (setq minions-prominent-modes
         (list 'defining-kbd-macro
               'flymake-mode))
-  (minions-mode 1))
+  :init
+  (minions-mode t))
 
 ;;;; `envrc'
 (use-package envrc
@@ -706,7 +673,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `org'
 (use-package org
-  :ensure nil
   :config
   (setq org-directory "~/org.d"
         org-agenda-files (directory-files-recursively
@@ -731,6 +697,12 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 		 ( "C-<" . mc/mark-previous-like-this)
 		 ("C-c C-<" . mc/mark-all-like-this)))
 
+;;;; `gnuplot'
+(use-package gnuplot
+  :mode ("\\.gp$\\'" . gnuplot-mode))
+
+;;;; `prism'
+(use-package prism)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PROGRAMMING LANGUAGES ;;
@@ -749,7 +721,9 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package highlight-indent-guides
   :config
   (setq highlight-indent-guides-method #'character
-		highlight-indent-guides-responsive #'top))
+		highlight-indent-guides-auto-enabled nil
+		highlight-indent-guides-responsive #'top)
+  (set-face-background 'highlight-indent-guides-top-character-face "#ef6f11"))
 
 ;;;;;; `dhall-mode'
 (use-package dhall-mode
@@ -757,7 +731,11 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;;;; `cc-mode'
 (use-package cc-mode
-  :init
+  :hook ((c++-mode . personal-programming-hooks)
+         (before-save . (lambda() #'(cpp-auto-include) #'(eglot-format))))
+  :bind (:map c++-mode-map
+              ("C-c C-c" . compile))
+  :config
   (defun project-find-root (dir)
     (when-let ((root (locate-dominating-file dir "CMakeLists.txt")))
       (cons 'CMakeLists root)))
@@ -766,12 +744,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
     (cdr project))
 
   (add-hook 'project-find-functions 'project-find-root)
-
-  :hook ((c++-mode . personal-programming-hooks)
-         (before-save . (lambda() #'(cpp-auto-include) #'(eglot-format))))
-  :bind (:map c++-mode-map
-              ("C-c C-c" . compile))
-  :config
   (setq-local compile-command "g++ -std=c++20 -Wall"))
 
 ;;;;;; `cpp-auto-include'
@@ -787,8 +759,12 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;;;; `go-mode'
 (use-package go-mode
-  :init
-  ;; (add-to-list 'exec-path "~/go/bin")
+  :bind (:map go-mode-map
+              ("C-c C-c" . compile))
+  :hook
+  ((go-mode . personal-programming-hooks)
+   (before-save . (lambda() #'(eglot-code-action-organize-imports 0) #'(eglot-format))))
+  :config
   (defun project-find-go-module (dir)
     (when-let ((root (locate-dominating-file dir "go.mod")))
       (cons 'go-module root)))
@@ -797,15 +773,9 @@ Useful for prompts such as `eval-expression' and `shell-command'."
     (cdr project))
 
   (add-hook 'project-find-functions #'project-find-go-module)
-
-  :bind (:map go-mode-map
-              ("C-c C-c" . compile))
-  :hook
-  ((go-mode . personal-programming-hooks)
-   (before-save . (lambda() #'(eglot-code-action-organize-imports 0) #'(eglot-format))))
-  :config
   (setq-local compile-command "go build -v && go test -v && go vet"
               tab-width 4))
+
 
 
 ;;;;;; `haskell-mode'
@@ -849,9 +819,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `poetry'
 (use-package poetry)
-
-;;;; `pyimport'
-;;(use-package pyimport)
 
 ;;;; `lua-mode'
 (use-package lua-mode)
@@ -928,31 +895,26 @@ kills the text before point."
 		  (kill-line 0)
 		(kill-region (point) end))))
 
-(defun bb/newline-below()
-  "Inserts a new and indented line after the current one. Places
-point at the beginning of the newly created line."
-  (interactive)
+(defun bb/newline-below(&optional arg)
+  "Inserts a new and indented line after the current one or, with prefix,
+after ARG number of lines."
+  (interactive "P")
+  (when arg
+	(forward-line arg))
   (move-end-of-line nil)
   (newline-and-indent))
 
-(defun bb/newline-above()
-    "Inserts a new and indented line before the current one. Places
-point at the beginning of the newly created line."
-  (interactive)
-  (move-beginning-of-line nil)
-  (newline-and-indent)
-  (forward-line -1))
-
-(defun bb/newline(arg)
-  "Inserts a new and indented line with ARG lines in between from
-the current line. Places point at the beginning of the newly created line."
-  (interactive "p")
-  (forward-line arg)
-  (when (< arg 0)
+(defun bb/newline-above(&optional arg)
+  "Inserts a new and indented line before the current one or, with prefix,
+before ARG number of lines."
+  (interactive "P")
+  (if arg
+	  (forward-line (- (1+ arg)))
 	(forward-line -1))
-  (if (= (line-number-at-pos) 1)
-	  (bb/newline-above)
-	(bb/newline-below)))
+  (if (/= (line-number-at-pos) 1)
+	  (bb/newline-below)
+	(newline-and-indent)
+	(forward-line -1)))
 
 
 ;;;;;;;;;;;;;;;;;
@@ -987,8 +949,6 @@ the current line. Places point at the beginning of the newly created line."
 
 (global-set-key (kbd "C-o") #'bb/newline-below)
 (global-set-key (kbd "M-o") #'bb/newline-above)
-(global-set-key (kbd "C-c o") #'bb/newline)
-
 
 (global-set-key (kbd "C-`") #'push-mark-no-activate)
 (global-set-key (kbd "M-`") #'jump-to-mark)
