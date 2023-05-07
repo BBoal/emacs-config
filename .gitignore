@@ -20,3 +20,5 @@ nov-places
 multisession/
 tramp
 .mc-lists.el
+package-quickstart.el
+.custom.el
