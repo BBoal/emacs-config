@@ -22,3 +22,4 @@ tramp
 .mc-lists.el
 package-quickstart.el
 .custom.el
+var/
