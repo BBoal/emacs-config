@@ -30,15 +30,15 @@
 ;;;;;;;;;;;;;;
 
 ;; Set default font
-(set-face-attribute 'default nil
-                    :family "AardvarkFixed Nerd Font Mono"
-                    :foundry "CYEL"
-                    :slant 'normal
-                    :weight 'normal
-                    :height 130
-                    :width 'normal)
+;; (set-face-attribute 'default nil
+;;                     :family "AardvarkFixed Nerd Font Mono"
+;;                     :foundry "CYEL"
+;;                     :slant 'normal
+;;                     :weight 'normal
+;;                     :height 130
+;;                     :width 'normal)
 
-;;(set-frame-font "AardvarkFixed Nerd Font Mono 13" nil t t)
+(set-frame-font "Iosevka Nerd Font Mono 13" nil t t)
 
 ;; Custom functions/libraries/modules
 (add-to-list 'load-path "~/.emacs.d/lisp")
@@ -49,7 +49,7 @@
 	  make-backup-files nil
 	  auto-save-file-name-transforms
 	  `(("\\`/.*/\\([^/]+\\)\\'"
-		 ,(concat (locate-user-emacs-file ".tmp")"/\\1") t)))
+		 ,(concat (locate-user-emacs-file ".tmp/")"\\1") t)))
 
 ;; Nice welcome message
 (setq-default initial-scratch-message
@@ -75,6 +75,7 @@
 	  confirm-kill-emacs nil
       confirm-kill-processes nil
 	  save-interprogram-paste-before-kill t
+	  kill-read-only-ok t
 	  mode-line-defining-kbd-macro
 			(propertize " Macro" 'face 'mode-line-emphasis)
 	  revert-without-query '(".*")
@@ -134,13 +135,13 @@
 (setq package-archives
 	  '(("elpa" . "https://elpa.gnu.org/packages/")
         ("melpa" . "https://melpa.org/packages/")))
-
 ;; Highest number gets priority (what is not mentioned gets priority 0)
 (setq package-archive-priorities
       '(("melpa" . 2)
-		("elpa" . 1)))
+		("elpa"  . 1)))
 
 (package-initialize)
+
 
 ;;;; `use-package'
 (when (not package-archive-contents)
@@ -150,15 +151,95 @@
 (setq use-package-always-ensure t
   	  use-package-always-defer t)
 
+
 ;;;; `auto-package-update'
 (use-package auto-package-update
-  :hook (auto-package-update-after . package-autoremove)
+  :hook ((auto-package-update-after . package-autoremove)
+		 (auto-package-update-after . package-quickstart-refresh))
   :init
   (setq auto-package-update-delete-old-versions t
         auto-package-update-hide-results t
         auto-package-update-interval 2)
   :config
   (auto-package-update-maybe))
+
+
+;;;; `persistent-scratch'
+(use-package persistent-scratch
+  :init
+  (setq persistent-scratch-save-file
+		(locate-user-emacs-file
+		 (concat user-emacs-directory ".tmp/.persistent_scratch")))
+  :config
+  (persistent-scratch-setup-default))
+
+
+;;;; `hl-todo'
+(use-package hl-todo
+  :init
+  (setq hl-todo-keyword-faces
+      '(("TODO"   . "#E1A920")
+        ("FIXME"  . "#FF4000")
+        ("DEBUG"  . "#A020F0")
+        ("GOTCHA" . "#BCD993")
+        ("STUB"   . "#1E90FF")))
+  :bind (:map hl-todo-mode-map
+  			  ("C-c t p" . hl-todo-previous)
+			  ("C-c t n" . hl-todo-next)
+			  ("C-c t o" . hl-todo-occur)
+			  ("C-c t i" . hl-todo-insert))
+  :config
+  (global-hl-todo-mode))
+
+
+;;;; `affe'
+(use-package affe
+  :config
+  ;; Manual preview key for `affe-grep'
+  (consult-customize affe-grep :preview-key "M-."))
+
+
+;;;; `goggles'
+(use-package goggles
+  :hook ((prog-mode text-mode) . goggles-mode)
+  :config
+  (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
+
+
+;;;; `smart-hungry-delete'
+(use-package smart-hungry-delete
+  :bind (("<backspace>" . smart-hungry-delete-backward-char)
+              ("C-d" . smart-hungry-delete-forward-char)))
+
+
+;;;; `jinx'
+(use-package jinx
+  :hook ( emacs-startup . global-jinx-mode )
+  :bind (( "M-$" . jinx-correct )
+		 ("C-M-$" . jinx-languages))
+  :config
+  (add-to-list 'vertico-multiform-categories
+             '(jinx grid (vertico-grid-annotate . 25)))
+  (vertico-multiform-mode 1))
+
+
+;;;; `osm'
+(use-package osm
+  :bind (("C-c o h" . osm-home)
+         ("C-c o s" . osm-search)
+         ("C-c o v" . osm-server)
+         ("C-c o t" . osm-goto)
+         ("C-c o x" . osm-gpx-show)
+         ("C-c o j" . osm-bookmark-jump))
+  :custom
+  ;; Take a look at the customization group `osm' for more options.
+  (osm-server 'default) ;; Configure the tile server
+  (osm-copyright t)     ;; Display the copyright information
+  :init
+  ;; Load Org link support
+  (with-eval-after-load 'org
+    (require 'osm-ol)))
+
 
 ;;;; `smtpmail'
 (use-package smtpmail
@@ -169,10 +250,12 @@
         smtpmail-smtp-service 465
         smtpmail-queue-mail nil))
 
+
 ;;;; `sendmail'
 (use-package sendmail
   :config
   (setq send-mail-function 'smtpmail-send-it))
+
 
 ;;;; `notmuch'
 (use-package notmuch
@@ -181,11 +264,14 @@
   (setq notmuch-identities '("Bruno Boal <bruno.boal@mailbox.org>")
 		notmuch-fcc-dirs   '(("bruno.boal@mailbox.org" . "mailbox/Sent"))))
 
+
 ;;;; `pass'
 (use-package pass)
 
+
 ;;;; `vterm'
 (use-package vterm)
+
 
 ;;;; `lin'
 (use-package lin
@@ -193,18 +279,22 @@
   (setq lin-face 'lin-red)
   (lin-global-mode))
 
+
 ;;;; `ediff'
 (use-package ediff
   :config
   (setq ediff-split-window-function #'split-window-horizontally
         ediff-window-setup-function #'ediff-setup-windows-plain))
 
+
 ;;;; `magit'
 (use-package magit
   :bind ("C-c s" . magit-status))
 
+
 ;;;; `magit-annex'
 (use-package magit-annex)
+
 
 ;;;; `nov'
 (use-package nov
@@ -215,17 +305,22 @@
                            :height 130))
 (add-hook 'nov-mode-hook 'my-nov-font-setup))
 
+
 ;;;; `project'
 (use-package project)
+
 
 ;;;; `substitute'
 (use-package substitute)
 
+
 ;;;; `pdf-tools'
 (use-package pdf-tools)
 
+
 ;;;; `chemtable'
 (use-package chemtable)
+
 
 ;;;; `wgrep'
 ;; Make grep buffers editable
@@ -238,6 +333,7 @@
   (setq wgrep-auto-save-buffer t
         wgrep-change-readonly-file t))
 
+
 ;;;; `rainbow-mode'
 (use-package rainbow-mode
   :bind (:map ctl-x-x-map
@@ -246,26 +342,29 @@
   (setq rainbow-ansi-colors nil
         rainbow-x-colors nil))
 
+
 ;;;; `modus-themes'
 (use-package modus-themes
   :demand t
   :config
   (load-theme hour-sets-modus)
-
   ;; Clock in the modeline
   (setq display-time-string-forms
         '((propertize (concat " " 24-hours ":" minutes " ")
                       'face #'keycast-key)))
   (display-time-mode 1))
 
+;; tab-bar tweaks
 (setq tab-bar-format                    ; Emacs 28
       '(tab-bar-format-tabs-groups
         tab-bar-format-align-right
         tab-bar-format-global))
 ;;global-mode-string (TODO)
 
+
 ;;;; `ef-themes'
 (use-package ef-themes)
+
 
 ;;;; `beframe'
 (use-package beframe
@@ -298,6 +397,7 @@
     (add-to-list 'consult-buffer-sources 'beframe--consult-source))
   (beframe-mode))
 
+
 ;;;; `keycast'
 (use-package keycast
   :demand t
@@ -323,9 +423,11 @@
                    mwheel-scroll))
     (add-to-list 'keycast-substitute-alist `(,event nil))))
 
+
 ;;;; `diredfl'
 (use-package diredfl
   :hook (dired-mode . diredfl-mode))
+
 
 ;;;; `which-key'
 (use-package which-key
@@ -346,6 +448,7 @@
   (which-key-mode)
   (which-key-setup-side-window-right-bottom))
 
+
 ;;;; `vertico'
 (use-package vertico
   ;; This works with `file-name-shadow-mode'.  When you are in a
@@ -356,21 +459,25 @@
   :init
   (vertico-mode))
 
+
 ;;;; `savehist'
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
   :config
-  (setq	history-delete-duplicates t
+  (setq savehist-file (locate-user-emacs-file "history")
+		history-delete-duplicates t
+		savehist-save-minibuffer-history t
         history-length 1000)
   :init
   (savehist-mode))
+
 
 ;;;; `consult'
 (use-package consult
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
          ("C-c h" . consult-history)
-         ("C-c m" . consult-mode-command)
+         ("C-c M-x" . consult-mode-command)
          ("C-c k" . consult-kmacro)
          ;; C-x bindings (ctl-x-map)
          ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
@@ -385,7 +492,7 @@
          ("C-M-#" . consult-register)
          ;; Other custom bindings
          ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-         ("C-h a" . apropos)                       ;; orig. apropos-command
+         ("C-h a" . apropos-command)               ;; orig. apropos-command
          ;; M-g bindings (goto-map)
          ("M-g e" . consult-compile-error)
          ("M-g g" . consult-goto-line)             ;; orig. goto-line
@@ -468,16 +575,19 @@
   ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
   )
 
+
 ;;;; `orderless'
 (use-package orderless
   :custom
   (completion-styles '(orderless basic))
   (completion-category-overrides '((file (styles basic partial-completion orderless)))))
 
+
 ;;;; `marginalia'
 (use-package marginalia
   :init
   (marginalia-mode))
+
 
 ;;;; `embark'
 (use-package embark
@@ -495,6 +605,7 @@
                  nil
                  (window-parameters (mode-line-format . none)))))
 
+
 ;;;; `embark-consult'
 (use-package embark-consult
   :after (embark consult)
@@ -504,10 +615,12 @@
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
+
 ;;;; `org-modern'
 (use-package org-modern
   :hook ((org-mode . org-modern-mode)
          (org-agenda-finalize . org-modern-agenda)))
+
 
 ;;;; `corfu'
 (use-package corfu
@@ -547,6 +660,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :init
   (global-corfu-mode))
 
+
 ;;;; `dabbrev'
 (use-package dabbrev
   ;; Swap M-/ and C-M-/
@@ -554,6 +668,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
          ("C-M-/" . dabbrev-expand))
   :custom
   (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
+
 
 ;;;; `cape'
 (use-package cape
@@ -577,6 +692,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (add-to-list 'completion-at-point-functions #'cape-abbrev)
   (add-to-list 'completion-at-point-functions #'cape-symbol))
 
+
 ;;;; `yasnippet'
 (use-package yasnippet
   :bind (:map yas-minor-mode-map
@@ -591,9 +707,11 @@ Useful for prompts such as `eval-expression' and `shell-command'."
         yas-also-indent-empty-lines t)
   (yas-reload-all))
 
+
 ;;;; `consult-yasnippet'
 (use-package consult-yasnippet
   :after (consult yasnippet))
+
 
 ;;;; `eglot'
 (use-package eglot
@@ -616,9 +734,11 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 		eglot-autoshutdown t
 		eglot-confirm-server-initiated-edits nil))
 
+
 ;;;; `consult-eglot'
 (use-package consult-eglot
   :after (consult eglot))
+
 
 ;;;; `bicycle'
 (use-package bicycle
@@ -631,10 +751,22 @@ Useful for prompts such as `eval-expression' and `shell-command'."
            #'(outline-minor-mode)
            #'(hs-minor-mode))))
 
-;;;; `beacon'
-(use-package beacon
+
+;; ;;;; `beacon'
+;; (use-package beacon
+;;   :config
+;;   (beacon-mode 1))
+
+;;;; `pulsar'
+(use-package pulsar
   :config
-  (beacon-mode 1))
+  (setq pulsar-pulse t
+        pulsar-delay 0.055
+        pulsar-iterations 10
+        pulsar-face 'pulsar-magenta
+        pulsar-highlight-face 'pulsar-blue)
+  (pulsar-global-mode 1))
+
 
 ;;;; `kind-icon'
 (use-package kind-icon
@@ -645,9 +777,11 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
+
 ;;;; `chezmoi'
 ;; TODO: Check how to integrate with CLI tool
 ;; (use-package chezmoi)
+
 
 ;;;; `minions'
 (use-package minions
@@ -661,15 +795,18 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :init
   (minions-mode t))
 
+
 ;;;; `envrc'
 (use-package envrc
   :config
   (envrc-global-mode))
 
+
 ;;;; `editorconfig'
 (use-package editorconfig
   :config
   (editorconfig-mode))
+
 
 ;;;; `org'
 (use-package org
@@ -685,9 +822,11 @@ Useful for prompts such as `eval-expression' and `shell-command'."
         org-edit-src-content-indentation 0)
   (require 'bb-org-capture))
 
+
 ;;;; `expand-region'
 (use-package expand-region
   :bind ("C-=" . er/expand-region))
+
 
 ;; TODO try mc/insert-numbers
 ;;;; `multiple-cursors'
@@ -697,12 +836,44 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 		 ( "C-<" . mc/mark-previous-like-this)
 		 ("C-c C-<" . mc/mark-all-like-this)))
 
+
 ;;;; `gnuplot'
 (use-package gnuplot
   :mode ("\\.gp$\\'" . gnuplot-mode))
 
+
 ;;;; `prism'
 (use-package prism)
+
+
+;;;; `highlight-indent-guides'
+(use-package highlight-indent-guides
+  :config
+  (defun bb-maybe--get-color(arg)
+	"It will return either a symbol or a color from the current palette."
+	(car
+	 (alist-get arg
+				(symbol-value
+				 (intern-soft
+				  (format "%s-palette"
+						  (car custom-enabled-themes)))))))
+
+  (defun bb-get-color(arg)
+	"To use with Ef or Modus themes. Get's the ARG color from the current
+theme palette, recursively if necessary."
+	(interactive)
+	(let ((maybe-color (bb-maybe--get-color arg)))
+	  (if (stringp maybe-color)
+		  maybe-color
+		(bb-maybe--get-color maybe-color))))
+
+  (setq highlight-indent-guides-method #'character
+		highlight-indent-guides-auto-enabled nil
+		highlight-indent-guides-responsive #'top)
+  (set-face-background
+   'highlight-indent-guides-top-character-face (bb-get-color 'cursor)))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PROGRAMMING LANGUAGES ;;
@@ -717,17 +888,11 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (highlight-indent-guides-mode t)
   (hs-minor-mode t))
 
-;;;; `highlight-indent-guides'
-(use-package highlight-indent-guides
-  :config
-  (setq highlight-indent-guides-method #'character
-		highlight-indent-guides-auto-enabled nil
-		highlight-indent-guides-responsive #'top)
-  (set-face-background 'highlight-indent-guides-top-character-face "#ef6f11"))
 
 ;;;;;; `dhall-mode'
 (use-package dhall-mode
   :mode "\\.dhall\\'")
+
 
 ;;;;;; `cc-mode'
 (use-package cc-mode
@@ -745,6 +910,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
   (add-hook 'project-find-functions 'project-find-root)
   (setq-local compile-command "g++ -std=c++20 -Wall"))
+
 
 ;;;;;; `cpp-auto-include'
 (use-package cpp-auto-include)

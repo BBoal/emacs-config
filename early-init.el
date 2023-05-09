@@ -27,32 +27,31 @@
 (setq-default custom-file (make-temp-file "emacs-custom-"))
 
 ;; Do not show compilation warnings
-(setq warning-suppress-types '((use-package) (bytecomp) (comp)))
+(setq warning-suppress-types '((use-package)(bytecomp)(comp))
+	  native-comp-async-report-warnings-errors  'silent
+      load-prefer-newer                         t
+	  package-enable-at-startup   	            nil
+	  package-quickstart                        t
+	  use-dialog-box              	            nil
+      inhibit-startup-screen     	            t
+	  inhibit-startup-buffer-menu               t
+      frame-resize-pixelwise                    t
+	  frame-inhibit-implied-resize              t
+	  garbage-collection-messages               t
+      package-native-compile                    t)
 
 ;; garbage collection setup
-(let ((normal-gc-cons-threshold (* 64 1024 1024))
+(let ((normal-gc-cons-threshold (* 128 1024 1024))
       (init-gc-cons-threshold (* 512 1024 1024)))
   (setq gc-cons-threshold init-gc-cons-threshold)
   (add-hook 'emacs-startup-hook
             (lambda ()
 			  (setq gc-cons-threshold normal-gc-cons-threshold))))
 
-
 ;; User info
 (setq user-full-name    "Bruno Boal"
       user-login-name   "bb"
       user-mail-address "egomet@bboal.com")
-
-(setq package-enable-at-startup   	    nil
-	  package-quickstart                t
-	  use-dialog-box              	    nil
-      inhibit-startup-screen     	    t
-	  inhibit-startup-buffer-menu       t
-      frame-resize-pixelwise            t
-	  frame-inhibit-implied-resize      t
-      load-prefer-newer                 t
-	  garbage-collection-messages       t
-      package-native-compile            t)
 
 (eval '(setq inhibit-startup-echo-area-message user-full-name))
 
