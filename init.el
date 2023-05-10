@@ -231,10 +231,10 @@
          ("C-c o t" . osm-goto)
          ("C-c o x" . osm-gpx-show)
          ("C-c o j" . osm-bookmark-jump))
-  :custom
+  :config
   ;; Take a look at the customization group `osm' for more options.
-  (osm-server 'default) ;; Configure the tile server
-  (osm-copyright t)     ;; Display the copyright information
+  (setq osm-server 'default  ;; Configure the tile server
+		osm-copyright t)     ;; Display the copyright information
   :init
   ;; Load Org link support
   (with-eval-after-load 'org
@@ -302,7 +302,7 @@
   :config
   (defun my-nov-font-setup ()
   (face-remap-add-relative 'variable-pitch :family "AardvarkFixed Nerd Font Mono"
-                           :height 130))
+                           :height 120))
 (add-hook 'nov-mode-hook 'my-nov-font-setup))
 
 
@@ -578,9 +578,9 @@
 
 ;;;; `orderless'
 (use-package orderless
-  :custom
-  (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion orderless)))))
+  :config
+  (setq completion-styles '(orderless basic)
+		completion-category-overrides '((file (styles basic partial-completion orderless)))))
 
 
 ;;;; `marginalia'
@@ -624,31 +624,30 @@
 
 ;;;; `corfu'
 (use-package corfu
+  :hook (minibuffer-setup . contrib/corfu-enable-always-in-minibuffer)
   :config
   ;; Adapted from Corfu's manual.
   (defun contrib/corfu-enable-always-in-minibuffer ()
-    "Enable Corfu in the minibuffer if MCT or Vertico is not active.
+    "Enable Corfu in the minibuffer if Vertico is not active.
 Useful for prompts such as `eval-expression' and `shell-command'."
     (unless (bound-and-true-p vertico--input)
       (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
                   corfu-popupinfo-delay nil)
       (corfu-mode 1)))
 
-  :hook (minibuffer-setup . contrib/corfu-enable-always-in-minibuffer)
-  :custom
-  (corfu-min-width 40)
-  (corfu-max-width 80)
-  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  (corfu-auto t)                 ;; Enable auto completion
-  (corfu-auto-delay 1)
-  (corfu-auto-prefix 3)
-  (corfu-separator ?\s)          ;; Orderless field separator
-  (corfu-quit-at-boundary 'separator)     ;; Never quit at completion boundary
-  (corfu-quit-no-match 'separator)        ;;  quit, even if there is no match
-  (corfu-preview-current nil)    ;; Disable current candidate preview
-  (corfu-preselect 'prompt)      ;; Disable candidate preselection
-  (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-  (corfu-scroll-margin 2)        ;; Use scroll margin
+  (setq corfu-min-width 40
+		corfu-max-width 80
+		corfu-cycle t                ;; Enable cycling for `corfu-next/previous'
+		corfu-auto nil                 ;; Enable auto completion
+		corfu-auto-delay 1
+		corfu-auto-prefix 3
+		corfu-separator ?\s          ;; Orderless field separator
+		corfu-quit-at-boundary 'separator     ;; Never quit at completion boundary
+		corfu-quit-no-match 'separator        ;;  quit, even if there is no match
+		corfu-preview-current nil    ;; Disable current candidate preview
+		corfu-preselect 'prompt      ;; Disable candidate preselection
+		corfu-on-exact-match nil     ;; Configure handling of exact matches
+		corfu-scroll-margin 2)        ;; Use scroll margin
   :bind
   (:map corfu-map
         ("J" . corfu-next)
@@ -666,8 +665,9 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   ;; Swap M-/ and C-M-/
   :bind (("M-/" . dabbrev-completion)
          ("C-M-/" . dabbrev-expand))
-  :custom
-  (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
+  :config
+  (setq dabbrev-ignored-buffer-regexps
+		'("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
 
 
 ;;;; `cape'
@@ -771,10 +771,9 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 ;;;; `kind-icon'
 (use-package kind-icon
   :after corfu
-  :custom
-  (kind-icon-use-icons t)
-  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
   :config
+  (setq kind-icon-use-icons t
+		kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
 
