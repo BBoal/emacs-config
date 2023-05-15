@@ -2,4 +2,5 @@
 # name: note
 # key: note
 # --
-`(format "%s %s -> " (make-string 2 (aref comment-start 0))  (format-time-string "%Y-%m-%d"))`
+`(comment-date-keyword
+	(yas-choose-value '("TODO" "NOTE" "FIXME" "BUG" "REMINDER" "TRY" "HACK")))`$0
