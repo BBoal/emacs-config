@@ -29,16 +29,13 @@
 ;; Settings ;;
 ;;;;;;;;;;;;;;
 
-;; Set default font
-;; (set-face-attribute 'default nil
-;;                     :family "AardvarkFixed Nerd Font Mono"
-;;                     :foundry "CYEL"
-;;                     :slant 'normal
-;;                     :weight 'normal
-;;                     :height 130
-;;                     :width 'normal)
 
-(set-frame-font "Iosevka Nerd Font Mono 13" nil t t)
+;; Set default font
+(set-face-attribute 'default nil
+                    :family "Iosevka Zenodotus Fixed"
+                    :height 130)
+
+;; (set-frame-font "AardvarkFixed Nerd Font Mono 13" nil t t)
 
 ;; Custom functions/libraries/modules
 (add-to-list 'load-path "~/.emacs.d/lisp")
@@ -81,6 +78,8 @@
 	  revert-without-query '(".*")
 	  help-window-select t
 	  kill-whole-line t
+	  mouse-yank-at-point t
+	  calendar-week-start-day 1
 	  custom-safe-themes t
 	  frame-title-format '(multiple-frames "%b"
 										   ("" "Emacs - %b ")))
@@ -134,7 +133,9 @@
 (require 'package)
 (setq package-archives
 	  '(("elpa" . "https://elpa.gnu.org/packages/")
-        ("melpa" . "https://melpa.org/packages/")))
+        ("melpa" . "https://melpa.org/packages/")
+		("elpa-devel" . "https://elpa.gnu.org/devel/")))
+
 ;; Highest number gets priority (what is not mentioned gets priority 0)
 (setq package-archive-priorities
       '(("melpa" . 2)
@@ -164,31 +165,45 @@
   (auto-package-update-maybe))
 
 
-;;;; `persistent-scratch'
-(use-package persistent-scratch
+;;;; `repeat'
+(use-package repeat
   :init
-  (setq persistent-scratch-save-file
-		(locate-user-emacs-file
-		 (concat user-emacs-directory ".tmp/.persistent_scratch")))
+  (repeat-mode)
   :config
-  (persistent-scratch-setup-default))
+  (setq repeat-on-final-keystroke t
+        repeat-exit-timeout 5
+        repeat-exit-key "<escape>"
+        repeat-keep-prefix nil
+        repeat-check-key t
+        repeat-echo-function 'ignore
+        ;; Technically, this is not in repeal.el, though it is the
+        ;; same idea.
+        set-mark-command-repeat-pop t))
+
+
+;;;; `vundo'
+(use-package vundo
+  :config
+  (setq vundo-glyph-alist vundo-unicode-symbols))
 
 
 ;;;; `hl-todo'
 (use-package hl-todo
-  :init
-  (setq hl-todo-keyword-faces
-      '(("TODO"   . "#E1A920")
-        ("FIXME"  . "#FF4000")
-        ("DEBUG"  . "#A020F0")
-        ("GOTCHA" . "#BCD993")
-        ("STUB"   . "#1E90FF")))
+  :config
+  (setq hl-todo-color-background nil
+		hl-todo-keyword-faces
+		'(("TODO"     . "#FFA623")
+          ("FIXME"    . "#FF4000")
+          ("BUG"    . "#A020F0")
+		  ("REMINDER" . "#1111EE")
+          ("TRY"   . "#1CFF0F")
+          ("HACK"     . "#1E90FF")))
   :bind (:map hl-todo-mode-map
   			  ("C-c t p" . hl-todo-previous)
 			  ("C-c t n" . hl-todo-next)
 			  ("C-c t o" . hl-todo-occur)
 			  ("C-c t i" . hl-todo-insert))
-  :config
+  :init
   (global-hl-todo-mode))
 
 
@@ -208,19 +223,32 @@
 
 ;;;; `smart-hungry-delete'
 (use-package smart-hungry-delete
+  :no-require t
   :bind (("<backspace>" . smart-hungry-delete-backward-char)
-              ("C-d" . smart-hungry-delete-forward-char)))
+         ("C-d" . smart-hungry-delete-forward-char)))
 
 
 ;;;; `jinx'
 (use-package jinx
+  :after vertico
+  :defines vertico-multiform-categories
   :hook ( emacs-startup . global-jinx-mode )
-  :bind (( "M-$" . jinx-correct )
+  :bind (( "M-$"  . jinx-correct )
 		 ("C-M-$" . jinx-languages))
   :config
+  (setq jinx-languages "en_GB pt_PT-preao"
+		jinx-include-faces '((prog-mode font-lock-doc-face)
+							 (conf-mode font-lock-comment-face))
+		jinx-exclude-regexps
+        '((t "[A-Z]+\\>"
+             "\\<[[:upper:]][[:lower:]]+\\>"
+             "\\w*?[0-9\.'\"-]\\w*"
+             "[a-z]+://\\S-+"
+             "<?[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>?")))
+
+  (vertico-multiform-mode 1)
   (add-to-list 'vertico-multiform-categories
-             '(jinx grid (vertico-grid-annotate . 25)))
-  (vertico-multiform-mode 1))
+             '(jinx grid (vertico-grid-annotate . 25))))
 
 
 ;;;; `osm'
@@ -262,7 +290,8 @@
   :load-path "/usr/share/emacs/site-lisp/"
   :config
   (setq notmuch-identities '("Bruno Boal <bruno.boal@mailbox.org>")
-		notmuch-fcc-dirs   '(("bruno.boal@mailbox.org" . "mailbox/Sent"))))
+		notmuch-fcc-dirs   '(("bruno.boal@mailbox.org" . "mailbox/Sent"))
+		notmuch-show-logo nil))
 
 
 ;;;; `pass'
@@ -301,8 +330,8 @@
   :mode ("\\.epub\\'" . nov-mode)
   :config
   (defun my-nov-font-setup ()
-  (face-remap-add-relative 'variable-pitch :family "AardvarkFixed Nerd Font Mono"
-                           :height 120))
+  (face-remap-add-relative 'variable-pitch :family "Iosevka Zenodotus Fixed"
+                           :height 130))
 (add-hook 'nov-mode-hook 'my-nov-font-setup))
 
 
@@ -426,7 +455,12 @@
 
 ;;;; `diredfl'
 (use-package diredfl
-  :hook (dired-mode . diredfl-mode))
+  :after dired
+  :hook (dired-mode . (lambda()
+						 (diredfl-mode)
+						 (gnus-dired-mode)))
+  :config
+  (require 'gnus-dired))
 
 
 ;;;; `which-key'
@@ -670,6 +704,38 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 		'("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
 
 
+;;;; `abbrev'
+(require 'abbrev)
+
+(setq abbrev-file-name (locate-user-emacs-file "bb-personal-abbrevs")
+	  only-global-abbrevs nil)
+
+(dolist (hook '(text-mode-hook prog-mode-hook git-commit-mode-hook))
+  (add-hook hook #'abbrev-mode))
+  ;; no confirmation on using ’abbrev-file-name’ to save abbreviations.
+(remove-hook 'save-some-buffers-functions #'abbrev--possibly-save)
+
+(define-key abbrev-map (kbd "C-x a u")  #'unexpand-abbrev)
+
+(define-abbrev-table
+  'global-abbrev-table '(("bmail" "egomet@bboal.com")
+						 ("bberg" "https://codeberg.org/BBoal")
+						 ("bhut"  "https://git.sr.ht/~bboal")
+						 ("blab"  "https://gitlab.com/bboal")
+						 ("bhub"  "https://github.com/BBoal")))
+(with-eval-after-load 'message
+  (define-abbrev-table
+	'message-mode-abbrev-table '(("gm" "Good morning, ")
+								 ("ga" "Good afternoon, ")
+								 ("ge" "Good evening, ")
+								 ("fyw" "I hope this email finds you well.\n")
+								 ("br" "Best regards,\nBruno Boal")
+								 ("ct" "Caros todos,\nEspero-vos bem.\n")
+								 ("atent" "Atentamente,\nBruno Boal")
+								 ("abest" "All the best,\nBruno Boal")
+								 ("unt" "Cheers, until next time,\nBruno Boal "))))
+
+
 ;;;; `cape'
 (use-package cape
   ;; Bind dedicated completion commands
@@ -695,9 +761,10 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `yasnippet'
 (use-package yasnippet
+  :demand t
   :bind (:map yas-minor-mode-map
-			  ("ç" . yas-expand))
-  :hook (prog-mode . yas-minor-mode)
+			  ("ç" . yas-maybe-expand))
+  :hook ((text-mode prog-mode) . yas-minor-mode)
   :init
   (setq yas-snippet-dirs
         '("~/.emacs.d/snippets"))
@@ -752,19 +819,15 @@ Useful for prompts such as `eval-expression' and `shell-command'."
            #'(hs-minor-mode))))
 
 
-;; ;;;; `beacon'
-;; (use-package beacon
-;;   :config
-;;   (beacon-mode 1))
-
 ;;;; `pulsar'
 (use-package pulsar
+  :demand t
   :config
   (setq pulsar-pulse t
         pulsar-delay 0.055
-        pulsar-iterations 10
-        pulsar-face 'pulsar-magenta
-        pulsar-highlight-face 'pulsar-blue)
+        pulsar-iterations 20
+        pulsar-face 'pulsar-green
+        pulsar-highlight-face 'pulsar-yellow)
   (pulsar-global-mode 1))
 
 
@@ -1060,7 +1123,7 @@ kills the text before point."
 		  (kill-line 0)
 		(kill-region (point) end))))
 
-(defun bb/newline-below(&optional arg)
+(defun bb/insert-newline-below(&optional arg)
   "Inserts a new and indented line after the current one or, with prefix,
 after ARG number of lines."
   (interactive "P")
@@ -1069,7 +1132,7 @@ after ARG number of lines."
   (move-end-of-line nil)
   (newline-and-indent))
 
-(defun bb/newline-above(&optional arg)
+(defun bb/insert-newline-above(&optional arg)
   "Inserts a new and indented line before the current one or, with prefix,
 before ARG number of lines."
   (interactive "P")
@@ -1080,6 +1143,23 @@ before ARG number of lines."
 	  (bb/newline-below)
 	(newline-and-indent)
 	(forward-line -1)))
+
+(defun bb/kill-ring-save-line()
+  "TODO save region if selected as argument"
+  (interactive)
+  (kill-ring-save (line-beginning-position) (line-end-position)))
+
+(defun bb/duplicate-line()
+  "TODO duplicate selected region if present"
+  (interactive)
+  (let ((dif-end-point
+		 (- (line-end-position) (point))))
+	(bb/kill-ring-save-line)
+	(move-end-of-line nil)
+	(newline)
+	(yank-in-context)
+	(cdr kill-ring)
+	(goto-char (- (point) dif-end-point))))
 
 
 ;;;;;;;;;;;;;;;;;
@@ -1103,17 +1183,20 @@ before ARG number of lines."
 (global-set-key (kbd "<f6>") #'whitespace-mode)
 (global-set-key (kbd "<f2>") #'revert-buffer)
 
-(global-set-key (kbd "C-c <up>")    #'windmove-up)
-(global-set-key (kbd "C-c <down>")  #'windmove-down)
-(global-set-key (kbd "C-c <left>")  #'windmove-left)
-(global-set-key (kbd "C-c <right>") #'windmove-right)
+(global-set-key (kbd "s-k") #'windmove-up)
+(global-set-key (kbd "s-j") #'windmove-down)
+(global-set-key (kbd "s-h") #'windmove-left)
+(global-set-key (kbd "s-l") #'windmove-right)
 
 (global-set-key (kbd "C-M-=") #'count-words)
 (global-set-key (kbd "M-DEL") #'backward-delete-word)
 (global-set-key (kbd "M-k") #'bb/kill-beg-line)
 
-(global-set-key (kbd "C-o") #'bb/newline-below)
-(global-set-key (kbd "M-o") #'bb/newline-above)
+(global-set-key (kbd "C-o") #'bb/insert-newline-below)
+(global-set-key (kbd "M-o") #'bb/insert-newline-above)
+
+(global-set-key (kbd "s-y") #'bb/kill-ring-save-line)
+(global-set-key (kbd "s-d") #'bb/duplicate-line)
 
 (global-set-key (kbd "C-`") #'push-mark-no-activate)
 (global-set-key (kbd "M-`") #'jump-to-mark)
