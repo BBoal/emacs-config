@@ -75,8 +75,8 @@
 (add-hook 'enable-theme-functions #'bb-emacs-invisible-dividers)
 
 ;; Setting themes and avoid flash of light during startup
-(if (and (> (string-to-number(format-time-string "%H")) 6 )
-         (< (string-to-number(format-time-string "%H")) 18))
+(if (and (> (string-to-number(format-time-string "%H")) 8 )
+         (< (string-to-number(format-time-string "%H")) 20))
     (progn
       (set-face-background 'default "white")
       (setq hour-sets-modus 'modus-operandi))
