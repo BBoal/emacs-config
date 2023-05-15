@@ -41,8 +41,8 @@
       package-native-compile                    t)
 
 ;; garbage collection setup
-(let ((normal-gc-cons-threshold (* 128 1024 1024))
-      (init-gc-cons-threshold (* 512 1024 1024)))
+(let ((normal-gc-cons-threshold (* 1024 1024 1024))
+      (init-gc-cons-threshold (* 4 1024 1024 1024)))
   (setq gc-cons-threshold init-gc-cons-threshold)
   (add-hook 'emacs-startup-hook
             (lambda ()
