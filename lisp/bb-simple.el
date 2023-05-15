@@ -27,30 +27,6 @@
 
 ;;; Code:
 
-(defcustom bb-search-todo-keywords
-	(concat "TODO\\|FIXME\\|NOTE\\|REVIEW"
-			"\\|HACK\\|WARNING\\|DEPRECATED\\|BUG")
-	"Regexp with search to-do keywords."
-	:type 'string
-	:group 'bb-search)
-
-(defun bb-search-occur-todo-keywords (&optional context)
-  "Produce Occur buffer with `bb-search-todo-keywords'.
-With optional numeric prefix argument for CONTEXT, show as many
-lines before and after each match.
-
-When called from Lisp CONTEXT must satisfy `natnump'.  A faulty
-value is read as 0.
-
-Also see `bb-search-grep-todo-keywords'."
-  (interactive "P")
-  (let* ((case-fold-search nil)
-		 (num (cond
-			   (current-prefix-arg
-				(prefix-numeric-value current-prefix-arg))
-			   (t (if (natnump context) context 0))))
-		 (buf-name (format "*keywords in <%s>*" (buffer-name))))
-	(occur-1 bb-search-todo-keywords num (list (current-buffer)) buf-name)))
 
 (defvar bb-common-url-regexp
   (concat
