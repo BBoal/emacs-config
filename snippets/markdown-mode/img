@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: img
+# key: img
+# --
+![alt text](${1:image url} ${2:"image Title"})
+$0

@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: define main
+# key: main
+# --
+{{ define "main" }}
+
+$0
+
+{{ end }}
