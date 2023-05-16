@@ -33,7 +33,7 @@
 ;; Set default font
 (set-face-attribute 'default nil
                     :family "Iosevka Zenodotus Fixed"
-                    :height 130)
+                    :height 135)
 
 ;; (set-frame-font "AardvarkFixed Nerd Font Mono 13" nil t t)
 
@@ -71,11 +71,13 @@
       use-short-answers t
       confirm-kill-emacs nil
       confirm-kill-processes nil
+      read-process-output-max (* 1024 1024)
       save-interprogram-paste-before-kill t
       kill-read-only-ok t
       mode-line-defining-kbd-macro
         (propertize " Macro" 'face 'mode-line-emphasis)
       revert-without-query '(".*")
+      imenu-auto-rescan t
       help-window-select t
       kill-whole-line t
       mouse-yank-at-point t
@@ -135,12 +137,14 @@
 (setq package-archives
       '(("elpa" . "https://elpa.gnu.org/packages/")
         ("melpa" . "https://melpa.org/packages/")
+        ("melpa-stable" . "https://stable.melpa.org/packages/")
         ("elpa-devel" . "https://elpa.gnu.org/devel/")))
 
 ;; Highest number gets priority (what is not mentioned gets priority 0)
 (setq package-archive-priorities
-      '(("melpa" . 2)
-        ("elpa"  . 1)))
+      '(("melpa" . 3)
+        ("melpa-stable" . 2)
+        ("elpa" . 1)))
 
 (package-initialize)
 
@@ -232,7 +236,6 @@
 ;;;; `jinx'
 (use-package jinx
   :after vertico
-  :defines vertico-multiform-categories
   :hook ( emacs-startup . global-jinx-mode )
   :bind (( "M-$"  . jinx-correct )
          ("C-M-$" . jinx-languages))
@@ -369,6 +372,7 @@
 (use-package rainbow-mode
   :bind (:map ctl-x-x-map
               ("c" . rainbow-mode))
+  :hook ((css-mode html-mode sass-mode) . rainbow-mode)
   :config
   (setq rainbow-ansi-colors nil
         rainbow-x-colors nil))
@@ -399,6 +403,7 @@
 
 ;;;; `beframe'
 (use-package beframe
+  :demand t
   :bind (:map global-map
               ("C-x f" . other-frame-preffix)    ; override `set-fill-column'
               ;; Replace the generic `buffer-menu'.  With a prefix argument, this
@@ -615,7 +620,7 @@
 ;;;; `orderless'
 (use-package orderless
   :config
-  (setq completion-styles '(orderless basic)
+  (setq completion-styles '(orderless basic initials)
         completion-category-overrides '((file (styles basic partial-completion orderless)))))
 
 
@@ -674,7 +679,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (setq corfu-min-width 40
         corfu-max-width 80
         corfu-cycle t                ;; Enable cycling for `corfu-next/previous'
-        corfu-auto nil               ;; Enable auto completion
+        corfu-auto t                 ;; Enable auto completion
         corfu-auto-delay 1
         corfu-auto-prefix 3
         corfu-separator ?\s          ;; Orderless field separator
@@ -686,7 +691,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
         corfu-scroll-margin 2)       ;; Use scroll margin
   :bind
   (:map corfu-map
-        ("SPC" . corfu-insert-separator)
+        ("s-SPC" . corfu-insert-separator)
         ("J" . corfu-next)
         ("K" . corfu-previous))
 
@@ -931,6 +936,21 @@ theme palette, recursively if necessary."
    'highlight-indent-guides-top-character-face (bb-get-color 'cursor)))
 
 
+;;;; `csv-mode'
+(use-package csv-mode
+  :mode	("\\.[Cc][Ss][Vv]\\'" . csv-mode)
+  :config
+  (setq csv-separators '("," ";" "|" " ")))
+
+
+;;;; `markdown-mode'
+(use-package markdown-mode
+  :mode
+  ("\\.md\\.html\\'" . markdown-mode)
+  :config
+  (add-to-list 'whitespace-cleanup-mode-ignore-modes 'markdown-mode))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PROGRAMMING LANGUAGES ;;
@@ -1026,6 +1046,7 @@ theme palette, recursively if necessary."
   :hook ((python-mode . personal-programming-hooks)
          (python-mode . flymake-ruff-load))
   :config
+  (setq python-indent-guess-indent-offset-verbose nil)
   (python-black-on-save-mode t))
 
 ;;;; `python-black'
@@ -1045,6 +1066,37 @@ theme palette, recursively if necessary."
 
 ;;;; `lua-mode'
 (use-package lua-mode)
+
+
+;;;; `inf-ruby'
+(use-package inf-ruby
+  :bind (:map inf-ruby-minor-mode-map
+  		      ("C-c r c" . inf-ruby-console-auto))
+  :hook (compilation-filter . inf-ruby-auto-enter-and-focus))
+
+;;;; `ruby-electric'
+(use-package ruby-electric)
+
+;;;; `ruby-end'
+(use-package ruby-end)
+
+;;;; `enh-ruby-mode'
+(use-package enh-ruby-mode
+  :after inf-ruby ruby-electric
+  :mode "\\.rb\\'"
+  :interpreter "ruby"
+  :functions inf-ruby-keys
+  :hook ((enh-ruby-mode . inf-ruby-minor-mode)
+         (enh-ruby-mode . ruby-electric-mode))
+  :config
+    (inf-ruby-keys))
+
+;;;; `rspec-mode'
+(use-package rspec-mode)
+
+;;;; `rubocopfmt'
+(use-package rubocopfmt)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Useful functions ;;
