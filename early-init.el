@@ -26,7 +26,36 @@
 ;; Disabling the custom file.
 (setq-default custom-file (make-temp-file "emacs-custom-"))
 
-;; Do not show compilation warnings
+
+;; garbage collection setup
+(let ((normal-gc-cons-threshold (* 1024 1024 1024))
+      (init-gc-cons-threshold (* 4 1024 1024 1024)))
+  (setq gc-cons-threshold init-gc-cons-threshold)
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+			  (setq gc-cons-threshold normal-gc-cons-threshold))))
+
+
+;; Setting themes and avoid flash of light during startup
+(if (and (> (string-to-number(format-time-string "%H")) 8 )
+         (< (string-to-number(format-time-string "%H")) 20))
+    (progn
+      (set-face-background 'default "white")
+      (setq hour-sets-modus 'modus-operandi))
+  (set-face-background 'default "black")
+  (setq hour-sets-modus 'modus-vivendi))
+
+
+;; setting the UI
+(modify-all-frames-parameters  `((left-fringe . 10)
+                                 (right-fringe . 10)
+                                 (vertical-scroll-bars)
+                                 (background-color . ,(face-background 'default))
+                                 (menu-bar-lines . 0)
+                                 (tool-bar-lines . 0)))
+
+
+;; Early options to consider
 (setq warning-suppress-types '((use-package)(bytecomp)(comp))
 	  native-comp-async-report-warnings-errors  'silent
       load-prefer-newer                         t
@@ -38,30 +67,9 @@
       frame-resize-pixelwise                    t
 	  frame-inhibit-implied-resize              t
 	  garbage-collection-messages               t
+      mode-line-format                          nil
       package-native-compile                    t)
 
-;; garbage collection setup
-(let ((normal-gc-cons-threshold (* 1024 1024 1024))
-      (init-gc-cons-threshold (* 4 1024 1024 1024)))
-  (setq gc-cons-threshold init-gc-cons-threshold)
-  (add-hook 'emacs-startup-hook
-            (lambda ()
-			  (setq gc-cons-threshold normal-gc-cons-threshold))))
-
-;; User info
-(setq user-full-name    "Bruno Boal"
-      user-login-name   "bb"
-      user-mail-address "egomet@bboal.com")
-
-(eval '(setq inhibit-startup-echo-area-message user-full-name))
-
-
-;; setting the UI
-(scroll-bar-mode -1)     ; disable scrollbar
-(menu-bar-mode   -1)     ; disable menubar
-(tool-bar-mode   -1)     ; disable toolbar
-(tooltip-mode    -1)     ; help text in echo area
-(set-fringe-mode 10)     ; give some breathing room
 
 (defun bb-emacs-invisible-dividers (_theme)
   "Make windows dividers for THEME invisible."
@@ -74,14 +82,13 @@
 
 (add-hook 'enable-theme-functions #'bb-emacs-invisible-dividers)
 
-;; Setting themes and avoid flash of light during startup
-(if (and (> (string-to-number(format-time-string "%H")) 8 )
-         (< (string-to-number(format-time-string "%H")) 20))
-    (progn
-      (set-face-background 'default "white")
-      (setq hour-sets-modus 'modus-operandi))
-  (set-face-background 'default "black")
-  (setq hour-sets-modus 'modus-vivendi))
+
+;; User info
+(setq user-full-name    "Bruno Boal"
+      user-login-name   "bb"
+      user-mail-address "egomet@bboal.com")
+
+(eval '(setq inhibit-startup-echo-area-message user-full-name))
 
 
 (provide 'early-init)
