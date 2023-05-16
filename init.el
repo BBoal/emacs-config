@@ -196,9 +196,9 @@
         '(("TODO"     . "#FFA623")
           ("NOTE"     . "#A31232")
           ("FIXME"    . "#FF4000")
-          ("BUG"      . "#A020F0")
+          ("REVIEW"   . "#A020F0")
           ("REMINDER" . "#1111EE")
-          ("TRY"      . "#1CFF0F")
+          ("TEMP"     . "#1CFF0F")
           ("HACK"     . "#1E90FF")))
   :bind (:map hl-todo-mode-map
               ("C-c t p" . hl-todo-previous)
