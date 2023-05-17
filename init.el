@@ -181,7 +181,7 @@
         repeat-keep-prefix nil
         repeat-check-key t
         repeat-echo-function 'ignore
-        ;; Technically, this is not in repeal.el, though it is the
+        ;; Technically, this is not in repeat.el, though it is the
         ;; same idea.
         set-mark-command-repeat-pop t))
 
@@ -293,8 +293,8 @@
 (use-package notmuch
   :load-path "/usr/share/emacs/site-lisp/"
   :config
-  (setq notmuch-identities '("Bruno Boal <bruno.boal@mailbox.org>")
-        notmuch-fcc-dirs   '(("bruno.boal@mailbox.org" . "mailbox/Sent"))
+  (setq notmuch-identities '("Bruno Boal <egomet@bboal.com>")
+        notmuch-fcc-dirs   '(("egomet@bboal.com" . "mailbox/Sent"))
         notmuch-show-logo nil))
 
 
@@ -345,7 +345,8 @@
 
 
 ;;;; `substitute'
-(use-package substitute)
+(use-package substitute
+  :demand t)
 
 
 ;;;; `pdf-tools'
@@ -619,8 +620,10 @@
 
 ;;;; `orderless'
 (use-package orderless
+  :demand t
   :config
-  (setq completion-styles '(orderless basic initials)
+  (setq completion-styles '(basic initials orderless)
+        orderless-matching-styles '(orderless-prefixes orderless-literal orderless-regexp)
         completion-category-overrides '((file (styles basic partial-completion orderless)))))
 
 
@@ -992,6 +995,7 @@ theme palette, recursively if necessary."
 ;;;;;; `cpp-auto-include'
 (use-package cpp-auto-include)
 
+
 ;;;;;; `clang-capf'
 (use-package clang-capf
   :after cape
@@ -1108,14 +1112,12 @@ theme palette, recursively if necessary."
   (interactive)
   (split-window-right)
   (windmove-right))
-(global-set-key (kbd "C-c -") 'split-window-right-and-focus)
 
 (defun split-window-below-and-focus ()
   "Spawn a new window below the current one and focus it."
   (interactive)
   (split-window-below)
   (windmove-down))
-(global-set-key (kbd "C-c \\") 'split-window-below-and-focus)
 
 (defun kill-buffer-and-delete-window ()
   "Kill the current buffer and delete its window."
@@ -1123,7 +1125,6 @@ theme palette, recursively if necessary."
   (progn
     (kill-this-buffer)
     (delete-window)))
-(global-set-key (kbd "C-c q") 'kill-buffer-and-delete-window)
 
 (defun revert-buffer-no-confirm ()
   "Revert buffer without confirmation."
@@ -1238,6 +1239,9 @@ before ARG number of lines."
 (global-set-key (kbd "s-j") #'windmove-down)
 (global-set-key (kbd "s-h") #'windmove-left)
 (global-set-key (kbd "s-l") #'windmove-right)
+(global-set-key (kbd "C-c -") 'split-window-right-and-focus)
+(global-set-key (kbd "C-c \\") 'split-window-below-and-focus)
+(global-set-key (kbd "C-c q") 'kill-buffer-and-delete-window)
 
 (global-set-key (kbd "C-M-=") #'count-words)
 (global-set-key (kbd "M-DEL") #'backward-delete-word)
