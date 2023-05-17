@@ -37,8 +37,8 @@
 
 
 ;; Setting themes and avoid flash of light during startup
-(if (and (> (string-to-number(format-time-string "%H")) 8 )
-         (< (string-to-number(format-time-string "%H")) 20))
+(if (and (> (string-to-number(format-time-string "%H")) 7 )
+         (< (string-to-number(format-time-string "%H")) 19))
     (progn
       (set-face-background 'default "white")
       (setq hour-sets-modus 'modus-operandi))
