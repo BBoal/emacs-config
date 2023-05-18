@@ -137,13 +137,11 @@
 (setq package-archives
       '(("elpa" . "https://elpa.gnu.org/packages/")
         ("melpa" . "https://melpa.org/packages/")
-        ("melpa-stable" . "https://stable.melpa.org/packages/")
         ("elpa-devel" . "https://elpa.gnu.org/devel/")))
 
 ;; Highest number gets priority (what is not mentioned gets priority 0)
 (setq package-archive-priorities
-      '(("melpa" . 3)
-        ("melpa-stable" . 2)
+      '(("melpa" . 2)
         ("elpa" . 1)))
 
 (package-initialize)
@@ -726,7 +724,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 ;; no confirmation on using ’abbrev-file-name’ to save abbreviations.
 (remove-hook 'save-some-buffers-functions #'abbrev--possibly-save)
 
-(define-key abbrev-map (kbd "C-x a u")  #'unexpand-abbrev)
+(define-key abbrev-map (kbd "u")  #'unexpand-abbrev) ;; C-x a u
 
 (define-abbrev-table
   'global-abbrev-table '(("bb" "Bruno Boal")
@@ -1024,7 +1022,6 @@ theme palette, recursively if necessary."
               tab-width 4))
 
 
-
 ;;;;;; `haskell-mode'
 (use-package haskell-mode
   :hook
@@ -1075,7 +1072,7 @@ theme palette, recursively if necessary."
 ;;;; `inf-ruby'
 (use-package inf-ruby
   :bind (:map inf-ruby-minor-mode-map
-  		      ("C-c r c" . inf-ruby-console-auto))
+              ("C-c r c" . inf-ruby-console-auto))
   :hook (compilation-filter . inf-ruby-auto-enter-and-focus))
 
 ;;;; `ruby-electric'
