@@ -33,17 +33,18 @@
   (setq gc-cons-threshold init-gc-cons-threshold)
   (add-hook 'emacs-startup-hook
             (lambda ()
-			  (setq gc-cons-threshold normal-gc-cons-threshold))))
+              (setq gc-cons-threshold normal-gc-cons-threshold))))
 
 
 ;; Setting themes and avoid flash of light during startup
-(if (and (> (string-to-number(format-time-string "%H")) 7 )
-         (< (string-to-number(format-time-string "%H")) 19))
-    (progn
-      (set-face-background 'default "white")
-      (setq hour-sets-modus 'modus-operandi))
-  (set-face-background 'default "black")
-  (setq hour-sets-modus 'modus-vivendi))
+(defun bb-emacs-avoid-flash-of-light-at-startup()
+  (if (and (> (string-to-number(format-time-string "%H")) 7 )
+           (< (string-to-number(format-time-string "%H")) 19))
+      (progn
+        (set-face-background 'default "white")
+        (setq hour-sets-modus 'modus-operandi))
+    (set-face-background 'default "black")
+    (setq hour-sets-modus 'modus-vivendi)))
 
 
 ;; setting the UI
@@ -56,29 +57,30 @@
 
 
 ;; Early options to consider
-(setq warning-suppress-types '((use-package)(bytecomp)(comp))
-	  native-comp-async-report-warnings-errors  'silent
-      load-prefer-newer                         t
-	  package-enable-at-startup   	            nil
-	  package-quickstart                        t
-	  use-dialog-box              	            nil
-      inhibit-startup-screen     	            t
-	  inhibit-startup-buffer-menu               t
-      frame-resize-pixelwise                    t
-	  frame-inhibit-implied-resize              t
-	  garbage-collection-messages               t
-      mode-line-format                          nil
-      package-native-compile                    t)
+(eval '(setq warning-suppress-types '((use-package)(bytecomp)(comp))
+             native-comp-async-report-warnings-errors  'silent
+             load-prefer-newer                         t
+             package-enable-at-startup                 nil
+             package-quickstart                        t
+             use-dialog-box                            nil
+             inhibit-startup-screen                    t
+             inhibit-startup-buffer-menu               t
+             frame-resize-pixelwise                    t
+             frame-inhibit-implied-resize              t
+             garbage-collection-messages               t
+             mode-line-format                          nil
+             package-native-compile                    t))
 
 
 (defun bb-emacs-invisible-dividers (_theme)
-  "Make windows dividers for THEME invisible."
+  "Source: https://github.com/protesilaos/dotfiles
+Make windows dividers for THEME invisible."
   (let ((bg (face-background 'default)))
-	(custom-set-faces
-	 `(fringe ((t :background ,bg :foreground ,bg)))
-	 `(window-divider ((t :background ,bg :foreground ,bg)))
-  	 `(window-divider-first-pixel ((t :background ,bg :foreground ,bg)))
-  	 `(window-divider-last-pixel ((t :background ,bg :foreground ,bg))))))
+    (custom-set-faces
+     `(fringe ((t :background ,bg :foreground ,bg)))
+     `(window-divider ((t :background ,bg :foreground ,bg)))
+     `(window-divider-first-pixel ((t :background ,bg :foreground ,bg)))
+     `(window-divider-last-pixel ((t :background ,bg :foreground ,bg))))))
 
 (add-hook 'enable-theme-functions #'bb-emacs-invisible-dividers)
 
@@ -90,6 +92,18 @@
 
 (eval '(setq inhibit-startup-echo-area-message user-full-name))
 
+
+(defun bb-emacs-re-enable-frame-theme (_frame)
+  "Source: https://github.com/protesilaos/dotfiles
+Re-enable active theme, if any, upon FRAME creation.
+Add this to `after-make-frame-functions' so that new frames do
+not retain the generic background set above."
+  (when-let ((theme (car custom-enabled-themes)))
+    (enable-theme theme)))
+
+(add-hook 'after-make-frame-functions #'bb-emacs-re-enable-frame-theme)
+
+(bb-emacs-avoid-flash-of-light-at-startup)
 
 (provide 'early-init)
 ;;; early-init.el ends here

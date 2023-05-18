@@ -403,12 +403,11 @@
 ;;;; `beframe'
 (use-package beframe
   :demand t
-  :bind (:map global-map
-              ("C-x f" . other-frame-preffix)    ; override `set-fill-column'
-              ;; Replace the generic `buffer-menu'.  With a prefix argument, this
-              ;; commands prompts for a frame.  Call the `buffer-menu' via M-x if
-              ;; you absolutely need the global list of buffers.
-              ("C-x C-b" . beframe-buffer-menu))
+  :bind (("C-x f" . other-frame-prefix)    ; override `set-fill-column'
+  ;; Replace the generic `buffer-menu'.  With a prefix argument, this
+  ;; commands prompts for a frame.  Call the `buffer-menu' via M-x if
+  ;; you absolutely need the global list of buffers.
+  ("C-x C-b" . beframe-buffer-menu))
   :config
   (setq beframe-functions-in-frames '(project-prompt-project-dir))
   (defvar consult-buffer-sources)
@@ -1215,13 +1214,14 @@ before ARG number of lines."
 ;; Keybindings ;;
 ;;;;;;;;;;;;;;;;;
 
-(global-set-key (kbd "<escape>") #'keyboard-escape-quit)
+(global-set-key (kbd "<escape>") #'bb-simple-keyboard-quit-dwim)
 (global-set-key (kbd "C-c a") #'org-agenda)
 (global-set-key (kbd "C-c c") #'org-capture)
 (global-set-key (kbd "C-c l") #'org-store-link)
 
 
 (global-set-key (kbd "C-c 0") #'kill-emacs)
+(global-set-key (kbd "C-c <delete>") #'delete-frame)
 (global-set-key (kbd "<f12>") #'save-buffer)
 (global-set-key (kbd "<f10>") #'save-buffers-kill-emacs)
 (global-set-key (kbd "<f9>") #'menu-bar-mode)
