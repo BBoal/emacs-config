@@ -1,9 +1,9 @@
 ;;; bb-simple.el --- Simple functions and commands -*- lexical-binding: t -*-
 
-;; Copyright (c) 2023    Bruno Boal <bruno.boal@tutanota.com>
-;; Author: Bruno Boal <bruno.boal@tutanota.com>
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
 ;; URL: https://github.com/BBoal/emacs-config
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "30.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
