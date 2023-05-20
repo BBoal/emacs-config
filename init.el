@@ -3,7 +3,7 @@
 ;; Copyright (c) 2023  Bruno Boal <egomet@bboal.com>
 ;; Author: Bruno Boal <egomet@bboal.com>
 ;; URL: https://github.com/BBoal/emacs-config
-;; Package-Requires: ((emacs "29.1"))
+;; Package-Requires: ((emacs "30.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -30,18 +30,19 @@
 ;;;;;;;;;;;;;;
 
 
-;; Set default font
+;;; Set default font
 (set-face-attribute 'default nil
                     :family "Iosevka Zenodotus Fixed"
                     :height 135)
 
 ;; (set-frame-font "AardvarkFixed Nerd Font Mono 13" nil t t)
 
-;; Custom functions/libraries/modules
+;;; Custom functions/libraries/modules
 (add-to-list 'load-path "~/.emacs.d/lisp")
 (require 'bb-simple)
+(require 'bb-misc)
 
-;;; https://www.gnu.org/software/emacs/manual/html_node/efaq/Not-writing-files-to-the-current-directory.html
+;;;;;; https://www.gnu.org/software/emacs/manual/html_node/efaq/Not-writing-files-to-the-current-directory.html
 (setq create-lockfiles nil
       make-backup-files nil
       auto-save-file-name-transforms
@@ -54,7 +55,7 @@
                 (format ";; %s\n;; Initialization in %s\n;; %s, be disciplined and maintain focus.\n\n"
                         emacs-version (emacs-init-time "%.3fs") user-full-name)))
 
-;; User preferences
+;;; User preferences
 (setq column-number-mode t
       display-time-24hr-format t
       display-time-mode t
@@ -96,13 +97,13 @@
               bidi-paragraph-direction 'left-to-right
               large-file-warning-threshold (* 30 1048 1048))
 
-;; Hooks
+;;; Hooks
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'text-mode-hook #'turn-on-auto-fill)
 
-;; No warnings and restrictions
+;;; No warnings and restrictions
 (dolist (unrestricted '(erase-buffer
                         narrow-to-region
                         narrow-to-page
@@ -132,7 +133,7 @@
 ;; Packages ;;
 ;;;;;;;;;;;;;;
 
-;;;; Initializing
+;;; Initializing
 (require 'package)
 (setq package-archives
       '(("elpa" . "https://elpa.gnu.org/packages/")
@@ -726,7 +727,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (define-key abbrev-map (kbd "u")  #'unexpand-abbrev) ;; C-x a u
 
 (define-abbrev-table
-  'global-abbrev-table '(("bb" "Bruno Boal")
+  'global-abbrev-table '(("BB" "Bruno Boal")
                          ("bmail" "egomet@bboal.com")
                          ("bberg" "https://codeberg.org/BBoal")
                          ("bhut"  "https://git.sr.ht/~bboal")
@@ -1236,9 +1237,9 @@ before ARG number of lines."
 (global-set-key (kbd "s-j") #'windmove-down)
 (global-set-key (kbd "s-h") #'windmove-left)
 (global-set-key (kbd "s-l") #'windmove-right)
-(global-set-key (kbd "C-c -") 'split-window-right-and-focus)
-(global-set-key (kbd "C-c \\") 'split-window-below-and-focus)
-(global-set-key (kbd "C-c q") 'kill-buffer-and-delete-window)
+(global-set-key (kbd "C-c -") #'split-window-right-and-focus)
+(global-set-key (kbd "C-c \\") #'split-window-below-and-focus)
+(global-set-key (kbd "C-c q") #'kill-buffer-and-delete-window)
 
 (global-set-key (kbd "C-M-=") #'count-words)
 (global-set-key (kbd "M-DEL") #'backward-delete-word)
@@ -1249,10 +1250,16 @@ before ARG number of lines."
 
 (global-set-key (kbd "s-y") #'bb/kill-ring-save-line)
 (global-set-key (kbd "s-d") #'bb/duplicate-line)
+(global-set-key (kbd "s-t") #'vterm-other-window)
 
 (global-set-key (kbd "C-`") #'push-mark-no-activate)
 (global-set-key (kbd "M-`") #'jump-to-mark)
 (define-key global-map [remap exchange-point-and-mark] #'exchange-point-and-mark-no-activate)
+
+(define-key global-map (kbd "s-c") #'bb-find-occurrence-direction-kill-sexp)
+(define-key global-map (kbd "s-a") #'bb-find-occurrence-direction-kill-around-sexp)
+(define-key global-map (kbd "s-z") #'bb-zap-from-char-to-end)
+(define-key global-map [remap zap-to-char] #'zap-up-to-char)
 
 ;; (define-key map (kbd "<tab>") #'log-view-toggle-entry-display)
 ;; (define-key map (kbd "<return>") #'log-view-find-revision)
