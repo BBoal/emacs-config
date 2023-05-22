@@ -28,75 +28,105 @@
 ;;; Code:
 
 
-(defun bb--find-occurrence(char count)
-  "Searches for CHAR, COUNTth times. Leaves point in occurrence
- or produces an error.
 
-Under the hood, the `search-forward' function is used."
-  (let ((bounds
-         (if (>= count 0) (line-end-position) (line-beginning-position))))
+(defun bb--find-occurrence(char count)
+  "This is a helper function usually called by:
+`bb-find-occurrence-direction-kill-sexp'
+`bb-find-occurrence-direction-kill-around-sexp'
+`bb-zap-from-char-to-end'
+
+Searches for CHAR, COUNTth times. Leaves point in occurrence
+or produces an error. To achieve this effect, the `search-forward'
+function is used.
+
+Returns DIR, with possible values of 1, when the search is meant to be
+forward; -1, when backward, or 0, when the occurrence matches either
+the values of `line-end-position' or `line-beginning-position'."
+
+  (let ((dir 1)
+        (bounds (line-end-position)))
+    (when (< count 0)
+      (setq dir -1
+            bounds (line-beginning-position)))
     (search-forward (format "%c" char) bounds nil count)
-    bounds))
+    (when (= (point) bounds)
+      (setq dir 0))
+    dir))
+
 
 
 (defun bb--kill-sexp-in-direction(dir)
   "This is a helper function. Usually called by
- `bb-find-occurrences-direction-kill-sexp' or
- `bb-find-occurrences-direction-kill-around-sexp'.
+`bb-find-occurrences-direction-kill-sexp' or
+`bb-find-occurrences-direction-kill-around-sexp'.
 
-If DIR is a positive number or 0, the kill direction is set forward and
-bounded to the end of the line.
-If DIR is negative, the direction becomes backward and the kill is bounded
-to the beginning of the line.
+DIR is the return value of `bb--find-occurrence'.
 
-On both cases, the function does not interfere with different lines, meaning
-that the kill is restricted to the same line used during the funcall."
-   (let ((direction 1)
-             (bounds (line-end-position)))
-         (when (< dir 0)
-           (setq direction -1
-                 bounds (line-beginning-position)))
-         (unless (eq (point) bounds)
-           (kill-sexp direction))))
+If DIR is 0, then the occurrence matched either `line-end-position' or
+`line-beginning-position'. On both cases, the function does not interfere
+with different lines, meaning that the kill is restricted to the same line
+and nothings gets evaluated.
+
+If DIR is 1, the kill direction is set forward and the next sexp is killed.
+Analogously, if DIR is -1, the previous sexp is killed."
+
+  (unless (= dir 0)
+    (kill-sexp dir)))
+
+
 
 ;;;###autoload
 (defun bb-find-occurrence-direction-kill-sexp(char count)
-  "A search is conducted for a specific CHAR, COUNTth times.
-If successful, then a sexp is killed in the direction defined by the sign of
-COUNT. The kill is restricted to the same line.
+  "A search is conducted for a specific CHAR, COUNTth times using the
+`bb--find-occurrence' helper function.
 
-See `bb--find-occurrence' and `bb--kill-sexp-in-direction'."
+If CHAR is found, the return value is then passed to `bb-kill-sexp-in-direction'
+for directional processing and possible `kill-sexp' usage."
+
   (interactive "cKill sexp next to char: \np")
-  (bb--find-occurrence char count)
-  (bb--kill-sexp-in-direction count))
+  (bb--kill-sexp-in-direction (bb--find-occurrence char count)))
+
+
 
 ;;;###autoload
 (defun bb-find-occurrence-direction-kill-around-sexp(char count)
-    "A search is conducted for a specific CHAR, COUNTth times.
-If successful, the area to kill is enlarged by means or moving the point
-away from the desired kill area. The kill direction is determined by the sign of
-the COUNT parameter and the kill command is restricted to the same line.
+  "A search is conducted for a specific CHAR, COUNTth times using the
+`bb--find-occurrence' helper function.
 
-See `bb--find-occurrence' and `bb--kill-sexp-in-direction'."
+If CHAR is found, the area to kill is enlarged by means or moving the point
+away from the desired kill area. The possible kill direction is determined
+by the return value of `bb--find-occurrence'. Processing is made with the
+`bb--kill-sexp-in-direction' function."
+
   (interactive "cKill sexp around char: \np")
-  (bb--find-occurrence char count)
-  (if (>= count 0) (forward-char -1) (forward-char 1))
-  (bb--kill-sexp-in-direction count))
+  (let ((kill-dir (bb--find-occurrence char count)))
+    (forward-char (- kill-dir))
+    (bb--kill-sexp-in-direction kill-dir)))
+
 
 
 ;;;###autoload
 (defun bb-zap-from-char-to-end(char count)
-  "If COUNT is positive, tries to find the COUNT'th occurrence of CHAR
-searching forward from point. Kills from occurrence to the end of line.
+  "A search is conducted for a specific CHAR, COUNTth times using the
+`bb--find-occurrence' helper function.
 
-If COUNT is negative, tries to find the COUNT'th occurrence of CHAR
-searching backward from point. Kills from occurrence to the beginning of
-the line."
+DIR is the return value of `bb--find-occurrence'.
+
+If DIR is 0, then the occurrence matched either `line-end-position' or
+`line-beginning-position'. On both cases, the function does not interfere
+with different lines, meaning that the kill is restricted to the same line
+and nothings gets evaluated.
+
+If DIR is 1, the kill is made from occurrence to `line-end-position'.
+Analogously, if DIR is -1, the kill goes to `line-beginning-position'."
+
   (interactive "cZap from char: \np")
-  (bb--find-occurrence char count)
-  (kill-region (point) (if (>= count 0)
-                           (line-end-position)
-                         (line-beginning-position))))
+  (let ((dir (bb--find-occurrence char count)))
+    (unless (= dir 0)
+      (kill-region (point) (if (= dir 1)
+                               (line-end-position)
+                             (line-beginning-position))))))
+
 
 
 (provide 'bb-misc)
