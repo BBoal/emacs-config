@@ -187,6 +187,7 @@
 
 ;;;; `vundo'
 (use-package vundo
+  :defer 2
   :config
   (setq vundo-glyph-alist vundo-unicode-symbols))
 
@@ -214,6 +215,7 @@
 
 ;;;; `affe'
 (use-package affe
+  :defer 2
   :config
   ;; Manual preview key for `affe-grep'
   (consult-customize affe-grep :preview-key "M-."))
@@ -234,6 +236,7 @@
 
 ;;;; `jinx'
 (use-package jinx
+  :defer 2
   :after vertico
   :hook ( emacs-startup . global-jinx-mode )
   :bind (( "M-$"  . jinx-correct )
@@ -256,6 +259,7 @@
 
 ;;;; `osm'
 (use-package osm
+  :defer 2
   :bind (("C-c o h" . osm-home)
          ("C-c o s" . osm-search)
          ("C-c o v" . osm-server)
@@ -274,6 +278,7 @@
 
 ;;;; `smtpmail'
 (use-package smtpmail
+  :defer 1
   :config
   (setq smtpmail-default-smtp-server "smtp.mailbox.org"
         smtpmail-smtp-server "smtp.mailbox.org"
@@ -284,12 +289,14 @@
 
 ;;;; `sendmail'
 (use-package sendmail
+  :defer 1
   :config
   (setq send-mail-function 'smtpmail-send-it))
 
 
 ;;;; `notmuch'
 (use-package notmuch
+  :defer 1
   :load-path "/usr/share/emacs/site-lisp/"
   :config
   (setq notmuch-identities '("Bruno Boal <egomet@bboal.com>")
@@ -298,15 +305,18 @@
 
 
 ;;;; `pass'
-(use-package pass)
+(use-package pass
+  :defer 2)
 
 
 ;;;; `vterm'
-(use-package vterm)
+(use-package vterm
+  :defer 2)
 
 
 ;;;; `lin'
 (use-package lin
+  :defer 2
   :config
   (setq lin-face 'lin-red)
   (lin-global-mode))
@@ -314,6 +324,7 @@
 
 ;;;; `ediff'
 (use-package ediff
+  :defer 2
   :config
   (setq ediff-split-window-function #'split-window-horizontally
         ediff-window-setup-function #'ediff-setup-windows-plain))
@@ -321,6 +332,7 @@
 
 ;;;; `magit'
 (use-package magit
+  :defer 2
   :bind ("C-c s" . magit-status))
 
 
@@ -330,6 +342,7 @@
 
 ;;;; `nov'
 (use-package nov
+  :defer 2
   :mode ("\\.epub\\'" . nov-mode)
   :config
   (defun my-nov-font-setup ()
@@ -359,6 +372,7 @@
 ;;;; `wgrep'
 ;; Make grep buffers editable
 (use-package wgrep
+  :defer 2
   :bind (:map grep-mode-map
               ("e" . wgrep-change-to-wgrep-mode)
               ("C-x C-q" . wgrep-change-to-wgrep-mode)
@@ -370,6 +384,7 @@
 
 ;;;; `rainbow-mode'
 (use-package rainbow-mode
+  :defer 2
   :bind (:map ctl-x-x-map
               ("c" . rainbow-mode))
   :hook ((css-mode html-mode sass-mode) . rainbow-mode)
@@ -403,6 +418,7 @@
 
 ;;;; `beframe'
 (use-package beframe
+  :defer 2
   :demand t
   :bind (("C-x f" . other-frame-prefix)    ; override `set-fill-column'
   ;; Replace the generic `buffer-menu'.  With a prefix argument, this
@@ -435,6 +451,7 @@
 
 ;;;; `keycast'
 (use-package keycast
+  :defer 1
   :demand t
   :config
   (defun prot/keycast-current-window-p ()
@@ -461,6 +478,7 @@
 
 ;;;; `diredfl'
 (use-package diredfl
+  :defer 2
   :after dired
   :hook (dired-mode . (lambda()
                         (diredfl-mode)
@@ -471,6 +489,7 @@
 
 ;;;; `which-key'
 (use-package which-key
+  :defer 1
   :config
   (dolist (keychords '("C-x <tab>"
                        "C-c <tab>"
@@ -503,6 +522,7 @@
 ;;;; `savehist'
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
+  :defer 2
   :config
   (setq savehist-file (locate-user-emacs-file "history")
         history-delete-duplicates t
@@ -514,6 +534,7 @@
 
 ;;;; `consult'
 (use-package consult
+  :defer 2
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
          ("C-c h" . consult-history)
@@ -618,6 +639,7 @@
 
 ;;;; `orderless'
 (use-package orderless
+  :defer 2
   :demand t
   :config
   (setq completion-styles '(basic initials orderless)
@@ -627,12 +649,14 @@
 
 ;;;; `marginalia'
 (use-package marginalia
+  :defer 2
   :init
   (marginalia-mode))
 
 
 ;;;; `embark'
 (use-package embark
+  :defer 2
   :bind
   (("C-." . embark-act)                 ;; pick some comfortable binding
    ("C-," . embark-dwim)                ;; good alternative: M-.
@@ -650,6 +674,7 @@
 
 ;;;; `embark-consult'
 (use-package embark-consult
+  :defer 2
   :after (embark consult)
   :demand t ; only necessary if you have the hook below
   ;; if you want to have consult previews as you move around an
@@ -680,7 +705,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (setq corfu-min-width 40
         corfu-max-width 80
         corfu-cycle t                ;; Enable cycling for `corfu-next/previous'
-        corfu-auto t                 ;; Enable auto completion
+        corfu-auto nil               ;; Enable auto completion
         corfu-auto-delay 1
         corfu-auto-prefix 3
         corfu-separator ?\s          ;; Orderless field separator
@@ -767,6 +792,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `yasnippet'
 (use-package yasnippet
+  :defer 2
   :demand t
   :hook ((text-mode prog-mode) . yas-minor-mode)
   :init
@@ -776,7 +802,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :config
   (setq yas-also-auto-indent-first-line t
         yas-also-indent-empty-lines t)
-  (define-key yas-minor-mode-map (kbd "ç") yas-maybe-expand)
+  (keymap-set yas-minor-mode-map "ç" yas-maybe-expand)
   (yas-reload-all))
 
 
@@ -939,19 +965,43 @@ theme palette, recursively if necessary."
 
 ;;;; `csv-mode'
 (use-package csv-mode
+  :defer 2
   :mode	("\\.[Cc][Ss][Vv]\\'" . csv-mode)
   :config
   (setq csv-separators '("," ";" "|" " ")))
+
+
+;;;; `adoc-mode'
+(use-package adoc-mode
+  :defer 2
+  :mode
+  ("\\.adoc\\'" . adoc-mode))
 
 
 ;;;; `markdown-mode'
 (use-package markdown-mode
   :mode
   ("\\.md\\.html\\'" . markdown-mode)
+  ("README\\.md\\'" . gfm-mode)
   :config
-  (add-to-list 'whitespace-cleanup-mode-ignore-modes 'markdown-mode))
+  (setq markdown-command
+        (concat
+         (executable-find "pandoc")
+         " --from=markdown --to=html5"
+         " --standalone --mathjax --highlight-style=pygments"))
+  (with-eval-after-load 'markdown-mode
+    (remove-hook 'before-save-hook #'delete-trailing-whitespace)))
 
 
+;;;; `vc'
+(use-package vc
+  :demand t
+  :config
+;;  (with-eval-after-load 'vc-mode
+  ;;  (define-key vc-git-log-view-mode-map (kbd "s") vc-log-search)
+  (keymap-set vc-git-log-view-mode-map "s" #'vc-log-search))
+;;  (define-key vc-git-log-view-mode-map (kbd "<tab>") log-view-toggle-entry-display)
+;;  (define-key vc-git-log-view-mode-map (kbd "<return>") log-view-find-revision))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PROGRAMMING LANGUAGES ;;
@@ -1189,7 +1239,7 @@ before ARG number of lines."
       (forward-line (- (1+ arg)))
     (forward-line -1))
   (if (/= (line-number-at-pos) 1)
-      (bb/newline-below)
+      (bb/insert-newline-below)
     (newline-and-indent)
     (forward-line -1)))
 
@@ -1215,55 +1265,58 @@ before ARG number of lines."
 ;; Keybindings ;;
 ;;;;;;;;;;;;;;;;;
 
-(global-set-key (kbd "<escape>") #'bb-simple-keyboard-quit-dwim)
-(global-set-key (kbd "C-c a") #'org-agenda)
-(global-set-key (kbd "C-c c") #'org-capture)
-(global-set-key (kbd "C-c l") #'org-store-link)
+(keymap-global-set "<escape>" #'bb-simple-keyboard-quit-dwim)
+(keymap-global-set "C-c a" #'org-agenda)
+(keymap-global-set "C-c c" #'org-capture)
+(keymap-global-set "C-c l" #'org-store-link)
 
-
-(global-set-key (kbd "C-c 0") #'kill-emacs)
-(global-set-key (kbd "C-c <delete>") #'delete-frame)
-(global-set-key (kbd "<f12>") #'save-buffer)
-(global-set-key (kbd "<f10>") #'save-buffers-kill-emacs)
-(global-set-key (kbd "<f9>") #'menu-bar-mode)
-(global-set-key (kbd "<f8>") (lambda ()
+(keymap-global-set "C-c 0" #'kill-emacs)
+(keymap-global-set "C-c <delete>" #'delete-frame)
+(keymap-global-set "<f12>" #'save-buffer)
+(keymap-global-set "<f10>" #'save-buffers-kill-emacs)
+(keymap-global-set "<f9>" #'menu-bar-mode)
+(keymap-global-set "<f8>" (lambda ()
                                (interactive)
                                (find-file "~/.emacs.d/init.el")))
-(global-set-key (kbd "<f7>") #'bb-simple-cycle-display-line-numbers)
-(global-set-key (kbd "<f6>") #'whitespace-mode)
-(global-set-key (kbd "<f2>") #'revert-buffer-no-confirm)
+(keymap-global-set "<f7>" #'bb-simple-cycle-display-line-numbers)
+(keymap-global-set "<f6>" #'whitespace-mode)
+(keymap-global-set "<f2>" #'revert-buffer-no-confirm)
 
-(global-set-key (kbd "s-k") #'windmove-up)
-(global-set-key (kbd "s-j") #'windmove-down)
-(global-set-key (kbd "s-h") #'windmove-left)
-(global-set-key (kbd "s-l") #'windmove-right)
-(global-set-key (kbd "C-c -") #'split-window-right-and-focus)
-(global-set-key (kbd "C-c \\") #'split-window-below-and-focus)
-(global-set-key (kbd "C-c q") #'kill-buffer-and-delete-window)
+(keymap-global-set "s-k" #'windmove-up)
+(keymap-global-set "s-j" #'windmove-down)
+(keymap-global-set "s-h" #'windmove-left)
+(keymap-global-set "s-l" #'windmove-right)
+(keymap-global-set "C-c -" #'split-window-right-and-focus)
+(keymap-global-set "C-c \\" #'split-window-below-and-focus)
+(keymap-global-set "C-c q" #'kill-buffer-and-delete-window)
 
-(global-set-key (kbd "C-M-=") #'count-words)
-(global-set-key (kbd "M-DEL") #'backward-delete-word)
-(global-set-key (kbd "M-k") #'bb/kill-beg-line)
+(keymap-global-set "C-M-=" #'count-words)
+(keymap-global-set "M-DEL" #'backward-delete-word)
+(keymap-global-set "M-k" #'bb/kill-beg-line)
 
-(global-set-key (kbd "C-o") #'bb/insert-newline-below)
-(global-set-key (kbd "M-o") #'bb/insert-newline-above)
+(keymap-global-set "C-o" #'bb/insert-newline-below)
+(keymap-global-set "M-o" #'bb/insert-newline-above)
 
-(global-set-key (kbd "s-y") #'bb/kill-ring-save-line)
-(global-set-key (kbd "s-d") #'bb/duplicate-line)
-(global-set-key (kbd "s-t") #'vterm-other-window)
+(keymap-global-set "s-y" #'bb/kill-ring-save-line)
+(keymap-global-set "s-d" #'bb/duplicate-line)
+(keymap-global-set "s-t" #'vterm-other-window)
 
-(global-set-key (kbd "C-`") #'push-mark-no-activate)
-(global-set-key (kbd "M-`") #'jump-to-mark)
-(define-key global-map [remap exchange-point-and-mark] #'exchange-point-and-mark-no-activate)
+(keymap-global-set "C-+" #'push-mark-no-activate)
+(keymap-global-set "M-+" #'jump-to-mark)
+;; (define-key global-map [remap exchange-point-and-mark] #'exchange-point-and-mark-no-activate)
 
-(define-key global-map (kbd "s-c") #'bb-find-occurrence-direction-kill-sexp)
-(define-key global-map (kbd "s-a") #'bb-find-occurrence-direction-kill-around-sexp)
-(define-key global-map (kbd "s-z") #'bb-zap-from-char-to-end)
-(define-key global-map [remap zap-to-char] #'zap-up-to-char)
+(keymap-global-set "s-c" #'bb-find-occurrence-direction-kill-sexp)
+(keymap-global-set "s-a" #'bb-find-occurrence-direction-kill-around-sexp)
+(keymap-global-set "s-z" #'bb-zap-from-char-to-end)
+(keymap-global-set "M-z" #'zap-up-to-char)
 
-;; (define-key map (kbd "<tab>") #'log-view-toggle-entry-display)
-;; (define-key map (kbd "<return>") #'log-view-find-revision)
-;; (define-key map (kbd "s") #'vc-log-search)
+(keymap-global-set "<home>" #'beginning-of-visual-line)
+(keymap-global-set "<end>" #'end-of-visual-line)
+
+;; 2023-05-22  FIXME => Symbol's value as variable is void: vc-log-mode-map
+;; (define-key vc-log-mode-map (kbd "s") #'vc-log-search)
+;; (define-key log-view-mode-map (kbd "<tab>") #'log-view-toggle-entry-display)
+;; (define-key log-view-mode-map (kbd "<return>") #'log-view-find-revision)
 
 
 (provide 'init)
