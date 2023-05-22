@@ -35,7 +35,8 @@
 Under the hood, the `search-forward' function is used."
   (let ((bounds
          (if (>= count 0) (line-end-position) (line-beginning-position))))
-    (search-forward (format "%c" char) bounds nil count)))
+    (search-forward (format "%c" char) bounds nil count)
+    bounds))
 
 
 (defun bb--kill-sexp-in-direction(dir)
@@ -50,14 +51,13 @@ to the beginning of the line.
 
 On both cases, the function does not interfere with different lines, meaning
 that the kill is restricted to the same line used during the funcall."
-  (if (>= dir 0)
-      (setq direction 1
-            bounds (line-end-position))
-    (setq direction -1
-          bounds (line-beginning-position)))
-  (unless (eq (point) bounds)
-    (kill-sexp direction)))
-
+   (let ((direction 1)
+             (bounds (line-end-position)))
+         (when (< dir 0)
+           (setq direction -1
+                 bounds (line-beginning-position)))
+         (unless (eq (point) bounds)
+           (kill-sexp direction))))
 
 ;;;###autoload
 (defun bb-find-occurrence-direction-kill-sexp(char count)
@@ -80,7 +80,7 @@ the COUNT parameter and the kill command is restricted to the same line.
 See `bb--find-occurrence' and `bb--kill-sexp-in-direction'."
   (interactive "cKill sexp around char: \np")
   (bb--find-occurrence char count)
-  (if (>= count 0) (left-char) (right-char))
+  (if (>= count 0) (forward-char -1) (forward-char 1))
   (bb--kill-sexp-in-direction count))
 
 
