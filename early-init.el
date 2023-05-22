@@ -3,7 +3,7 @@
 ;; Copyright (c) 2023  Bruno Boal <egomet@bboal.com>
 ;; Author: Bruno Boal <egomet@bboal.com>
 ;; URL: https://github.com/BBoal/emacs-config
-;; Package-Requires: ((emacs "29.1"))
+;; Package-Requires: ((emacs "30.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
