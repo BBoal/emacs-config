@@ -105,26 +105,61 @@ by the return value of `bb--find-occurrence'. Processing is made with the
 
 
 
+(defun bb--find-2nd-delimiter(char dir)
+  "This is a helper function called by `bb-change-inside-char-pairs' to get
+the second pair of a delimiter of a given CHAR.
+
+The delimiter pairs are in an associative list. If CHAR is not present in the
+list, it is assumed that CHAR is the closing delimiter for CHAR.
+
+DIR will let you work on both directions with open<->closing as well as
+closing<->open delimiters."
+
+  (let* ((pairs '((?\( . ?\))
+                  (?\{ . ?\})
+                  (?\[ . ?\])
+                  (?\` . ?\')
+                  (?\< . ?\>)))
+         (closing-delim (if (>= dir 0)
+                            (cdr (assq char pairs))
+                          (car (rassq char pairs)))))
+    (bb--find-occurrence (or closing-delim char)
+                           dir)))
+
+
+
 ;;;###autoload
 (defun bb-change-inside-char-pairs(char count)
-  "."
+  "The main goal of this function is to kill the \"inside\" of a CHAR delimiter
+group.
+Helper function `bb--find-occurrence' and `bb--find-2nd-delimiter' are used for
+that effect. The first will get point to CHAR and returns the direction of
+the search. The latter function gets point to the closing delimiter of CHAR
+"
   (interactive "cChange pair: \np")
-  (let* ((count-pairs (cond
-                      ((> count 0) (- (* count 2) 1))
-                      ((< count 0) (+ (* count 2) 1))
-                      (t 0)))
-         (search-dir (bb--find-occurrence char count-pairs))
-         (first-char (point)))
-    (bb--find-occurrence char search-dir)
-    (forward-char (- search-dir))
+
+  (let ((pair-num (cond
+                   ((= count 0) 1)
+                   (t (abs count))))
+        (abs-count (if (>= count 0) 1 -1)))
+
+    (while (> pair-num 1)
+      (bb--find-2nd-delimiter char (bb--find-occurrence char abs-count))
+      (setq pair-num (1- pair-num)))
+
+    (bb--find-occurrence char abs-count)
+    (setq first-char (point))
+    (bb--find-2nd-delimiter char abs-count)
+    (forward-char (- abs-count))
     (kill-region first-char (point))))
 
 
 
 ;;;###autoload
 (defun bb-change-around-char-pairs(char count)
-  "."
-  (interactive "cChange pair: \np")
+  "Similiar to `bb-change-inside-char-pairs' but also kills surrounding
+delimiters."
+  (interactive "cDelete around pair: \np")
   (bb-change-inside-char-pairs char count)
   (delete-forward-char 1)
   (delete-forward-char -1))
