@@ -106,6 +106,32 @@ by the return value of `bb--find-occurrence'. Processing is made with the
 
 
 ;;;###autoload
+(defun bb-change-inside-char-pairs(char count)
+  "."
+  (interactive "cChange pair: \np")
+  (let* ((count-pairs (cond
+                      ((> count 0) (- (* count 2) 1))
+                      ((< count 0) (+ (* count 2) 1))
+                      (t 0)))
+         (search-dir (bb--find-occurrence char count-pairs))
+         (first-char (point)))
+    (bb--find-occurrence char search-dir)
+    (forward-char (- search-dir))
+    (kill-region first-char (point))))
+
+
+
+;;;###autoload
+(defun bb-change-around-char-pairs(char count)
+  "."
+  (interactive "cChange pair: \np")
+  (bb-change-inside-char-pairs char count)
+  (delete-forward-char 1)
+  (delete-forward-char -1))
+
+
+
+;;;###autoload
 (defun bb-zap-from-char-to-end(char count)
   "A search is conducted for a specific CHAR, COUNTth times using the
 `bb--find-occurrence' helper function.
