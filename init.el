@@ -333,7 +333,7 @@
 ;;;; `magit'
 (use-package magit
   :defer 2
-  :bind ("C-c s" . magit-status))
+  :bind ("C-c m s" . magit-status))
 
 
 ;;;; `magit-annex'
@@ -537,8 +537,9 @@
   :defer 2
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
-         ("C-c h" . consult-history)
+         ("C-c s" . consult-history)
          ("C-c M-x" . consult-mode-command)
+         ("C-h h m" . consult-man)
          ("C-c k" . consult-kmacro)
          ;; C-x bindings (ctl-x-map)
          ("C-x M-:" . consult-complex-command)   ;; orig. repeat-complex-command
@@ -577,8 +578,8 @@
          ;; Isearch integration
          ("M-s e" . consult-isearch-history)
          :map isearch-mode-map
-         ("M-e" . consult-isearch-history)    ;; orig. isearch-edit-string
-         ("M-s e" . consult-isearch-history)  ;; orig. isearch-edit-string
+         ("M-s" . consult-isearch-history)    ;; orig. isearch-edit-string
+         ("M-s s" . consult-isearch-history)  ;; orig. isearch-edit-string
          ("M-s l" . consult-line)        ;; needed by consult-line to detect isearch
          ("M-s L" . consult-line-multi)  ;; needed by consult-line to detect isearch
          ;; Minibuffer history
@@ -1266,9 +1267,9 @@ before ARG number of lines."
 ;;;;;;;;;;;;;;;;;
 
 (keymap-global-set "<escape>" #'bb-simple-keyboard-quit-dwim)
-(keymap-global-set "C-c a" #'org-agenda)
-(keymap-global-set "C-c c" #'org-capture)
-(keymap-global-set "C-c l" #'org-store-link)
+(keymap-global-set "C-c o a" #'org-agenda)
+(keymap-global-set "C-c o c" #'org-capture)
+(keymap-global-set "C-c o l" #'org-store-link)
 
 (keymap-global-set "C-c 0" #'kill-emacs)
 (keymap-global-set "C-c <delete>" #'delete-frame)
@@ -1305,8 +1306,12 @@ before ARG number of lines."
 (keymap-global-set "M-+" #'jump-to-mark)
 ;; (define-key global-map [remap exchange-point-and-mark] #'exchange-point-and-mark-no-activate)
 
-(keymap-global-set "s-c" #'bb-find-occurrence-direction-kill-sexp)
-(keymap-global-set "s-a" #'bb-find-occurrence-direction-kill-around-sexp)
+(keymap-global-set "C-c n" #'bb-find-occurrence-direction-kill-sexp)
+(keymap-global-set "C-c a" #'bb-find-occurrence-direction-kill-around-sexp)
+
+(keymap-global-set "s-i" #'bb-change-inside-char-pairs)
+(keymap-global-set "s-a" #'bb-change-around-char-pairs)
+
 (keymap-global-set "s-z" #'bb-zap-from-char-to-end)
 (keymap-global-set "M-z" #'zap-up-to-char)
 
