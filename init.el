@@ -816,17 +816,16 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package eglot
   :after envrc
   :bind (:map eglot-mode-map
-              ("C-c r" . eglot-rename)
-              ("C-c o" . eglot-code-action-organize-imports)
-              ("C-c h" . eldoc)
-              ("C-c f" . eglot-code-action-quickfix)
-              ("C-c i" . eglot-code-action-inline))
-  :hook ((go-mode
-          c++-mode
-          haskell-mode
-          lua-mode
-          python-mode ) . eglot-ensure)
+              ("C-c e r" . eglot-rename)
+              ("C-c e o" . eglot-code-action-organize-imports)
+              ("C-c e h" . eldoc)
+              ("C-c e f" . eglot-code-action-quickfix)
+              ("C-c e i" . eglot-code-action-inline))
   :config
+  (dolist (langs '(go-mode-hook c++-mode-hook haskell-mode-hook lua-mode-hook
+                                python-mode-hook racket-mode-hook))
+    (add-hook langs 'eglot-ensure))
+                                
   (setq corfu-popupinfo-mode t
         corfu-popupinfo-delay 1.0
         eglot-sync-connect nil
@@ -1118,6 +1117,11 @@ theme palette, recursively if necessary."
 
 ;;;; `lua-mode'
 (use-package lua-mode)
+
+
+;;;; `racket-mode'
+(use-package racket-mode)
+  
 
 
 ;;;; `inf-ruby'
