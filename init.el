@@ -825,7 +825,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (dolist (langs '(go-mode-hook c++-mode-hook haskell-mode-hook lua-mode-hook
                                 python-mode-hook racket-mode-hook))
     (add-hook langs 'eglot-ensure))
-                                
+
   (setq corfu-popupinfo-mode t
         corfu-popupinfo-delay 1.0
         eglot-sync-connect nil
@@ -989,19 +989,22 @@ theme palette, recursively if necessary."
          (executable-find "pandoc")
          " --from=markdown --to=html5"
          " --standalone --mathjax --highlight-style=pygments"))
-  (with-eval-after-load 'markdown-mode
-    (remove-hook 'before-save-hook #'delete-trailing-whitespace)))
+  (defun no-delete-whitespace()
+    (remove-hook 'before-save-hook #'delete-trailing-whitespace :local))
+  (add-hook 'markdown-mode-hook 'no-delete-whitespace))
 
 
 ;;;; `vc'
 (use-package vc
   :demand t
   :config
-;;  (with-eval-after-load 'vc-mode
-  ;;  (define-key vc-git-log-view-mode-map (kbd "s") vc-log-search)
-  (keymap-set vc-git-log-view-mode-map "s" #'vc-log-search))
-;;  (define-key vc-git-log-view-mode-map (kbd "<tab>") log-view-toggle-entry-display)
-;;  (define-key vc-git-log-view-mode-map (kbd "<return>") log-view-find-revision))
+  (require 'vc-git)
+  (require 'add-log)
+  (require 'log-view)
+  ;;  (require 'vc-dir)  ;; 2023-05-26  NOTE => Take a look into it
+  (keymap-set vc-git-log-view-mode-map "s" #'vc-log-search)
+  (keymap-set vc-git-log-view-mode-map "<tab>" #'log-view-toggle-entry-display)
+  (keymap-set vc-git-log-view-mode-map "<return>" #'log-view-find-revision))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PROGRAMMING LANGUAGES ;;
@@ -1121,7 +1124,7 @@ theme palette, recursively if necessary."
 
 ;;;; `racket-mode'
 (use-package racket-mode)
-  
+
 
 
 ;;;; `inf-ruby'
@@ -1271,9 +1274,12 @@ before ARG number of lines."
 ;;;;;;;;;;;;;;;;;
 
 (keymap-global-set "<escape>" #'bb-simple-keyboard-quit-dwim)
-(keymap-global-set "C-c o a" #'org-agenda)
-(keymap-global-set "C-c o c" #'org-capture)
-(keymap-global-set "C-c o l" #'org-store-link)
+
+(defvar-keymap s-org-prefix-map
+  "a" #'org-agenda
+  "c" #'org-capture
+  "l" #'org-store-link)
+(keymap-global-set "s-o" s-org-prefix-map)
 
 (keymap-global-set "C-c 0" #'kill-emacs)
 (keymap-global-set "C-c <delete>" #'delete-frame)
@@ -1291,8 +1297,8 @@ before ARG number of lines."
 (keymap-global-set "s-j" #'windmove-down)
 (keymap-global-set "s-h" #'windmove-left)
 (keymap-global-set "s-l" #'windmove-right)
-(keymap-global-set "C-c -" #'split-window-right-and-focus)
-(keymap-global-set "C-c \\" #'split-window-below-and-focus)
+(keymap-global-set "s-\\" #'split-window-right-and-focus)
+(keymap-global-set "s-\-" #'split-window-below-and-focus)
 (keymap-global-set "C-c q" #'kill-buffer-and-delete-window)
 
 (keymap-global-set "C-M-=" #'count-words)
@@ -1313,19 +1319,25 @@ before ARG number of lines."
 (keymap-global-set "C-c n" #'bb-find-occurrence-direction-kill-sexp)
 (keymap-global-set "C-c a" #'bb-find-occurrence-direction-kill-around-sexp)
 
-(keymap-global-set "s-i" #'bb-change-inside-char-pairs)
-(keymap-global-set "s-a" #'bb-change-around-char-pairs)
+
+(defvar-keymap s-change-prefix-map
+            "i" #'bb-change-inside-char-pairs
+            "a" #'bb-change-around-char-pairs)
+(keymap-global-set "s-c" s-change-prefix-map)
+
+;; (defvar-keymap testing-prefix-f-map
+;;   "e" #'move-end-of-line)
+
+;; (define-key testing-prefix-map "f" testing-prefix-f-map)
+
+;; (keymap-global-set "s-i" #'bb-change-inside-char-pairs)
+;; (keymap-global-set "s-a" #'bb-change-around-char-pairs)
 
 (keymap-global-set "s-z" #'bb-zap-from-char-to-end)
 (keymap-global-set "M-z" #'zap-up-to-char)
 
 (keymap-global-set "<home>" #'beginning-of-visual-line)
 (keymap-global-set "<end>" #'end-of-visual-line)
-
-;; 2023-05-22  FIXME => Symbol's value as variable is void: vc-log-mode-map
-;; (define-key vc-log-mode-map (kbd "s") #'vc-log-search)
-;; (define-key log-view-mode-map (kbd "<tab>") #'log-view-toggle-entry-display)
-;; (define-key log-view-mode-map (kbd "<return>") #'log-view-find-revision)
 
 
 (provide 'init)
