@@ -32,8 +32,8 @@
 
 ;;; Set default font
 (set-face-attribute 'default nil
-                    :family "Iosevka Zenodotus Fixed"
-                    :height 135)
+                    :family "Iosevka Zenodotus"
+                    :height 120)
 
 ;; (set-frame-font "AardvarkFixed Nerd Font Mono 13" nil t t)
 
@@ -55,6 +55,7 @@
                 (format ";; %s\n;; Initialization in %s\n;; %s, be disciplined and maintain focus.\n\n"
                         emacs-version (emacs-init-time "%.3fs") user-full-name)))
 
+
 ;;; User preferences
 (setq column-number-mode t
       display-time-24hr-format t
@@ -63,7 +64,6 @@
       sentence-end-double-space t
       sentence-end-without-period nil
       colon-double-space nil
-      use-hard-newlines nil
       adaptive-fill-mode t
       bidi-inhibit-bpa t
       scroll-conservatively 101
@@ -102,6 +102,8 @@
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'text-mode-hook #'turn-on-auto-fill)
+(add-hook 'emacs-lisp-mode-hook (lambda() (eldoc-mode t)))
+
 
 ;;; No warnings and restrictions
 (dolist (unrestricted '(erase-buffer
@@ -145,6 +147,8 @@
       '(("melpa" . 2)
         ("elpa" . 1)))
 
+
+;; 2023-05-29  NOTE => Is this necessary?
 (package-initialize)
 
 
@@ -230,7 +234,7 @@
 
 ;;;; `smart-hungry-delete'
 (use-package smart-hungry-delete
-  :bind (("<backspace>" . smart-hungry-delete-backward-char)
+  :bind (("C-<backspace>" . smart-hungry-delete-backward-char)
          ("C-d" . smart-hungry-delete-forward-char)))
 
 
@@ -515,6 +519,9 @@
   ;; root '/' directory, Vertico will clear the old path to keep only
   ;; your current input. Works with pasting as well.
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
+  :config
+  (setq vertico-preselect 'prompt
+        vertico-cycle t)
   :init
   (vertico-mode))
 
@@ -539,7 +546,6 @@
   :bind (;; C-c bindings (mode-specific-map)
          ("C-c s" . consult-history)
          ("C-c M-x" . consult-mode-command)
-         ("C-h h m" . consult-man)
          ("C-c k" . consult-kmacro)
          ;; C-x bindings (ctl-x-map)
          ("C-x M-:" . consult-complex-command)   ;; orig. repeat-complex-command
@@ -554,7 +560,7 @@
          ("C-M-#" . consult-register)
          ;; Other custom bindings
          ("M-y" . consult-yank-pop)     ;; orig. yank-pop
-         ("C-h a" . apropos-command)    ;; orig. apropos-command
+         ("s-h a" . apropos-command)    ;; orig. apropos-command
          ;; M-g bindings (goto-map)
          ("M-g e" . consult-compile-error)
          ("M-g g" . consult-goto-line)     ;; orig. goto-line
@@ -660,8 +666,7 @@
   :defer 2
   :bind
   (("C-." . embark-act)                 ;; pick some comfortable binding
-   ("C-," . embark-dwim)                ;; good alternative: M-.
-   ("C-h B" . embark-bindings)) ;; alternative for \`describe-bindings\'
+   ("C-," . embark-dwim))                ;; good alternative: M-.
   :init
   ;; Optionally replace the key help with a completing-read interface
   (setq prefix-help-command #'embark-prefix-help-command)
@@ -822,10 +827,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
               ("C-c e f" . eglot-code-action-quickfix)
               ("C-c e i" . eglot-code-action-inline))
   :config
-  (dolist (langs '(go-mode-hook c++-mode-hook haskell-mode-hook lua-mode-hook
-                                python-mode-hook racket-mode-hook))
-    (add-hook langs 'eglot-ensure))
-
   (setq corfu-popupinfo-mode t
         corfu-popupinfo-delay 1.0
         eglot-sync-connect nil
@@ -858,7 +859,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
         pulsar-delay 0.055
         pulsar-iterations 20
         pulsar-face 'pulsar-green
-        pulsar-highlight-face 'pulsar-yellow)
+        pulsar--face 'pulsar-yellow)
   (pulsar-global-mode 1))
 
 
@@ -935,8 +936,8 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :mode ("\\.gp$\\'" . gnuplot-mode))
 
 
-;;;; `highlight-indent-guides'
-(use-package highlight-indent-guides
+;;;; `indent-guide'
+(use-package indent-guide
   :config
   (defun bb-maybe--get-color(arg)
     "It will return either a symbol or a color from the current palette."
@@ -956,13 +957,29 @@ theme palette, recursively if necessary."
           maybe-color
         (bb-maybe--get-color maybe-color))))
 
-  (setq highlight-indent-guides-method #'character
-        highlight-indent-guides-auto-enabled nil
-        highlight-indent-guides-responsive #'top)
-  (set-face-background
-   'highlight-indent-guides-top-character-face (bb-get-color 'cursor)))
+  (setq indent-guide-char "")
+  
+  (defun bb--update-indent-guide-face(_theme)
+    (when indent-guide-mode
+      (set-face-foreground 'indent-guide-face (bb-get-color 'cursor))))
+  (add-hook 'enable-theme-functions 'bb--update-indent-guide-face))
 
 
+  
+;; ;;;; `highlight-indent-guides'
+;; (use-package highlight-indent-guides
+;;   :config
+;;   (setq highlight-indent-guides-character ?\
+;;         highlight-indent-guides-method #'character
+;;         highlight-indent-guides-responsive #'stack
+;;         highlight-indent-guides-auto-stack-odd-face-perc 5
+;;         highlight-indent-guides-auto-stack-even-face-perc 5
+;;         highlight-indent-guides-auto-stack-character-face-perc 10)
+;;   (set-face-foreground
+;;    'highlight-indent-guides-character-face (bb-get-color 'cursor)))
+
+
+  
 ;;;; `csv-mode'
 (use-package csv-mode
   :defer 2
@@ -1010,13 +1027,13 @@ theme palette, recursively if necessary."
 ;; PROGRAMMING LANGUAGES ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;; personal-programming-hooks function
-(defun personal-programming-hooks ()
+;;;;;; bb-programming-hooks function
+(defun bb-programming-hooks ()
   "Useful hooks for programming."
   (interactive)
   (electric-pair-local-mode t)
   (subword-mode t)
-  (highlight-indent-guides-mode t)
+  (indent-guide-mode t)
   (hs-minor-mode t))
 
 
@@ -1027,10 +1044,18 @@ theme palette, recursively if necessary."
 
 ;;;;;; `cc-mode'
 (use-package cc-mode
-  :hook ((c++-mode . personal-programming-hooks)
-         (before-save . (lambda() #'(cpp-auto-include) #'(eglot-format))))
-  :bind (:map c++-mode-map
-              ("C-c C-c" . compile))
+  :hook (((c++-mode c-mode) . (lambda()
+                                (bb-programming-hooks)
+                                (eglot-ensure)
+                                (bb-set-compile-command)))
+         (before-save . (lambda()
+                          (when (eq major-mode 'c++-mode)
+                            (cpp-auto-include))
+                          (eglot-format))))
+  :bind ((:map c++-mode-map
+               ("C-c C-c" . compile))
+         (:map c-mode-map
+               ("C-c C-c" . compile)))
   :config
   (defun project-find-root (dir)
     (when-let ((root (locate-dominating-file dir "CMakeLists.txt")))
@@ -1040,7 +1065,27 @@ theme palette, recursively if necessary."
     (cdr project))
 
   (add-hook 'project-find-functions 'project-find-root)
-  (setq-local compile-command "g++ -std=c++20 -Wall"))
+
+  ;; Setting compile-command
+  (defun bb-set-compile-command()
+    (interactive)
+    (let ((compile-cmd ""))
+      (cond
+       ((eq major-mode 'c++-mode)
+        (unless (file-exists-p "CMakeLists.txt")
+          (setq compile-cmd "g++ -g -std=c++20 -Wall -o ")))
+       ((eq major-mode 'c-mode)
+        (unless (or (file-exists-p "makefile")
+		            (file-exists-p "Makefile"))
+          (setq compile-cmd "gcc -g -O -o "))))
+      (setq-local compile-command
+                  (when buffer-file-name
+                    (concat compile-cmd
+                            (file-name-base buffer-file-name) " "
+                            (file-name-nondirectory buffer-file-name))))))
+  (setq gdb-many-windows t
+        gdb-show-main    t
+        gdb-debug-log    nil))
 
 
 ;;;;;; `cpp-auto-include'
@@ -1055,13 +1100,17 @@ theme palette, recursively if necessary."
   (add-to-list 'completion-at-point-functions #'clang-capf))
 
 
+
 ;;;;;; `go-mode'
 (use-package go-mode
   :bind (:map go-mode-map
               ("C-c C-c" . compile))
-  :hook
-  ((go-mode . personal-programming-hooks)
-   (before-save . (lambda() #'(eglot-code-action-organize-imports 0) #'(eglot-format))))
+  :hook ((go-mode . (lambda()
+                     (eglot-ensure)
+                     (bb-programming-hooks)))
+         (before-save . (lambda()
+                          (eglot-code-action-organize-imports 0)
+                          (eglot-format))))
   :config
   (defun project-find-go-module (dir)
     (when-let ((root (locate-dominating-file dir "go.mod")))
@@ -1075,10 +1124,13 @@ theme palette, recursively if necessary."
               tab-width 4))
 
 
+
 ;;;;;; `haskell-mode'
 (use-package haskell-mode
   :hook
-  (haskell-mode . personal-programming-hooks)
+  (haskell-mode . (lambda()
+                          (eglot-ensure)
+                          (bb-programming-hooks)))
   :config
   (setq-default eglot-workspace-configuration
                 '((haskell
@@ -1087,18 +1139,21 @@ theme palette, recursively if necessary."
                      (globalOn . :json-false))))))  ;; disable stan
   (haskell-indent-mode t))
 
+
 ;;;;;; `ormolu'
 (use-package ormolu
-  :hook (haskell-mode . ormolu-format-on-save-mode)
-  :bind
-  (:map haskell-mode-map
-        ("C-c r" . ormolu-format-buffer)))
+  :hook (haskell-mode . (ormolu-format-on-save-mode))
+  :bind (:map haskell-mode-map
+              ("C-c r" . ormolu-format-buffer)))
+
 
 
 ;;;;;; `python-mode'
 (use-package python-mode
-  :hook ((python-mode . personal-programming-hooks)
-         (python-mode . flymake-ruff-load))
+  :hook (python-mode . (lambda()
+                          (bb-programming-hooks)
+                          (eglot-ensure)
+                          (flymake-ruff-load)))
   :config
   (setq python-indent-guess-indent-offset-verbose nil)
   (python-black-on-save-mode t))
@@ -1118,12 +1173,17 @@ theme palette, recursively if necessary."
 ;;;; `poetry'
 (use-package poetry)
 
+
+
 ;;;; `lua-mode'
-(use-package lua-mode)
+(use-package lua-mode
+  :hook (lua-mode . eglot-ensure))
+
 
 
 ;;;; `racket-mode'
-(use-package racket-mode)
+(use-package racket-mode
+  :hook (racket-mode . eglot-ensure))
 
 
 
@@ -1204,20 +1264,14 @@ This is the same as using \\[set-mark-command] with the prefix argument."
   (exchange-point-and-mark)
   (deactivate-mark nil))
 
-;; https://www.emacswiki.org/emacs/BackwardDeleteWord
-(defun delete-word (arg)
-  "Delete characters forward until encountering the end of a word.
-With argument, do this that many times."
-  (interactive "p")
-  (if (use-region-p)
-      (delete-region (region-beginning) (region-end))
-    (delete-region (point) (progn (forward-word arg) (point)))))
-
-(defun backward-delete-word (arg)
-  "Delete characters backward until encountering the end of a word.
-With argument, do this that many times."
-  (interactive "p")
-  (delete-word (- arg)))
+;; ;; https://www.emacswiki.org/emacs/BackwardDeleteWord
+;; (defun delete-word (arg)
+;;   "Delete characters forward until encountering the end of a word.
+;; With argument, do this that many times."
+;;   (interactive "p")
+;;   (if (use-region-p)
+;;       (delete-region (region-beginning) (region-end))
+;;     (delete-region (point) (progn (forward-word arg) (point)))))
 
 (defun bb/kill-beg-line()
   "Kills until the beginning of the text in current line.
@@ -1269,11 +1323,19 @@ before ARG number of lines."
     (goto-char (- (point) dif-end-point))))
 
 
+
 ;;;;;;;;;;;;;;;;;
 ;; Keybindings ;;
 ;;;;;;;;;;;;;;;;;
 
+(keymap-set lisp-interaction-mode-map "C-j" #'bb-eval-print-current-sexp-lisp)
+
 (keymap-global-set "<escape>" #'bb-simple-keyboard-quit-dwim)
+
+(defvar-keymap s-help-prefix-map
+  "m" #'consult-man
+  "B" #'embark-bindings) ;; alternative for \`describe-bindings\'
+(keymap-global-set "s-h" s-help-prefix-map)
 
 (defvar-keymap s-org-prefix-map
   "a" #'org-agenda
@@ -1302,7 +1364,6 @@ before ARG number of lines."
 (keymap-global-set "C-c q" #'kill-buffer-and-delete-window)
 
 (keymap-global-set "C-M-=" #'count-words)
-(keymap-global-set "M-DEL" #'backward-delete-word)
 (keymap-global-set "M-k" #'bb/kill-beg-line)
 
 (keymap-global-set "C-o" #'bb/insert-newline-below)
