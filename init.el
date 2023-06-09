@@ -759,7 +759,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 (define-abbrev-table
   'global-abbrev-table '(("BB" "Bruno Boal")
-                         ("bmail" "egomet@bboal.com")
+                         ("bmail" "<egomet@bboal.com>")
                          ("bberg" "https://codeberg.org/BBoal")
                          ("bhut"  "https://git.sr.ht/~bboal")
                          ("blab"  "https://gitlab.com/bboal")
@@ -781,7 +781,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package cape
   ;; Bind dedicated completion commands
   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-  :bind (("M-p p" . completion-at-point) ;; capf
+  :bind (("M-ç" . completion-at-point) ;; capf
          ("M-p t" . complete-tag)        ;; etags
          ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
          ("M-p h" . cape-history)
@@ -1036,6 +1036,14 @@ theme palette, recursively if necessary."
   (indent-guide-mode t)
   (hs-minor-mode t))
 
+(defun bb-eglot-arrange-file()
+  "Imports and formats programming file using Eglot"
+  (interactive)
+  (if (eq major-mode 'c++-mode)
+      (cpp-auto-include))
+  (eglot-code-action-organize-imports 0)
+  (eglot-format))
+
 
 ;;;;;; `dhall-mode'
 (use-package dhall-mode
@@ -1047,16 +1055,19 @@ theme palette, recursively if necessary."
   :hook (((c++-mode c-mode) . (lambda()
                                 (bb-programming-hooks)
                                 (eglot-ensure)
-                                (bb-set-compile-command)))
-         (before-save . (lambda()
-                          (when (eq major-mode 'c++-mode)
-                            (cpp-auto-include))
-                          (eglot-format))))
+                                (bb-set-compile-command))))
+         ;; (before-save . (lambda()
+         ;;                  (if (eq major-mode 'c++-mode)
+         ;;                    (cpp-auto-include))
+         ;;                  (eglot-code-action-organize-imports 0)
+         ;;                  (eglot-format))))
   :bind ((:map c++-mode-map
                ("C-c C-c" . compile))
          (:map c-mode-map
                ("C-c C-c" . compile)))
   :config
+  (add-hook 'before-save-hook #'bb-eglot-arrange-file :depth :local)
+
   (defun project-find-root (dir)
     (when-let ((root (locate-dominating-file dir "CMakeLists.txt")))
       (cons 'CMakeLists root)))
@@ -1079,10 +1090,12 @@ theme palette, recursively if necessary."
 		            (file-exists-p "Makefile"))
           (setq compile-cmd "gcc -g -O -o "))))
       (setq-local compile-command
-                  (when buffer-file-name
+                  (when-let ((buffer-file-name)
+                             (filename-bin (file-name-base buffer-file-name)))
                     (concat compile-cmd
-                            (file-name-base buffer-file-name) " "
-                            (file-name-nondirectory buffer-file-name))))))
+                            filename-bin  " "
+                            (file-name-nondirectory buffer-file-name)
+                            " && ./" filename-bin)))))
   (setq gdb-many-windows t
         gdb-show-main    t
         gdb-debug-log    nil))
@@ -1107,11 +1120,13 @@ theme palette, recursively if necessary."
               ("C-c C-c" . compile))
   :hook ((go-mode . (lambda()
                      (eglot-ensure)
-                     (bb-programming-hooks)))
-         (before-save . (lambda()
-                          (eglot-code-action-organize-imports 0)
-                          (eglot-format))))
+                     (bb-programming-hooks))))
+         ;; (before-save . (lambda()
+         ;;                  (eglot-code-action-organize-imports 0)
+         ;;                  (eglot-format))))
   :config
+  (add-hook 'before-save-hook #'bb-eglot-arrange-file :depth :local)
+  
   (defun project-find-go-module (dir)
     (when-let ((root (locate-dominating-file dir "go.mod")))
       (cons 'go-module root)))
