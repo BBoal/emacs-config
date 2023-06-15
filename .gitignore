@@ -24,4 +24,5 @@ package-quickstart.el
 .custom.el
 var/
 scratch*
+!lessons/*.el
 tree-sitter/
