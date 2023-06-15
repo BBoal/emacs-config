@@ -8,6 +8,7 @@
 
 ;;;; `hl-todo'
 (use-package hl-todo
+  :defer 3
   :config
   (setq hl-todo-color-background nil
         hl-todo-keyword-faces
@@ -29,6 +30,7 @@
 
 ;;;; `goggles'
 (use-package goggles
+  :defer 3
   :hook ((prog-mode text-mode) . goggles-mode)
   :config
   (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
@@ -53,32 +55,8 @@
         rainbow-x-colors nil))
 
 
-;;;; `modus-themes'
-(use-package modus-themes
-  :demand t
-  :config
-  (load-theme hour-sets-modus)
-  ;; Clock in the modeline
-  (setq display-time-string-forms
-        '((propertize (concat " " 24-hours ":" minutes " ")
-                      'face #'keycast-key)))
-  (display-time-mode 1))
-
-;; tab-bar tweaks
-(setq tab-bar-format               ;; Emacs 28
-      '(tab-bar-format-tabs-groups
-        tab-bar-format-align-right
-        tab-bar-format-global))
-;;global-mode-string (TODO)
-
-
-;;;; `ef-themes'
-(use-package ef-themes)
-
-
 ;;;; `keycast'
 (use-package keycast
-  :defer 1
   :demand t
   :config
   (defun prot/keycast-current-window-p ()
@@ -101,6 +79,31 @@
                    mouse-movement-p
                    mwheel-scroll))
     (add-to-list 'keycast-substitute-alist `(,event nil))))
+
+
+;;;; `modus-themes'
+(use-package modus-themes
+  :demand t
+  :after keycast
+  :config
+  (load-theme hour-sets-modus)
+  ;; Clock in the modeline
+  (setq display-time-string-forms
+        '((propertize (concat " " 24-hours ":" minutes " ")
+                      'face #'keycast-key)))
+  (display-time-mode 1))
+
+;; tab-bar tweaks
+;; (setq tab-bar-format               ;; Emacs 28
+;;      '(tab-bar-format-tabs-groups
+;;        tab-bar-format-align-right
+;;        tab-bar-format-global))
+;;global-mode-string (TODO)
+
+
+;;;; `ef-themes'
+(use-package ef-themes)
+
 
 ;;;; `which-key'
 (use-package which-key
@@ -125,6 +128,7 @@
 
 ;;;; `bicycle'
 (use-package bicycle
+  :defer 2
   :after outline
   :bind (:map outline-minor-mode-map
               ("C-<tab>" . bicycle-cycle)
@@ -137,6 +141,7 @@
 
 ;;;; `pulsar'
 (use-package pulsar
+  :defer 2
   :demand t
   :config
   (setq pulsar-pulse t
@@ -149,6 +154,7 @@
 
 ;;;; `kind-icon'
 (use-package kind-icon
+  :defer 1
   :after corfu
   :config
   (setq kind-icon-use-icons t
@@ -159,6 +165,7 @@
 
 ;;;; `minions'
 (use-package minions
+  :defer 2
   :config
   (setq minions-mode-line-lighter ";")
   ;; NOTE: This will be expanded whenever I find a mode that should not
@@ -173,6 +180,7 @@
 
 ;;;; `indent-guide'
 (use-package indent-guide
+  :defer 2
   :config
   (defun bb-maybe--get-color(arg)
     "It will return either a symbol or a color from the current palette."

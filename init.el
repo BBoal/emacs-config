@@ -54,17 +54,11 @@
 (setq column-number-mode t
       display-time-24hr-format t
       display-time-mode t
-      ispell-dictionary nil
-      sentence-end-double-space t
-      sentence-end-without-period nil
-      colon-double-space nil
-      adaptive-fill-mode t
       bidi-inhibit-bpa t
       scroll-conservatively 101
       x-stretch-cursor t
       ring-bell-function 'ignore
       use-short-answers t
-      confirm-kill-emacs nil
       confirm-kill-processes nil
       read-process-output-max (* 1024 1024)
       save-interprogram-paste-before-kill t
@@ -134,26 +128,8 @@
   (add-to-list 'load-path dirs))
 
 ;; Initialization
-(require 'bb-package-init)
+(require 'package-init)
 (require 'project)
 
-(defun bb-require-lisp-files-in-dir (directory)
-  "Requires all elisp files in DIRECTORY."
-  (mapcar
-   (lambda (file)
-     (require (intern (file-name-sans-extension file))))
-   (directory-files directory nil "\.el$")))
-
-(defun bb-require-lisp-files-in-dir-matching (parent-dir regex-string)
-  "Require all elisp files in directories matched by REGEX-STRING having
-PARENT-DIR as a parent directory.
-
-e.g  (bb-require-lisp-files-in-dir-matching user-emacs-directory \"lisp-\")
-
-Will `require' all .el files in ~/.emacs.d/{lisp-init,lisp-utils,lisp-user}"
-(let ((dirs-to-load  (directory-files parent-dir :fullpath regex-string)))
-  (while dirs-to-load
-      (bb-require-lisp-files-in-dir (car dirs-to-load))
-      (setq dirs-to-load (cdr dirs-to-load)))))
-
+;; Loads all "bb-" elisp files from "bb-" dirs
 (bb-require-lisp-files-in-dir-matching user-emacs-directory "bb-")

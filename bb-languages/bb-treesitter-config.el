@@ -1,4 +1,4 @@
-;;; treesitter-config.el --- treesit configs -*- lexical-binding: t -*-
+;;; bb-treesitter-config.el --- treesit configs -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;;; Setup of the various languages available to treesitter
@@ -40,5 +40,5 @@
         (yaml-mode . yaml-ts-mode)))
 
 
-(provide 'treesitter-config)
-;;; treesitter-config.el ends here
+(provide 'bb-treesitter-config)
+;;; bb-treesitter-config.el ends here
