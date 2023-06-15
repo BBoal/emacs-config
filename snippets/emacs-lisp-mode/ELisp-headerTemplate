@@ -1,0 +1,19 @@
+# -*- mode: snippet -*-
+# name: ELisp headerTemplate
+# key: header
+# expand-env: ((yas-wrap-around-region ?r))
+# expand-env: ((yas-indent-line 'fixed))
+# contributor: Bruno Boal <egomet@bboal.com>
+# --
+;;; `(file-name-nondirectory buffer-file-name)` --- ${2:Description} -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;; $3
+
+;;; Code:
+
+$0
+
+
+(provide '`(file-name-base buffer-file-name)`)
+;;; `(file-name-nondirectory buffer-file-name)` ends here
