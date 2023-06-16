@@ -16,14 +16,7 @@
                     (eglot-ensure)
                     (bb-programming-hooks))))
   :config
-  (defun project-find-go-module (dir)
-    (when-let ((root (locate-dominating-file dir "go.mod")))
-      (cons 'go-module root)))
-
-  (cl-defmethod project-root ((project (head go-module)))
-    (cdr project))
-
-  (add-hook 'project-find-functions #'project-find-go-module)
+  (prot-find-project-root go-mode "go.mod")
   (setq-local compile-command "go build -v && go test -v && go vet"
               tab-width 4))
 
@@ -34,8 +27,6 @@
   		      ("C-c t" . go-add-tags))
   :config
   (setq go-add-tags-style 'snake-case))
-
-
 
 
 

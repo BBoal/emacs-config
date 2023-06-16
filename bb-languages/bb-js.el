@@ -13,16 +13,7 @@
               (eglot-ensure)
               (bb-programming-hooks)))
 
-  (defun project-find-jsconfig-json (dir)
-    (when-let ((root (locate-dominating-file dir "jsconfig.json")))
-      (cons 'jsconfig-json root)))
-
-  (cl-defmethod project-root ((project (head jsconfig-json)))
-    (cdr project))
-
-  (add-hook 'project-find-functions #'project-find-jsconfig-json))
-
-
+(prot-find-project-root js-mode "jsconfig.json"))
 
 (provide 'bb-js)
 ;;; bb-js.el ends here

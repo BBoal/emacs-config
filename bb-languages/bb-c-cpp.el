@@ -19,14 +19,9 @@
          (:map c-mode-map
                ("C-c C-c" . compile)))
   :config
-  (defun project-find-root (dir)
-    (when-let ((root (locate-dominating-file dir "CMakeLists.txt")))
-      (cons 'CMakeLists root)))
-
-  (cl-defmethod project-root ((project (head CMakeLists)))
-    (cdr project))
-
-  (add-hook 'project-find-functions 'project-find-root)
+  (prot-find-project-root c-ts-mode "Makefile")
+  (prot-find-project-root c-mode "Makefile")
+  (prot-find-project-root c++-mode "CMakeList.txt")
 
   ;; Setting compile-command
   (defun bb-set-compile-command()
