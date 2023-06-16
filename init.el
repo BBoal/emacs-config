@@ -92,7 +92,7 @@
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'text-mode-hook #'turn-on-auto-fill)
-(add-hook 'emacs-lisp-mode-hook (lambda() (eldoc-mode t)))
+(add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
 (add-hook 'html-mode-hook #'emmet-mode)
 
 
@@ -130,6 +130,7 @@
 ;; Initialization
 (require 'package-init)
 (require 'project)
+(require 'setup-langs)
 
 ;; Loads all "bb-" elisp files from "bb-" dirs
 (bb-require-lisp-files-in-dir-matching user-emacs-directory "bb-")
