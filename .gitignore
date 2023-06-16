@@ -26,3 +26,4 @@ var/
 scratch*
 !lessons/*.el
 tree-sitter/
+pushmacs
