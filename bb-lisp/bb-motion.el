@@ -92,13 +92,13 @@ before ARG number of lines."
 (defun bb/kill-ring-save-line()
   "TODO save region if selected as argument"
   (interactive)
-  (kill-ring-save (line-beginning-position) (line-end-position)))
+  (kill-ring-save (pos-bol) (pos-eol)))
 
 (defun bb/duplicate-line()
   "TODO duplicate selected region if present"
   (interactive)
   (let ((dif-end-point
-         (- (line-end-position) (point))))
+         (- (pos-eol) (point))))
     (bb/kill-ring-save-line)
     (move-end-of-line nil)
     (newline)

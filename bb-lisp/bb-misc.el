@@ -41,13 +41,13 @@ function is used.
 
 Returns DIR, with possible values of 1, when the search is meant to be
 forward; -1, when backward, or 0, when the occurrence matches either
-the values of `line-end-position' or `line-beginning-position'."
+the values of `line-end-position' or `pos-bol'."
 
   (let ((dir 1)
-        (bounds (line-end-position)))
+        (bounds (pos-eol)))
     (when (< count 0)
       (setq dir -1
-            bounds (line-beginning-position)))
+            bounds (pos-bol)))
     (search-forward (format "%c" char) bounds nil count)
     (when (= (point) bounds)
       (setq dir 0))
@@ -62,8 +62,8 @@ the values of `line-end-position' or `line-beginning-position'."
 
 DIR is the return value of `bb--find-occurrence'.
 
-If DIR is 0, then the occurrence matched either `line-end-position' or
-`line-beginning-position'. On both cases, the function does not interfere
+If DIR is 0, then the occurrence matched either `pos-eol' or
+`pos-bol'. On both cases, the function does not interfere
 with different lines, meaning that the kill is restricted to the same line
 and nothings gets evaluated.
 
@@ -173,20 +173,20 @@ delimiters."
 
 DIR is the return value of `bb--find-occurrence'.
 
-If DIR is 0, then the occurrence matched either `line-end-position' or
-`line-beginning-position'. On both cases, the function does not interfere
+If DIR is 0, then the occurrence matched either `pos-eol' or
+`pos-bol'. On both cases, the function does not interfere
 with different lines, meaning that the kill is restricted to the same line
 and nothings gets evaluated.
 
-If DIR is 1, the kill is made from occurrence to `line-end-position'.
-Analogously, if DIR is -1, the kill goes to `line-beginning-position'."
+If DIR is 1, the kill is made from occurrence to `pos-eol'.
+Analogously, if DIR is -1, the kill goes to `pos-bol'."
 
   (interactive "cZap from char: \np")
   (let ((dir (bb--find-occurrence char count)))
     (unless (= dir 0)
       (kill-region (point) (if (= dir 1)
-                               (line-end-position)
-                             (line-beginning-position))))))
+                               (pos-eol)
+                             (pos-bol))))))
 
 
 
