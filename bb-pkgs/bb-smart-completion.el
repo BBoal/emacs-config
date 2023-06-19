@@ -48,6 +48,7 @@
 ;;;; `consult'
 (use-package consult
   :defer 2
+  :demand
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
          ("C-c s" . consult-history)
@@ -67,33 +68,6 @@
          ;; Other custom bindings
          ("M-y" . consult-yank-pop)     ;; orig. yank-pop
          ("s-h a" . apropos-command)    ;; orig. apropos-command
-         ;; M-g bindings (goto-map)
-         ("M-g e" . consult-compile-error)
-         ("M-g g" . consult-goto-line)     ;; orig. goto-line
-         ("M-g M-g" . consult-goto-line)   ;; orig. goto-line
-         ("M-g o" . consult-outline)       ;; Alternative: consult-org-heading
-         ("M-g m" . consult-mark)
-         ("M-g k" . consult-global-mark)
-         ("M-g i" . consult-imenu)
-         ("M-g I" . consult-imenu-multi)
-         ;; M-s bindings (search-map)
-         ("M-s d" . consult-find)
-         ("M-s D" . consult-locate)
-         ("M-s g" . consult-grep)
-         ("M-s G" . consult-git-grep)
-         ("M-s r" . consult-ripgrep)
-         ("M-s l" . consult-line)
-         ("M-s L" . consult-line-multi)
-         ("M-s m" . consult-multi-occur)
-         ("M-s k" . consult-keep-lines)
-         ("M-s u" . consult-focus-lines)
-         ;; Isearch integration
-         ("M-s e" . consult-isearch-history)
-         :map isearch-mode-map
-         ("M-s" . consult-isearch-history)    ;; orig. isearch-edit-string
-         ("M-s s" . consult-isearch-history)  ;; orig. isearch-edit-string
-         ("M-s l" . consult-line)        ;; needed by consult-line to detect isearch
-         ("M-s L" . consult-line-multi)  ;; needed by consult-line to detect isearch
          ;; Minibuffer history
          :map minibuffer-local-map
          ("M-s" . consult-history)       ;; orig. next-matching-history-element
@@ -123,6 +97,28 @@
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
   :config
+  (defvar-keymap m-search-prefix-map
+    "f" #'consult-find
+    "g" #'consult-grep
+    "G" #'consult-git-grep
+    "r" #'consult-ripgrep
+    "l" #'consult-line
+    "L" #'consult-line-multi
+    "m" #'consult-multi-occur
+    "k" #'consult-keep-lines
+    "u" #'consult-focus-lines
+    "s" #'consult-isearch-history)
+  (keymap-global-set "M-s" m-search-prefix-map)
+
+  (defvar-keymap g-goto-prefix-map
+    "e"   #'consult-compile-error
+    "M-g" #'consult-goto-line     ;; orig. goto-line
+    "o"   #'consult-outline       ;; Alternative: consult-org-heading
+    "m"   #'consult-mark
+    "M-m" #'consult-global-mark
+    "i"   #'consult-imenu
+    "I"   #'consult-imenu-multi)
+  (keymap-global-set "M-g" g-goto-prefix-map)
 
   ;; Optionally configure preview. The default value
   ;; is 'any, such that any key triggers the preview.
