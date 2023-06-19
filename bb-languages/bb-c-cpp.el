@@ -59,5 +59,13 @@
   (add-to-list 'completion-at-point-functions #'clang-capf))
 
 
+;;;; `disaster'
+(use-package disaster
+  :bind ((:map c++-mode-map
+               ("C-c d" . disaster))
+         (:map c-mode-map
+               ("C-c d" . disaster))))
+
+
 (provide 'bb-c-cpp)
 ;;; bb-c-cpp.el ends here
