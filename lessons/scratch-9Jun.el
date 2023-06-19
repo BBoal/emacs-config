@@ -1,6 +1,5 @@
 ;; GNU Emacs 30.0.50 of 2023-04-16
-;; Initialization in 0.292s
-;; Bruno Boal, be disciplined and maintain focus.
+;; Specific functions with modes
 
 (let* ((mode-spec-func
         '((c++-mode . cpp-auto-include)
@@ -12,12 +11,7 @@
     (bb--find-occurrence (or closing-delim char)
                            dir)))
 
-(defun testing ()
-  (message "Hello"))
-
-(defun testing-two ()
-  (message "Hello world"))
-
+;;;;;;; Idea
 (setq my-modes
       '((lisp-interaction-mode . testing)
         (emacs-lisp-mode . testing-two)))
@@ -31,22 +25,11 @@
   (funcall fn)))
 
 
-
-(cond
- ((eq major-mode 'MODE))
- ((eq major-mode 'MODE))
- ((eq major-mode 'MODE)))
-
-(pcase major-mode
-  ('c++ (setq-local command ...))
-  ('c (setq-local command ...))
-  (_ (setq-local command ...)))
-
-(setq-local command
-            (pcase major-mode
-              ('c++ val)
-              ('c val)
-              (_ val)))
+      Instead of:                     Alternative:                           Or even:
+(cond                         (pcase major-mode                    (setq-local cmd (pcase major-mode
+ ((eq major-mode 'MODE))        ('c++ (setq-local command ..))                           ('c++ val)
+ ((eq major-mode 'MODE))        ('c (setq-local command ....))                           ('c val)
+ ((eq major-mode 'MODE)))       (_ (setq-local command ....)))                           (_ val)))
 
 
 ;;;;;;;;;;;;;;;;;;;;
