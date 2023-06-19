@@ -31,8 +31,8 @@
 ;;; Set default font
 (set-face-attribute 'default nil
                     :family "Iosevka Zenodotus"
-                    :height 120)
-;; (set-frame-font "AardvarkFixed Nerd Font Mono 13" nil t t)
+                    :height 130)
+;; (set-frame-font "FantasqueSansMono Nerd Font Mono 13" nil t t)
 
 
 ;;;;;; https://www.gnu.org/software/emacs/manual/html_node/efaq/Not-writing-files-to-the-current-directory.html
@@ -72,6 +72,7 @@
       mouse-yank-at-point t
       calendar-week-start-day 1
       custom-safe-themes t
+      dictionary-server "dict.org"
       frame-title-format '(multiple-frames "%b"
                                            ("" "Emacs - %b ")))
 
