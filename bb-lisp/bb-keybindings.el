@@ -22,6 +22,8 @@
 
 (keymap-global-set "C-c 0" #'kill-emacs)
 (keymap-global-set "C-c <delete>" #'delete-frame)
+(keymap-global-set "C-c l" #'dictionary-lookup-definition)
+
 (keymap-global-set "<f12>" #'save-buffer)
 (keymap-global-set "<f10>" #'save-buffers-kill-emacs)
 (keymap-global-set "<f9>" #'menu-bar-mode)
@@ -38,7 +40,7 @@
 (keymap-global-set "s-l" #'windmove-right)
 (keymap-global-set "s-\\" #'bb/split-window-right-and-focus)
 (keymap-global-set "s-\-" #'bb/split-window-below-and-focus)
-(keymap-global-set "C-c q" #'bb/kill-buffer-and-delete-window)
+(keymap-global-set "s-q" #'bb/kill-buffer-and-delete-window)
 
 (keymap-global-set "C-M-=" #'count-words)
 (keymap-global-set "M-k" #'bb/kill-beg-line)
