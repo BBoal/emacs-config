@@ -38,66 +38,66 @@
 (defun bb-simple--pos-url-on-line (&optional char)
   "Return position of `bb-common-url-regexp' on line or at CHAR."
   (save-excursion
-	(goto-char (or char (line-beginning-position)))
-	(re-search-forward bb-common-url-regexp (line-end-position) :noerror)))
+    (goto-char (or char (pos-bol)))
+    (re-search-forward bb-common-url-regexp (pos-eol) :noerror)))
 
 ;;;###autoload
 (defun bb-simple-escape-url-line (&optional char)
   "Escape all URLs or email addresses on the current line.
-By default, start operating from `line-beginning-position' to the
+By default, start operating from `pos-bol' to the
 end of the current line. With optional CHAR as a buffer
 position, operate from CHAR to the end of the line."
   (interactive)
   (when-let ((regexp-end (bb-simple--pos-url-on-line char)))
-	(save-excursion
-	  (goto-char regexp-end)
-	  (unless (looking-at ">")
-		(insert ">")
-		(search-backward "\s")
-		(forward-char 1)
-		(insert "<")))
-	(bb-simple-escape-url-line (1+ regexp-end))))
+    (save-excursion
+      (goto-char regexp-end)
+      (unless (looking-at ">")
+        (insert ">")
+        (search-backward "\s")
+        (forward-char 1)
+        (insert "<")))
+    (bb-simple-escape-url-line (1+ regexp-end))))
 
 ;;;###autoload
 (defun bb-simple-escape-url-region (beg end)
   "Apply `bb-simple-escape-url' on a region lines between BEG and END."
   (interactive
    (if (region-active-p)
-	   (list (region-beginning) (region-end))
-	 (error "There is no region!")))
+       (list (region-beginning) (region-end))
+     (error "There is no region!")))
   (unless (> end beg)
-	(cl-rotatef end beg))
+    (cl-rotatef end beg))
   (save-excursion
-	(goto-char beg)
-	(setq beg (line-beginning-position))
-	(while (<= beg end)
-	  (bb-simple-escape-url-line beg)
-	  (beginning-of-line 2)
-	  (setq beg (point)))))
+    (goto-char beg)
+    (setq beg (pos-bol))
+    (while (<= beg end)
+      (bb-simple-escape-url-line beg)
+      (beginning-of-line 2)
+      (setq beg (point)))))
 
 ;;;###autoload
 (defun bb-simple-escape-url-dwim ()
   (interactive)
   (call-interactively
    (if (region-active-p)
-	   #'bb-simple-escape-url-region
-	 #'bb-simple-escape-url-line)))
+       #'bb-simple-escape-url-region
+     #'bb-simple-escape-url-line)))
 
 ;;;###autoload
 (defun bb-simple-cycle-display-line-numbers ()
   (interactive)
   (if display-line-numbers
-	  (display-line-numbers-mode 'toggle)
-	(setq-local display-line-numbers 'visual)))
+      (display-line-numbers-mode 'toggle)
+    (setq-local display-line-numbers 'visual)))
 
 ;;;###autoload
 (defun bb-simple-indent-tabs-spaces-rest ()
   (interactive)
   (setq-local whitespace-style '( indentation::space face tabs spaces
-								  trailing lines space-before-tab newline
-								  empty space-after-tab space-mark tab-mark
-								  newline-mark missing-newline-at-eof)
-		      tab-width 2)
+                                  trailing lines space-before-tab newline
+                                  empty space-after-tab space-mark tab-mark
+                                  newline-mark missing-newline-at-eof)
+              tab-width 2)
   (untabify (point-min) (point-max))
   (indent-tabs-mode nil))
 
@@ -119,18 +119,18 @@ options. Then, new values are set accordingly TABS-OR-SPACES and WIDTH, adjustin
    '(indentation space-after-tab space-before-tab))
   (if (string= tabs-or-spaces "tabs")
       (progn
-	    (bb-simple-add-to-list-elements
-	     'whitespace-style '(indentation::tab space-after-tab::tab space-before-tab::tab))
-	    (indent-tabs-mode 1))
+        (bb-simple-add-to-list-elements
+         'whitespace-style '(indentation::tab space-after-tab::tab space-before-tab::tab))
+        (indent-tabs-mode 1))
     (bb-simple-add-to-list-elements
      'whitespace-style '(indentation::space space-after-tab::space space-before-tab::space))
     (indent-tabs-mode -1))
-       (setq-local tab-width width))
+  (setq-local tab-width width))
 
 (defun bb-simple--style-prompt()
   "Simple prompt for getting user choice of tabs or spaces"
   (completing-read "Indentation: tabs or spaces? "
-		           '(tabs spaces) nil :require-match))
+                   '(tabs spaces) nil :require-match))
 
 (defun bb-simple--tab-width-prompt()
   "Simple prompt for getting tab-width value"
@@ -144,11 +144,11 @@ helper functions."
      (list
       style
       (if (string= style "tabs")
-	      (bb-simple--tab-width-prompt)
-	    (default-value 'tab-width)))))
+          (bb-simple--tab-width-prompt)
+        (default-value 'tab-width)))))
   (bb-simple--indent style width)
   (let ((min (point-min))
-	    (max (point-max)))
+        (max (point-max)))
     (indent-region min max 0)
     (indent-region min max)))
 
@@ -180,6 +180,24 @@ The DWIM behaviour of this command is as follows:
     (keyboard-quit))))
 
 
+
+(defun bb-maybe-eval-string (string)
+  "Maybe evaluate elisp in a given STRING."
+  (or
+   (ignore-errors (eval (car (read-from-string string))))
+   string))
+
+
+(defun bb-show-string-and-eval-in-other-buffer(string mode)
+  (pop-to-buffer "testing")
+  (funcall mode)
+  (insert (format "%s %s %s%s"
+                  string
+                  comment-start
+                  (bb-maybe-eval-string string)
+                  "\n\014\n\n"))
+  (other-window 1))   ;; Added because save-excursion is not working
+
 ;;;###autoload
 (defun bb-eval-print-current-sexp-lisp()
   "Evaluate expression if point is right after ending parenthesis,
@@ -190,49 +208,26 @@ taken into consideration and proper evaluated."
   (unless (derived-mode-p 'lisp-data-mode)
     (electric-newline-and-maybe-indent))
   (let ((orig-point-pos (point))
-        beg
-        end)
+        (mode major-mode))
+
     (cond
-
-     ;; Position after ")"
-     ((eq ?\) (char-before (point)))
-      ;; Go back to "("
-      (setq end (point))
-      (setq beg (forward-list -1 :interactive)))
-
-     ;; On top of ")"
+     ;; If point is after ")"
+     ((eq ?\) (char-before (point))))
+     ;; If point is on top of "("
+     ((looking-at "("))
+     ;; If point is on top of ")"
      ((eq ?\) (char-after (point)))
-      (forward-char 1)
-      (setq end (point))
-      (setq beg (forward-list -1 :interactive)))
-
-     ;; On top of "(" or inside a sexp
-     ((if (looking-at "(") (setq beg (point))
-        (setq beg (re-search-forward "(" (buffer-end -1) t -1)))
-      (setq end (when beg (forward-list 1 :interactive)))))
-
-    (cond
-     ;; in case of a symbol evaluation, the previous sexp position, existing,
-     ;; comes before the position of the aforementioned symbol.
-     ;; Also, if beg is null. There is no previous sexp.
-     ((or (null beg) (> orig-point-pos end))
-      (goto-char orig-point-pos))
-     ;; If "somewhere" inside the top sexp, just eval-print
-     ;; HERE line-end-position should be last char in line not
-     ;; counting with possible comments.
-     ((= (line-end-position) end)
-      (goto-char end))
-     ;; All other cases
+      (forward-char 1))
+     ;; All the other cases
      (t
-      (kill-ring-save beg end)
-      (forward-sentence)
-      (newline-and-indent 2)
-      (yank-in-context)
-      (cdr kill-ring)))
-    ;; Don't eval the emptyness
-    (when (current-word)
-      (eval-print-last-sexp))
-    (goto-char orig-point-pos)))
+      (if-let ((beg (re-search-forward "(" (buffer-end -1) t -1))
+               (end (forward-list 1 :interactive)))
+          (if (or (null end) (> orig-point-pos end))
+              (goto-char orig-point-pos)))))
+
+    ;; Let's see what do we have for evaluation
+    (when-let ((string (thing-at-point 'sexp :no-properties)))
+      (bb-show-string-and-eval-in-other-buffer string mode))))
 
 
 (provide 'bb-simple)
