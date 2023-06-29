@@ -94,7 +94,6 @@
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'text-mode-hook #'turn-on-auto-fill)
 (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
-(add-hook 'html-mode-hook #'emmet-mode)
 
 
 ;; Select text is replaced with input
