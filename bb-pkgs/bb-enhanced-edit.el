@@ -89,6 +89,7 @@
   (setq savehist-file (locate-user-emacs-file "history")
         history-delete-duplicates t
         savehist-save-minibuffer-history t
+        savehist-additional-variables '(register-alist kill-ring)
         history-length 1000)
   :init
   (savehist-mode))

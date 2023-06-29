@@ -73,6 +73,7 @@
       calendar-week-start-day 1
       custom-safe-themes t
       dictionary-server "dict.org"
+      set-mark-command-repeat-pop t ;; C-u C-SPC once, then C-SPC, C-SPC, ...
       frame-title-format '(multiple-frames "%b"
                                            ("" "Emacs - %b ")))
 
