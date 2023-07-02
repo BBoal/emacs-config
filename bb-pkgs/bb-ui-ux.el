@@ -69,7 +69,6 @@
 ;;;; `modus-themes'
 (use-package modus-themes
   :demand t
-  :after keycast
   :config
   (load-theme hour-sets-modus))
 
@@ -253,14 +252,12 @@ Specific to the current window's mode line.")
 
 ;;;; `keycast'
 (use-package keycast
-  :demand t
+  :defer 2
   :config
   (setq keycast-mode-line-insert-after 'prot-modeline-vc-branch)
   (setq keycast-mode-line-format "%3s%k%c%R")
   (setq keycast-mode-line-window-predicate 'mode-line-window-selected-p)
   (setq keycast-mode-line-remove-tail-elements nil)
-  (unless (keycast--mode-active-p)
-      (keycast-mode 1))
 
   (dolist (input '(self-insert-command
                    org-self-insert-command))
