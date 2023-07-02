@@ -30,6 +30,7 @@
         (css-mode . css-ts-mode)
         (go-mode . go-ts-mode)
         (html-mode . html-ts-mode)
+        (mhtml-mode . html-ts-mode)
         (js-mode . js-ts-mode)
         (json-mode . json-ts-mode)
         (python-mode . python-ts-mode)
