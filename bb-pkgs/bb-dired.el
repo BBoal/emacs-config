@@ -6,14 +6,6 @@
 ;;; Code:
 
 
-;; When there are two Dired buffers side-by-side make Emacs
-;; automatically suggest the other one as the target of copy or rename
-;; operations.  Remember that you can always use M-p and M-n in the
-;; minibuffer to cycle through the history, regardless of what this
-;; does.
-(setq dired-dwim-target t)
-
-
 ;; Teach Dired to use a specific external program with either the
 ;; `dired-do-shell-command' or `dired-do-async-shell-command' command
 ;; (with the default keys, those are bound to `!' `&', respectively).
@@ -27,9 +19,17 @@
         ("\\.\\(mp[34]\\|m4a\\|ogg\\|flac\\|webm\\|mkv\\)" "mpv" "xdg-open")
 		(".*" "xdg-open")))
 
+
+;;;; `dired'
+(use-package dired
+  :hook (dired-mode . dired-hide-details-mode)
+  :config
+  (setq dired-dwim-target t))
+
+
+
 ;;;; `diredfl'
 (use-package diredfl
-  :defer 2
   :after dired
   :hook (dired-mode . (lambda()
                         (diredfl-mode)
@@ -38,6 +38,12 @@
   (require 'gnus-dired))
 
 
+(use-package dired-preview
+  :after dired
+  :vc ( :url "https://git.sr.ht/~protesilaos/dired-preview"
+        :rev :newest)
+  :config
+  (add-hook 'dired-mode-hook #'dired-preview-mode))
 
 
 (provide 'bb-dired)
