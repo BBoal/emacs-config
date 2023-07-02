@@ -10,6 +10,7 @@
 (keymap-global-set "<escape>" #'bb-simple-keyboard-quit-dwim)
 
 (defvar-keymap s-help-prefix-map
+  "a" #'apropos-command
   "m" #'consult-man
   "B" #'embark-bindings) ;; alternative for \`describe-bindings\'
 (keymap-global-set "s-h" s-help-prefix-map)
@@ -32,6 +33,7 @@
                                (find-file "~/.emacs.d/init.el")))
 (keymap-global-set "<f7>" #'bb-simple-cycle-display-line-numbers)
 (keymap-global-set "<f6>" #'whitespace-mode)
+(keymap-global-set "<f5>" #'keycast-mode-line-mode)
 (keymap-global-set "<f2>" #'bb/revert-buffer-no-confirm)
 
 (keymap-global-set "s-k" #'windmove-up)
