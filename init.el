@@ -31,7 +31,7 @@
 ;;; Set default font
 (set-face-attribute 'default nil
                     :family "Iosevka Zenodotus"
-                    :height 130)
+                    :height 120)
 ;; (set-frame-font "FantasqueSansMono Nerd Font Mono 13" nil t t)
 
 
@@ -51,10 +51,7 @@
 
 
 ;;; User preferences
-(setq column-number-mode t
-      display-time-24hr-format t
-      display-time-mode t
-      bidi-inhibit-bpa t
+(setq bidi-inhibit-bpa t
       scroll-conservatively 101
       x-stretch-cursor t
       ring-bell-function 'ignore
@@ -63,8 +60,6 @@
       read-process-output-max (* 1024 1024)
       save-interprogram-paste-before-kill t
       kill-read-only-ok t
-      mode-line-defining-kbd-macro
-        (propertize " Macro" 'face 'mode-line-emphasis)
       revert-without-query '(".*")
       imenu-auto-rescan t
       help-window-select t
