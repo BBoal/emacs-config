@@ -6,6 +6,14 @@
 ;;; Code:
 
 
+; When there are two Dired buffers side-by-side make Emacs
+;; automatically suggest the other one as the target of copy or rename
+;; operations.  Remember that you can always use M-p and M-n in the
+;; minibuffer to cycle through the history, regardless of what this
+;; does.  (The "dwim" stands for "Do What I Mean".)
+(setq dired-dwim-target t)
+
+
 ;; Teach Dired to use a specific external program with either the
 ;; `dired-do-shell-command' or `dired-do-async-shell-command' command
 ;; (with the default keys, those are bound to `!' `&', respectively).
@@ -20,17 +28,15 @@
 		(".*" "xdg-open")))
 
 
-;;;; `dired'
-(use-package dired
-  :hook (dired-mode . dired-hide-details-mode)
-  :config
-  (setq dired-dwim-target t))
-
+;; Automatically hide the detailed listing when visiting a Dired
+;; buffer.  This can always be toggled on/off by calling the
+;; `dired-hide-details-mode' interactively with M-x or its keybindings
+;; (the left parenthesis by default).
+(add-hook 'dired-mode-hook #'dired-hide-details-mode)
 
 
 ;;;; `diredfl'
 (use-package diredfl
-  :after dired
   :hook (dired-mode . (lambda()
                         (diredfl-mode)
                         (gnus-dired-mode)))
@@ -39,7 +45,6 @@
 
 
 (use-package dired-preview
-  :after dired
   :vc ( :url "https://git.sr.ht/~protesilaos/dired-preview"
         :rev :newest)
   :config
