@@ -23,7 +23,6 @@
 
 ;;;; `jinx'
 (use-package jinx
-  :defer 2
   :after vertico
   :hook ( emacs-startup . global-jinx-mode )
   :bind (( "M-$"  . jinx-correct )
@@ -47,8 +46,7 @@
 
 ;;;; `consult'
 (use-package consult
-  :defer 2
-  :demand
+  :demand t
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
          ("C-c s" . consult-history)
@@ -147,7 +145,6 @@
 
 ;;;; `orderless'
 (use-package orderless
-  :defer 2
   :demand t
   :config
   (setq completion-styles '(basic initials orderless)
@@ -157,14 +154,13 @@
 
 ;;;; `marginalia'
 (use-package marginalia
-  :defer 2
   :init
   (marginalia-mode))
 
 
 ;;;; `embark'
 (use-package embark
-  :defer 2
+  :demand t
   :bind
   (("C-." . embark-act)                 ;; pick some comfortable binding
    ("C-," . embark-dwim))                ;; good alternative: M-.
@@ -181,8 +177,6 @@
 
 ;;;; `embark-consult'
 (use-package embark-consult
-  :defer 2
-  :after (embark consult)
   :demand t ; only necessary if you have the hook below
   ;; if you want to have consult previews as you move around an
   ;; auto-updating embark collect buffer
@@ -295,8 +289,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `yasnippet'
 (use-package yasnippet
-  :defer 2
-  :demand t
   :hook ((text-mode prog-mode) . yas-minor-mode)
   :init
   (setq yas-snippet-dirs
@@ -311,6 +303,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `consult-yasnippet'
 (use-package consult-yasnippet
+  :defer 1
   :after (consult yasnippet))
 
 
@@ -335,6 +328,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `consult-eglot'
 (use-package consult-eglot
+  :defer 1
   :after (consult eglot))
 
 
