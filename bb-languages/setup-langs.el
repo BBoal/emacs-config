@@ -18,7 +18,8 @@
 (defun bb-eglot-arrange-file()
   "Imports and formats programming file using Eglot"
   (interactive)
-  (if (eq major-mode 'c++-mode)
+  (if (or (eq major-mode 'c++-mode)
+          (eq major-mode 'c++-ts-mode))
       (cpp-auto-include))
   (ignore-errors
     (eglot-code-action-organize-imports (point-min)))
