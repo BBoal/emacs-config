@@ -7,6 +7,7 @@
 
 ;;;; `smtpmail'
 (use-package smtpmail
+  :demand t
   :config
   (setq smtpmail-default-smtp-server "smtp.mailbox.org"
         smtpmail-smtp-server "smtp.mailbox.org"
@@ -17,13 +18,13 @@
 
 ;;;; `sendmail'
 (use-package sendmail
-  :defer 1
   :config
   (setq send-mail-function 'smtpmail-send-it))
 
 
 ;;;; `notmuch'
 (use-package notmuch
+  :demand t
   :load-path "/usr/share/emacs/site-lisp/"
   :config
   (setq notmuch-identities '("Bruno Boal <egomet@bboal.com>")
@@ -33,7 +34,7 @@
 
 ;;;; `notmuch-indicator'
 (use-package notmuch-indicator
-  :after (notmuch smtpmail)
+  :demand t
   :vc (:url "https://git.sr.ht/~protesilaos/notmuch-indicator"
        :rev :newest)
   :config
