@@ -8,7 +8,7 @@
 
 ;;;;;; `cc-mode'
 (use-package cc-mode
-  :hook (((c++-mode c-mode) .
+  :hook (((c++-ts-mode c++-mode c-ts-mode c-mode) .
           (lambda()
             (add-hook 'before-save-hook #'bb-eglot-arrange-file :depth :local)
             (bb-programming-hooks)
@@ -16,11 +16,16 @@
             (bb-set-compile-command))))
   :bind ((:map c++-mode-map
                ("C-c C-c" . compile))
+         (:map c++-ts-mode-map
+               ("C-c C-c" . compile))
          (:map c-mode-map
+               ("C-c C-c" . compile))
+         (:map c-ts-mode-map
                ("C-c C-c" . compile)))
   :config
   (prot-find-project-root c-ts-mode "Makefile")
   (prot-find-project-root c-mode "Makefile")
+  (prot-find-project-root c++-ts-mode "CMakeList.txt")
   (prot-find-project-root c++-mode "CMakeList.txt")
 
   ;; Setting compile-command
@@ -28,12 +33,11 @@
     (interactive)
     (let ((compile-cmd ""))
       (cond
-       ((eq major-mode 'c++-mode)
+       ((or (eq major-mode 'c++-ts-mode) (eq major-mode 'c++-mode))
         (unless (file-exists-p "CMakeLists.txt")
           (setq compile-cmd "g++ -g -std=c++20 -Wall -o ")))
-       ((eq major-mode 'c-mode)
-        (unless (or (file-exists-p "makefile")
-		            (file-exists-p "Makefile"))
+       ((or (eq major-mode 'c-ts-mode) (eq major-mode 'c-mode))
+        (unless (file-exists-p "Makefile")
           (setq compile-cmd "gcc -g -O -o "))))
       (setq-local compile-command
                   (when-let ((buffer-file-name)
@@ -54,7 +58,7 @@
 ;;;;;; `clang-capf'
 (use-package clang-capf
   :after cape
-  :hook (c-mode c++-mode objc-mode)
+  :hook (c-ts-mode c-mode c++-ts-mode c++-mode objc-mode)
   :config
   (add-to-list 'completion-at-point-functions #'clang-capf))
 
@@ -63,7 +67,11 @@
 (use-package disaster
   :bind ((:map c++-mode-map
                ("C-c d" . disaster))
+         (:map c++-ts-mode-map
+               ("C-c d" . disaster))
          (:map c-mode-map
+               ("C-c d" . disaster))
+         (:map c-ts-mode-map
                ("C-c d" . disaster))))
 
 
