@@ -67,7 +67,6 @@
          ("C-M-#" . consult-register)
          ;; Other custom bindings
          ("M-y" . consult-yank-pop)     ;; orig. yank-pop
-         ("s-h a" . apropos-command)    ;; orig. apropos-command
          ;; Minibuffer history
          :map minibuffer-local-map
          ("M-s" . consult-history)       ;; orig. next-matching-history-element
@@ -318,13 +317,15 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 ;;;; `eglot'
 (use-package eglot
   :after envrc
-  :bind (:map eglot-mode-map
-              ("C-c e r" . eglot-rename)
-              ("C-c e o" . eglot-code-action-organize-imports)
-              ("C-c e h" . eldoc)
-              ("C-c e f" . eglot-code-action-quickfix)
-              ("C-c e i" . eglot-code-action-inline))
   :config
+  (defvar-keymap s-eglot-prefix-map
+  "r" #'eglot-rename
+  "o" #'eglot-code-action-organize-imports
+  "h" #'eldoc
+  "f" #'eglot-code-action-quickfix
+  "i" #'eglot-code-action-inline)
+  (keymap-set eglot-mode-map "s-e" s-eglot-prefix-map)
+
   (setq corfu-popupinfo-mode t
         corfu-popupinfo-delay 1.0
         eglot-sync-connect nil
