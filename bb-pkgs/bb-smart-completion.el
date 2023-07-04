@@ -160,7 +160,7 @@
 
 ;;;; `embark'
 (use-package embark
-  :demand t
+  :defer 2
   :bind
   (("C-." . embark-act)                 ;; pick some comfortable binding
    ("C-," . embark-dwim))                ;; good alternative: M-.
@@ -177,7 +177,7 @@
 
 ;;;; `embark-consult'
 (use-package embark-consult
-  :demand t ; only necessary if you have the hook below
+  :defer 3 ; only necessary if you have the hook below
   ;; if you want to have consult previews as you move around an
   ;; auto-updating embark collect buffer
   :hook
@@ -186,6 +186,10 @@
 
 ;;;; `corfu'
 (use-package corfu
+  :bind (:map corfu-map
+              ("s-SPC" . corfu-insert-separator)
+              ("J" . corfu-next)
+              ("K" . corfu-previous))
   :hook (minibuffer-setup . contrib/corfu-enable-always-in-minibuffer)
   :config
   ;; Adapted from Corfu's manual.
@@ -212,16 +216,10 @@ Useful for prompts such as `eval-expression' and `shell-command'."
         corfu-preselect 'prompt      ;; Disable candidate preselection
         corfu-on-exact-match nil     ;; Configure handling of exact matches
         corfu-scroll-margin 2)       ;; Use scroll margin
-  :bind
-  (:map corfu-map
-        ("s-SPC" . corfu-insert-separator)
-        ("J" . corfu-next)
-        ("K" . corfu-previous))
 
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since Dabbrev can be used globally (M-/).
   ;; See also `corfu-excluded-modes'.
-  :init
   (global-corfu-mode))
 
 
@@ -328,7 +326,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `consult-eglot'
 (use-package consult-eglot
-  :defer 1
+  :defer 3
   :after (consult eglot))
 
 

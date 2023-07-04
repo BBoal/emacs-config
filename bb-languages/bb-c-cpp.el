@@ -13,20 +13,20 @@
             (add-hook 'before-save-hook #'bb-eglot-arrange-file :depth :local)
             (bb-programming-hooks)
             (eglot-ensure)
-            (bb-set-compile-command))))
-  :bind ((:map c++-mode-map
-               ("C-c C-c" . compile))
-         (:map c++-ts-mode-map
-               ("C-c C-c" . compile))
-         (:map c-mode-map
-               ("C-c C-c" . compile))
-         (:map c-ts-mode-map
-               ("C-c C-c" . compile)))
+            (bb-set-compile-command)
+            (bb-setup-cc-project-root))))
+  :bind (("C-c C-c" . compile))
+
   :config
-  (prot-find-project-root c-ts-mode "Makefile")
-  (prot-find-project-root c-mode "Makefile")
-  (prot-find-project-root c++-ts-mode "CMakeList.txt")
-  (prot-find-project-root c++-mode "CMakeList.txt")
+  (defun bb-setup-cc-project-root()
+  (let ((mode major-mode))
+    (cond
+     ((or (eq mode c-ts-mode)
+          (eq mode c-mode))
+      (prot-find-project-root mode "Makefile"))
+     ((or (eq mode c++-ts-mode)
+          (eq mode c++-mode))
+      (prot-find-project-root mode "CMakeList.txt")))))
 
   ;; Setting compile-command
   (defun bb-set-compile-command()
@@ -65,14 +65,7 @@
 
 ;;;; `disaster'
 (use-package disaster
-  :bind ((:map c++-mode-map
-               ("C-c d" . disaster))
-         (:map c++-ts-mode-map
-               ("C-c d" . disaster))
-         (:map c-mode-map
-               ("C-c d" . disaster))
-         (:map c-ts-mode-map
-               ("C-c d" . disaster))))
+:bind (("C-c d" . disaster)))
 
 
 (provide 'bb-c-cpp)

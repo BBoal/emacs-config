@@ -7,8 +7,7 @@
 
 ;;;; `repeat'
 (use-package repeat
-  :init
-  (repeat-mode)
+  :defer 3
   :config
   (setq repeat-on-final-keystroke t
         repeat-exit-timeout 5
@@ -18,7 +17,8 @@
         repeat-echo-function 'ignore
         ;; Technically, this is not in repeat.el, though it is the
         ;; same idea.
-        set-mark-command-repeat-pop t))
+        set-mark-command-repeat-pop t)
+  (repeat-mode))
 
 
 ;;;; `smart-hungry-delete'
@@ -29,7 +29,7 @@
 
 ;;;; `ediff'
 (use-package ediff
-  :defer 2
+  :defer 3
   :config
   (setq ediff-split-window-function #'split-window-horizontally
         ediff-window-setup-function #'ediff-setup-windows-plain))
@@ -38,7 +38,7 @@
 ;;;; `wgrep'
 ;; Make grep buffers editable
 (use-package wgrep
-  :defer 2
+  :defer 3
   :bind (:map grep-mode-map
               ("e" . wgrep-change-to-wgrep-mode)
               ("C-x C-q" . wgrep-change-to-wgrep-mode)
@@ -50,7 +50,6 @@
 
 ;;;; `beframe'
 (use-package beframe
-  :defer 2
   :demand t
   :bind (("C-x f" . other-frame-prefix)    ; override `set-fill-column'
   ;; Replace the generic `buffer-menu'.  With a prefix argument, this
@@ -84,7 +83,6 @@
 ;;;; `savehist'
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
-  :defer 2
   :config
   (setq savehist-file (locate-user-emacs-file "history")
         history-delete-duplicates t
