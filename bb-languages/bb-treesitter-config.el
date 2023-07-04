@@ -28,6 +28,7 @@
         (c-mode . c-ts-mode)
         (c++-mode . c++-ts-mode)
         (css-mode . css-ts-mode)
+        (c-or-c++-mode . c-or-c++-ts-mode)
         (go-mode . go-ts-mode)
         (html-mode . html-ts-mode)
         (mhtml-mode . html-ts-mode)
