@@ -14,7 +14,12 @@
 
 ;;;; `hl-todo'
 (use-package hl-todo
-  :defer 3
+  :defer 1
+  :bind (:map hl-todo-mode-map
+              ("C-c t p" . hl-todo-previous)
+              ("C-c t n" . hl-todo-next)
+              ("C-c t o" . hl-todo-occur)
+              ("C-c t i" . hl-todo-insert))
   :config
   (setq hl-todo-color-background nil
         hl-todo-keyword-faces
@@ -25,18 +30,12 @@
           ("REMINDER" . "#1111EE")
           ("TEMP"     . "#1CFF0F")
           ("HACK"     . "#1E90FF")))
-  :bind (:map hl-todo-mode-map
-              ("C-c t p" . hl-todo-previous)
-              ("C-c t n" . hl-todo-next)
-              ("C-c t o" . hl-todo-occur)
-              ("C-c t i" . hl-todo-insert))
-  :init
   (global-hl-todo-mode))
 
 
 ;;;; `goggles'
 (use-package goggles
-  :defer 3
+  :defer 1
   :hook ((prog-mode text-mode) . goggles-mode)
   :config
   (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
@@ -44,7 +43,7 @@
 
 ;;;; `lin'
 (use-package lin
-  :defer 2
+  :defer 1
   :config
   (setq lin-face 'lin-red)
   (lin-global-mode))
@@ -52,7 +51,7 @@
 
 ;;;; `rainbow-mode'
 (use-package rainbow-mode
-  :defer 2
+  :defer 1
   :bind (:map ctl-x-x-map
               ("c" . rainbow-mode))
   :hook ((css-mode
@@ -243,10 +242,8 @@ Specific to the current window's mode line.")
 
 
 ;; Clock in the modeline
-;;(setq display-time-interval 10)
-;;(setq display-time-default-load-average nil)
 (setq display-time-string-forms
-      '((capitalize (format-time-string "%a, %d %b %R "))))
+      '((capitalize (format-time-string " %a,%d %b %R "))))
 (display-time-mode 1)
 
 
@@ -287,7 +284,7 @@ Specific to the current window's mode line.")
         which-key-use-C-h-commands nil
         which-key-side-window-max-height 0.333
         which-key-side-window-max-width 0.4
-        which-key-idle-delay 0.2)
+        which-key-idle-delay 0.5)
   :init
   (which-key-mode)
   (which-key-setup-side-window-right-bottom))
