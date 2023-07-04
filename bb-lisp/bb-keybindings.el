@@ -43,6 +43,7 @@
 (keymap-global-set "s-\\" #'bb/split-window-right-and-focus)
 (keymap-global-set "s-\-" #'bb/split-window-below-and-focus)
 (keymap-global-set "s-q" #'bb/kill-buffer-and-delete-window)
+(keymap-global-set "s-!" #'delete-other-windows-vertically)
 
 (keymap-global-set "C-M-=" #'count-words)
 (keymap-global-set "M-k" #'bb/kill-beg-line)
