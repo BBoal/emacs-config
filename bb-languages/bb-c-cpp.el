@@ -14,7 +14,7 @@
 (defun bb-setup-cc-project-root()
   (interactive)
   (let ((mode major-mode))
-    (keymap-set (symbol-value (intern-soft (format "%s-map" (prin1-to-string mode))))
+    (keymap-set (symbol-value (derived-mode-map-name mode))
                 "C-c C-c" #'compile)
     (cond
      ((or (eq mode c-ts-mode)
