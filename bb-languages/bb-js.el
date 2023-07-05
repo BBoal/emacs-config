@@ -14,7 +14,7 @@
               (eglot-ensure)
               (bb-programming-hooks)))
 
-(prot-find-project-root js-ts-mode "jsconfig.json"))
+  (prot-find-project-root js-ts-mode "jsconfig.json"))
 
 (provide 'bb-js)
 ;;; bb-js.el ends here
