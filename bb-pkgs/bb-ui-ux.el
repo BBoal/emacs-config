@@ -333,12 +333,14 @@ Specific to the current window's mode line.")
   :config
   (defun bb-maybe--get-color(arg)
     "It will return either a symbol or a color from the current palette."
-    (car
+    (or
+     (car
      (alist-get arg
                 (symbol-value
                  (intern-soft
                   (format "%s-palette"
-                          (car custom-enabled-themes)))))))
+                          (car custom-enabled-themes))))))
+     (face-foreground 'cursor nil 'default)))
 
   (defun bb-get-color(arg)
     "To use with Ef or Modus themes. Get's the ARG color from the current
@@ -355,7 +357,6 @@ theme palette, recursively if necessary."
     (when indent-guide-mode
       (set-face-foreground 'indent-guide-face (bb-get-color 'cursor))))
   (add-hook 'enable-theme-functions 'bb--update-indent-guide-face))
-
 
 
 (provide 'bb-ui-ux)
