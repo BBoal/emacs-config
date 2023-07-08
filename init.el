@@ -81,7 +81,7 @@
               indent-tabs-mode nil
               kill-do-not-save-duplicates t
               bidi-paragraph-direction 'left-to-right
-              large-file-warning-threshold (* 30 1048 1048))
+              large-file-warning-threshold (* 30 1024 1024))
 
 
 ;;; Hooks
