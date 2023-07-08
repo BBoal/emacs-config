@@ -117,6 +117,8 @@
     "I"   #'consult-imenu-multi)
   (keymap-global-set "M-g" g-goto-prefix-map)
 
+  (keymap-set minibuffer-local-map "C-s" #'consult-history)
+
   ;; Optionally configure preview. The default value
   ;; is 'any, such that any key triggers the preview.
   ;; (setq consult-preview-key 'any)
