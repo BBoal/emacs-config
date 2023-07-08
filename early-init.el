@@ -57,7 +57,8 @@
 
 
 ;; Early options to consider
-(eval '(setq warning-suppress-types '((use-package)(bytecomp)(comp))
+(eval '(setq warning-suppress-types '((bytecomp) (comp)
+                                      (package-initialize) (use-package))
              native-comp-async-report-warnings-errors  'silent
              load-prefer-newer                         t
              package-enable-at-startup                 nil
