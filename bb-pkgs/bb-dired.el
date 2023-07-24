@@ -28,6 +28,9 @@
 		(".*" "xdg-open")))
 
 
+;; Avoid opening a new dired buffer for each new visited dir
+(setq dired-kill-when-opening-new-dired-buffer t)
+
 ;; Automatically hide the detailed listing when visiting a Dired
 ;; buffer.  This can always be toggled on/off by calling the
 ;; `dired-hide-details-mode' interactively with M-x or its keybindings
@@ -45,8 +48,7 @@
 
 
 (use-package dired-preview
-  :vc ( :url "https://git.sr.ht/~protesilaos/dired-preview"
-        :rev :newest)
+  :defer 1
   :config
   (add-hook 'dired-mode-hook #'dired-preview-mode))
 
