@@ -57,9 +57,7 @@
 
 
 ;; Early options to consider
-(eval '(setq warning-suppress-types '((bytecomp) (comp)
-                                      (package-initialize) (use-package))
-             native-comp-async-report-warnings-errors  'silent
+(eval '(setq native-comp-async-report-warnings-errors  'silent
              load-prefer-newer                         t
              package-enable-at-startup                 nil
              package-quickstart                        t
@@ -72,6 +70,13 @@
              mode-line-format                          nil
              package-native-compile                    t))
 
+
+;; Thanks again to Prot, for giving me peace of windows...
+(add-to-list 'display-buffer-alist
+             ;; '("\\`\\*\\(Warnings\\|Compile-Log\\|Org Links\\)\\*\\'"
+             '("\\`\\*\\(Warnings\\|Org Links\\)\\*\\'"
+               (display-buffer-no-window)
+               (allow-no-window . t)))
 
 (defun bb-emacs-invisible-dividers (_theme)
   "Source: https://github.com/protesilaos/dotfiles
@@ -91,7 +96,7 @@ Make windows dividers for THEME invisible."
       user-login-name   "bb"
       user-mail-address "egomet@bboal.com")
 
-(eval '(setq inhibit-startup-echo-area-message user-full-name))
+(eval '(setq inhibit-startup-echo-area-message user-full-name));; 2023-07-12  REMINDER => Reason for the eval
 
 
 (defun bb-emacs-re-enable-frame-theme (_frame)
