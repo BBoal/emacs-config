@@ -68,18 +68,21 @@
       calendar-week-start-day 1
       custom-safe-themes t
       dictionary-server "dict.org"
+      enable-recursive-minibuffers t
+      show-paren-context-when-offscreen 'overlay
       set-mark-command-repeat-pop t ;; C-u C-SPC once, then C-SPC, C-SPC, ...
       frame-title-format '(multiple-frames "%b"
                                            ("" "Emacs - %b ")))
 
 
-(setq-default fill-column 100
+(setq-default fill-column 79
               tab-always-indent 'complete
               tab-first-completion 'word-or-paren-or-punct
               tab-width 4
               scroll-margin 4
               indent-tabs-mode nil
               kill-do-not-save-duplicates t
+              cursor-in-non-selected-windows nil
               bidi-paragraph-direction 'left-to-right
               large-file-warning-threshold (* 30 1024 1024))
 
@@ -90,6 +93,8 @@
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'text-mode-hook #'turn-on-auto-fill)
 (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
+(add-hook 'activate-mark-hook (lambda() (setq cursor-type 'bar)))
+(add-hook 'deactivate-mark-hook (lambda() (setq cursor-type t)))
 
 
 ;; Select text is replaced with input
@@ -103,9 +108,15 @@
 
 
 ;;; No warnings and restrictions
-(dolist (unrestricted '(erase-buffer narrow-to-region narrow-to-page dired-find-alternate-file
-                        upcase-region downcase-region))
+(dolist (unrestricted
+     '(erase-buffer
+       narrow-to-region
+       narrow-to-page
+       dired-find-alternate-file
+       upcase-region
+       downcase-region))
   (put unrestricted 'disabled nil))
+
 
 (setq safe-local-variable-values
       '((eval add-to-list 'whitespace-style 'indentation::tab)
