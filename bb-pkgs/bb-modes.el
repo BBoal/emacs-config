@@ -38,6 +38,7 @@
 
 ;;;; `markdown-mode'
 (use-package markdown-mode
+  :defer 2
   :mode
   ("\\.md\\.html\\'" . markdown-mode)
   ("README\\.md\\'" . gfm-mode)
