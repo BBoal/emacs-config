@@ -21,13 +21,12 @@
 
 
 ;;;; `use-package'
-(when (not package-archive-contents)
+(unless package-archive-contents
   (package-refresh-contents))
 
 (require 'use-package-ensure)
 (setq use-package-always-ensure t
       use-package-always-defer t)
-
 
 ;;;; `auto-package-update'
 (use-package auto-package-update
@@ -39,6 +38,35 @@
         auto-package-update-interval 2)
   :config
   (auto-package-update-maybe))
+
+
+(defvar prot-emacs-packages
+  '(agitate
+    altcaps
+    beframe
+    cursory
+    denote
+    dired-preview
+    ef-themes
+    fontaine
+    lin
+    logos
+    mct
+    modus-themes
+    notmuch-indicator
+    pulsar
+    spacious-padding
+    standard-themes
+    substitute
+    sxhkdrc-mode
+    tmr)
+  "List of symbols representing the packages Prot develops/maintains.")
+
+(setq package-pinned-packages
+      `(,@(mapcar
+           (lambda (package)
+             (cons package "elpa-devel"))
+           prot-emacs-packages)))
 
 
 (defun bb-require-bb-lisp-files-in-dir (directory)
