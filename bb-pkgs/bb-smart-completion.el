@@ -15,6 +15,9 @@
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
   :config
   (setq vertico-preselect 'prompt
+        vertico-scroll-margin 1
+        vertico-count 5
+        vertico-resize nil
         vertico-cycle t)
   :init
   (vertico-mode))
@@ -118,6 +121,10 @@
   (keymap-global-set "M-g" g-goto-prefix-map)
 
   (keymap-set minibuffer-local-map "C-s" #'consult-history)
+
+  ;; Setting the correct path to the config variable in order to get rid
+  ;; of ripgrep errors during execution
+  (setenv "RIPGREP_CONFIG_PATH" "/home/bb/.config/ripgrep/ripgreprc")
 
   ;; Optionally configure preview. The default value
   ;; is 'any, such that any key triggers the preview.
