@@ -101,7 +101,7 @@ position, operate from CHAR to the end of the line."
   (untabify (point-min) (point-max))
   (indent-tabs-mode nil))
 
-
+;;;###autoload
 (defun bb-simple-add-to-list-elements (receiver-list elements)
   "Add the ELEMENTS to the RECEIVER-LIST"
   (mapc
@@ -136,6 +136,7 @@ options. Then, new values are set accordingly TABS-OR-SPACES and WIDTH, adjustin
   "Simple prompt for getting tab-width value"
   (read-number "tab-width: "))
 
+;;;###autoload
 (defun bb-simple-indent-tabs-or-spaces(style width)
   "Indents buffer with user choices STYLE and WIDTH obtained from
 helper functions."
@@ -265,6 +266,17 @@ taken into consideration and proper evaluated."
     ;; Let's see what do we have for evaluation
     (when-let ((string (thing-at-point 'sexp :no-properties)))
       (bb-show-string-and-eval-in-other-buffer string mode))))
+
+
+;;;###autoload
+(defun bb-delete-blank-lines-dwim(beg end)
+  "Delete all blank lines either surrounding point or, between BEG and END."
+  (interactive "*r")
+  (let ((regexp "^[ \t]*$"))
+    (if (region-active-p)
+        (flush-lines regexp (region-beginning) (region-end) nil)
+      (delete-blank-lines)
+      (if (looking-at regexp) (delete-blank-lines)))))
 
 
 (provide 'bb-simple)
