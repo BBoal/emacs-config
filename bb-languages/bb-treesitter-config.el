@@ -25,6 +25,7 @@
 
 (setq major-mode-remap-alist
       '((bash-mode . bash-ts-mode)
+        (sh-mode . bash-ts-mode)
         (c-mode . c-ts-mode)
         (c++-mode . c++-ts-mode)
         (css-mode . css-ts-mode)
