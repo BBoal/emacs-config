@@ -304,7 +304,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :config
   (setq yas-also-auto-indent-first-line t
         yas-also-indent-empty-lines t)
-  (keymap-set yas-minor-mode-map "ç" yas-maybe-expand)
   (yas-reload-all))
 
 

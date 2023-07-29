@@ -5,6 +5,33 @@
 
 ;;; Code:
 
+
+;; 2023-07-26  TODO => Get different regexp's for different languages
+(defcustom bb-prog-langs-alist
+  '((lisp-interaction-mode . "[(`'\"@,]")
+    (emacs-lisp-mode       . "[(`'\"@,]")
+    (bash-ts-mode          . "[\"'\[\({,;~=+-/%]")
+    (sh-mode               . "[\"'\[\({,;~=+-/%]"))
+  "Alist of characters, language specific, used by `bb-simple-ç-dwim'")
+
+
+(defun bb-try-jump-args-direction(arg paragraph-boundary)
+  (interactive "p")
+  (let ((regexp (or (alist-get major-mode bb-prog-langs-alist)
+                    "[!\"#$%&'()*+,-./:;<=>\?\\@\[\]\^_`{|}~]"))
+        (bound (save-excursion
+                 (funcall paragraph-boundary)
+                 (point))))
+
+    (if (> arg 0)
+        (re-search-forward regexp bound t arg)
+      ;; else  arg < 0
+      (unless (or (bobp) (eq (point) (1+ (point-min))))
+        (forward-char -1)
+        (re-search-forward regexp bound t arg)
+        (forward-char 1)))))
+
+
 ;;;; `bb-programming-hooks'
 (defun bb-programming-hooks ()
   "Useful hooks for programming."

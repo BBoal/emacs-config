@@ -180,6 +180,43 @@ The DWIM behaviour of this command is as follows:
     (keyboard-quit))))
 
 
+(defun bb-simple-ç-dwim(arg)
+  (interactive "p")
+  (if (< arg 0)
+    (message "This function only searches forward. Ignoring the signed prefix"))
+  (bb--simple-ç-or-Ç-worker (abs arg)))
+
+(defun bb-simple-Ç-dwim(arg)
+  (interactive "p")
+  (if (< arg 0)
+      (message "This function only searches backward. Ignoring the signed prefix"))
+  (bb--simple-ç-or-Ç-worker (- (abs arg))))
+
+(defun bb--simple-ç-or-Ç-worker(arg)
+  "Do-What-I-Mean behavior for the 'ç' or 'Ç' key.
+
+The DWIM behavior of this command is as follows:
+
+- Tries to expand possible yasnippet template before point
+- If major-mode is prog-mode derived, jump through special chars defined in
+`' variable
+- In every other case use insert specific character."
+  ;; Let's assume a positive arg (forward search)
+  (let ((search-bounds 'end-of-paragraph-text)
+        (char-number 231)) ; ç
+    ;; in case of a wrong assumption
+    (if (< arg 0)
+      (setq search-bounds 'start-of-paragraph-text
+            char-number 199)) ; Ç
+  (cond
+   ((and (or (yas-minor-mode) (yas-global-mode))
+         (yas-expand)))
+   ((derived-mode-p 'prog-mode)
+    (bb-try-jump-args-direction arg search-bounds))
+   (t
+    (insert (char-to-string char-number))))))
+
+
 
 (defun bb-maybe-eval-string (string)
   "Maybe evaluate elisp in a given STRING."
