@@ -66,23 +66,41 @@
 
 (defvar-keymap s-change-prefix-map
             "i" #'bb-change-inside-char-pairs
-            "a" #'bb-change-around-char-pairs)
+            "a" #'bb-change-around-char-pairs
+            "u" #'bb-simple-escape-url-dwim)
 (keymap-global-set "s-c" s-change-prefix-map)
 
 ;; (defvar-keymap testing-prefix-f-map
 ;;   "e" #'move-end-of-line)
-
 ;; (define-key testing-prefix-map "f" testing-prefix-f-map)
-
-;; (keymap-global-set "s-i" #'bb-change-inside-char-pairs)
-;; (keymap-global-set "s-a" #'bb-change-around-char-pairs)
 
 (keymap-global-set "s-z" #'bb-zap-from-char-to-end)
 (keymap-global-set "M-z" #'zap-up-to-char)
 
 (keymap-global-set "<home>" #'beginning-of-visual-line)
 (keymap-global-set "<end>" #'end-of-visual-line)
+(keymap-global-set "ç" #'bb-simple-ç-dwim)
+(keymap-global-set "Ç" #'bb-simple-Ç-dwim)
 
+
+(keymap-global-set "s-f" #'forward-to-word)
+(keymap-global-set "s-b" #'backward-to-word)
+(keymap-global-set "s-p" #'bb-move-line-above-dwim)
+(keymap-global-set "s-n" #'bb-move-line-below-dwim)
+(keymap-global-set "s-o" #'bb-delete-blank-lines-dwim)
+
+
+(defvar-keymap s-notmuch-prefix-map
+            "m" #'notmuch-hello)
+            ;; "u" #'notmuch-sort-saved-searches)
+(keymap-global-set "s-m" s-notmuch-prefix-map)
+
+(with-eval-after-load 'notmuch
+  (keymap-set notmuch-search-mode-map "/" #'notmuch-search-filter) ; alias for l
+  (keymap-set notmuch-search-mode-map "r" #'notmuch-search-reply-to-thread) ; easier to reply to all by default
+  (keymap-set notmuch-search-mode-map "R" #'notmuch-search-reply-to-thread-sender)
+  (keymap-set notmuch-show-mode-map "r" #'notmuch-show-reply)
+  (keymap-set notmuch-show-mode-map "R" #'notmuch-show-reply-sender))
 
 
 (provide 'bb-keybindings)
