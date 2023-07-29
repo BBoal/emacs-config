@@ -41,10 +41,10 @@
   (if (and (> (string-to-number(format-time-string "%H")) 7 )
            (< (string-to-number(format-time-string "%H")) 19))
       (progn
-        (set-face-background 'default "white")
-        (setq hour-sets-modus 'modus-operandi))
-    (set-face-background 'default "black")
-    (setq hour-sets-modus 'modus-vivendi)))
+        (set-face-background 'default "#edf4f8")
+        (setq hour-sets-theme 'ef-maris-light))
+    (set-face-background 'default "#131c2b")
+    (setq hour-sets-theme 'ef-maris-dark)))
 
 
 ;; setting the UI

@@ -66,14 +66,15 @@
 
 
 ;;;; `modus-themes'
-(use-package modus-themes
-  :demand t
-  :config
-  (load-theme hour-sets-modus))
+(use-package modus-themes)
 
 
 ;;;; `ef-themes'
-(use-package ef-themes)
+(use-package ef-themes
+  :demand t
+  :config
+  (load-theme hour-sets-theme))
+
 
 
 ;;;; `modeline-setup'
