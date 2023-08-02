@@ -53,7 +53,8 @@
 (keymap-global-set "M-o" #'bb-insert-newline-above)
 
 (keymap-global-set "s-y" #'bb-kill-ring-save-line)
-(keymap-global-set "s-d" #'bb-duplicate-line)
+(keymap-global-set "s-D" #'bb-duplicate-line-above-dwim)
+(keymap-global-set "s-d" #'bb-duplicate-line-below-dwim)
 (keymap-global-set "s-t" #'vterm-other-window)
 
 (keymap-global-set "C-+" #'bb-push-mark-no-activate)

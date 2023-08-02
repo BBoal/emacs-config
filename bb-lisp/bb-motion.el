@@ -57,8 +57,9 @@ This is the same as using \\[set-mark-command] with the prefix argument."
 ;;       (delete-region (region-beginning) (region-end))
 ;;     (delete-region (point) (progn (forward-word arg) (point)))))
 
+
 (defun bb-kill-beg-line()
-  "Kills until the beginning of the text in current line.
+  "Kills from the beginning of the text in current line.
 If no text exists between point and the start of the line,
 kills the text before point."
   (interactive)
@@ -68,76 +69,181 @@ kills the text before point."
         (kill-line 0)
       (kill-region (point) end))))
 
-(defun bb-insert-newline-below(&optional arg)
-  "Inserts a new and indented line after the current one or, with prefix,
-after ARG number of lines."
-  (interactive "P")
-  (when arg
-    (forward-line arg))
-  (move-end-of-line nil)
-  (newline-and-indent))
-
-(defun bb-insert-newline-above(&optional arg)
-  "Inserts a new and indented line before the current one or, with prefix,
-before ARG number of lines."
-  (interactive "P")
-  (if arg
-      (forward-line (- (1+ arg)))
-    (forward-line -1))
-  (if (/= (line-number-at-pos) 1)
-      (bb-insert-newline-below)
-    (newline-and-indent)
-    (forward-line -1)))
-
 (defun bb-kill-ring-save-line()
   "Save region when selected, or line otherwise."
   (interactive)
   (if (region-active-p)
       (kill-ring-save (region-beginning) (region-end))
-  (kill-ring-save (pos-bol) (pos-eol))))
+    (kill-ring-save (pos-bol) (pos-eol))))
 
-(defun bb-duplicate-line()
-  "TODO duplicate selected region if present"
-  (interactive)
-  (let ((dif-end-point (unless (use-region-p)
-                         (- (pos-eol) (point)))))
-    (bb-kill-ring-save-line)
-    (move-end-of-line nil)
-    (newline)
-    (yank-in-context)
-    (cdr kill-ring)
-    (if dif-end-point ;; meaning there wasn't a region-p
-        (goto-char (- (point) dif-end-point))
-      (indent-region (region-beginning) (region-end)))))
+
+
+(defun bb-insert-newline-above(&optional arg)
+  "Inserts a new line before the current one or, with prefix, before
+ARG number of lines."
+  (interactive "p")
+  (forward-line (1+ (- arg)))
+  (save-excursion
+    (goto-char (pos-bol))
+    (insert "\n")))
+
+(defun bb-insert-newline-below(&optional arg)
+  "Inserts a new line after the current one or, with prefix, after
+ARG number of lines."
+  (interactive "p")
+  (forward-line (1- arg))
+  (goto-char (pos-eol))
+  (insert "\n"))
+
+
+
+(defun bb-duplicate-line-above-dwim(arg)
+  "Duplicate line or region ARGth times below point/region.
+If ARG is nil, do it one time."
+  (interactive "p")
+  (bb--duplicate-line (abs arg)
+                      (if (> arg 0) -1 1)))
+
+
+(defun bb-duplicate-line-below-dwim(arg)
+  "Duplicate line or region ARGth times above point/region.
+If ARG is nil, do it one time."
+  (interactive "p")
+  (bb--duplicate-line (abs arg)
+                      (if (> arg 0) 1 -1)))
+
+
+(defun bb--duplicate-line(count dir)
+  "Duplicate line or region COUNTth times in DIRection according to prefix.
+A positive prefix leave the duplicates above, a negative, below."
+
+  (let ((start (pos-bol))
+        (end (pos-eol))
+        (opoint (point))
+        (omark (mark))
+        diff-eol-mark)
+
+    (when-let (((use-region-p))
+               (line-diff-mark-point (1+ (- (line-number-at-pos omark)
+                                            (line-number-at-pos opoint)))))
+
+      ;; Point is after Mark (selection downwards)
+      (if (> opoint omark)    ; point is at the end. Correct assignment of end.
+          (setq start (pos-bol line-diff-mark-point)) ; setting start to pos-bol of the mark
+        ;; Point is before Mark (selection upwards)
+        ;; point is at the beginning. Correct assignment of start.
+        (setq end (pos-eol line-diff-mark-point)))    ;; setting end
+
+      (setq diff-eol-mark (- opoint omark)))    ; distance between point and mark
+
+
+    (let* ((diff-eol-point (1+ (- end opoint))) ; account for the concated "\n" below
+           (deactivate-mark)
+           (lines (concat (buffer-substring start end) "\n")))
+
+      (when (> dir 0) ; dups above point
+        (goto-char end)
+        (forward-line 1)
+
+        (while (> count 0)
+          ;; Handle the special case when there isn't a newline as the eob.
+          (if (and (eq (point) (point-max))
+                   (/= (current-column) 0))
+              (insert "\n"))
+
+          (insert lines)
+          (setq count (1- count))))
+
+
+      (when (< dir 0) ; dups below point
+        (while (> count 0)
+          (goto-char start)
+          (forward-line 0)
+          (insert lines)
+          (setq count (1- count))))
+
+      ;;  either way go to same point location reference initial motion
+      (goto-char (- (point) diff-eol-point))
+      ;;  if user provided a region, set the mark properly
+      (if diff-eol-mark (set-mark (- (point) diff-eol-mark))))))
+
+
+
 
 
 (defun bb-transpose-words (&optional arg)
+  "Transpose words around point or around/after point and mark "
   (interactive "p")
   (transpose-words (if (region-active-p) 0 arg)))
 
 
-(defun bb--move-line(count dir)
-    (let* ((start (pos-bol))
-           (end (pos-eol))
-           (end-newline (1+ end))
-           (line (buffer-substring start end-newline))
-           (dif-end-point (- end-newline (point))))
-      (delete-region start end-newline)
-      (forward-line (* count dir))
-      (insert line)
-      (goto-char (- (point) dif-end-point))))
 
-(defun bb-move-line-above(arg)
-  (interactive "p")
-   (if (= (line-number-at-pos) 1)
-      (user-error "Warning: Already at the first line!")
-    (bb--move-line arg -1)))
+(defun bb--move-line(count)
+  "Move line or region COUNTth times in direction according to prefix.
+      A positive prefix moves the line(s) below, a negative, above."
 
-(defun bb-move-line-below(&optional arg)
+  (let ((start (pos-bol))
+        (end (pos-eol))
+        diff-eol-point
+        diff-eol-mark)
+    (when-let (((use-region-p))
+               (pos (point))
+               (mrk (mark))
+               (line-diff-mark-point (1+ (- (line-number-at-pos mrk)
+                                            (line-number-at-pos pos)))))
+      (if (> pos mrk)
+          (setq start (pos-bol line-diff-mark-point)) ; pos-bol of where the mark is
+        (setq end (pos-eol line-diff-mark-point)))    ; pos-eol of the line where the mark is
+      (setq diff-eol-mark (1+ (- end mrk))))          ; 1+ to get the \n
+    ;; this is valid for region or a single line
+    (setq diff-eol-point (1+ (- end (point))))
+    (let* ((max (point-max))
+           (end (1+ end))
+           (end (if (> end max) max end))
+           (deactivate-mark)
+           (lines (delete-and-extract-region start end)))
+      (forward-line count)
+      ;; Handle the special case when there isn't a newline as the eob.
+      (if (and (eq (point) max)
+               (/= (current-column) 0))
+          (insert "\n"))
+      (insert lines)
+      ;; if user provided a region
+      (if diff-eol-mark
+          (set-mark (- (point) diff-eol-mark)))
+      ;; either way go to same point location reference initial motion
+      (goto-char (- (point) diff-eol-point)))))
+
+(defun bb--move-line-user-error (boundary)
+  "Return `user-error' with message accounting for BOUNDARY.
+      BOUNDARY is a buffer position, expected to be `point-min' or `point-max'."
+  (when-let ((bound (line-number-at-pos boundary))
+             (string-bound (if (= boundary (point-min)) "first" "last"))
+             (scope (cond
+                     ((and (use-region-p)
+                           (or (= (line-number-at-pos (point)) bound)
+                               (= (line-number-at-pos (mark)) bound)))
+                      "region is ")
+                     ((= (line-number-at-pos (point)) bound)
+                      "")
+                     (t nil))))
+    (user-error (format "Warning: %salready in the %s line!" scope string-bound))))
+
+
+(defun bb-move-line-above-dwim(arg)
+  "Move line or region ARGth times up.
+      If ARG is nil, do it one time."
   (interactive "p")
-  (if (= (line-number-at-pos) (line-number-at-pos (point-max)))
-      (user-error "Warning: Already at the last line!")
-    (bb--move-line arg 1)))
+  (unless (bb--move-line-user-error (point-min))
+    (bb--move-line (- arg))))
+
+
+(defun bb-move-line-below-dwim(arg)
+  "Move line or region ARGth times down.
+      If ARG is nil, do it one time."
+  (interactive "p")
+  (unless (bb--move-line-user-error (point-max))
+    (bb--move-line arg)))
 
 
 (provide 'bb-motion)
