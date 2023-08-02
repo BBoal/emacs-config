@@ -8,8 +8,8 @@
 
 ;; 2023-07-26  TODO => Get different regexp's for different languages. Aliases??
 (defcustom bb-prog-langs-alist
-  '((lisp-interaction-mode . "[(`'\"@,]")
-    (emacs-lisp-mode       . "[(`'\"@,]")
+  '((lisp-interaction-mode . "[()`'\"@,]")
+    (emacs-lisp-mode       . "[()`'\"@,]")
     (bash-ts-mode          . "[\"'\[\({,;~=+-/%]")
     (sh-mode               . "[\"'\[\({,;~=+-/%]"))
   "Alist of characters, language specific, used by `bb-simple-ç-dwim'")
@@ -19,7 +19,7 @@
   " Jump ARG times through user specific chars bounded by PARAGRAPH-BOUNDARY.
 
 According to a specific regexp described in the 'bb-prog-langs-list' obtained
-according to the major-mode, the user can "jump" to designated chars to quickly
+according to the major-mode, the user can \"jump\" to designated chars to quickly
 re-edit the current paragraph."
   (interactive "p")
   (let ((regexp (or (alist-get major-mode bb-prog-langs-alist)
