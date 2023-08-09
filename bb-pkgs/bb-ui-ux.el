@@ -98,6 +98,7 @@
     (when-let* (((mode-line-window-selected-p))
                 (branches (vc-git-branches))
                 (branch (car branches))
+                ((stringp branch))
                 (state (vc-state (buffer-file-name) 'Git))
                 (face (pcase state
                         ('added 'vc-locally-added-state)
