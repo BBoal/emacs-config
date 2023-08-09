@@ -9,15 +9,25 @@
 ;;;; `org'
 (use-package org
   :config
-  (setq org-directory "~/org.d"
-        org-agenda-files (directory-files-recursively
-                          (concat org-directory "/agenda.d/") "\\.org\\'")
-        org-default-notes-file (concat org-directory "/notes.org")
-        org-export-html-postamble nil
-        org-startup-indented t
-        org-src-preserve-indentation t
-        org-src-tab-acts-natively nil
-        org-edit-src-content-indentation 0)
+  (let* ((org-dir "~/org.d")
+         (agenda-dir (concat org-dir "/agenda.d/"))
+         (notes-file (concat org-dir "/notes.org")))
+    (mapc
+     (lambda (fd)
+       (unless (file-exists-p fd)
+         (if (string-suffix-p ".d/" fd)
+             (make-directory fd t)
+           (write-region "" nil fd))))
+     `(,agenda-dir ,notes-file))
+
+    (setq org-directory org-dir
+          org-agenda-files (directory-files-recursively agenda-dir "\\.org\\'")
+          org-default-notes-file notes-file
+          org-export-html-postamble nil
+          org-startup-indented t
+          org-src-preserve-indentation t
+          org-src-tab-acts-natively nil
+          org-edit-src-content-indentation 0))
   (require 'bb-org-capture))
 
 
