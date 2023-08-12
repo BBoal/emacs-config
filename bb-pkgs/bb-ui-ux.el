@@ -6,10 +6,77 @@
 ;;; Code:
 
 
+;; modus-themes personal preferences
 (setq modus-operandi-tinted-palette-overrides
       '((cursor blue-intense)
         (bg-mode-line-active "#d0d6ff")
         (bg-mode-line-inactive "#e6e6e6")))
+
+
+;; desktop-save options
+(setq desktop-dirname (bb-ensure-dir-or-file-exist "~/.emacs-desktop.d/")
+      desktop-path `(,desktop-dirname)
+      desktop-file-name-format 'absolute
+      desktop-load-locked-desktop nil
+      desktop-restore-eager 6
+      desktop-auto-save-timeout 0
+      desktop-save t)
+
+
+(defun bb-get-last-modifiedf-in-dir (directory)
+  "Return the last modified file (full-path) in DIRECTORY."
+  (interactive "DDirectory: ")
+  (let ((counter 0)
+        files modified-times latest-file)
+    (mapc
+     (lambda (attr)
+       (let ((names (car attr))
+             (times (nth 5 attr)))
+         (if (and (< counter 2)
+                  (or (string-suffix-p "/." names)
+                      (string-suffix-p "/.." names)))
+             (setq counter (1+ counter))
+           (setq files (cons (cons names times)
+                             files)
+                 modified-times (cons times modified-times)))))
+     (directory-files-and-attributes directory :full))
+
+    (setq modified-times (nreverse (sort modified-times #'time-less-p))
+          latest-file (car (rassq (car modified-times) files)))
+
+    (if (called-interactively-p)
+        (message latest-file)
+      latest-file)))
+
+
+
+(defun bb-set-buffer-name-for-desktop-mode()
+  "Avoids the *temp* buffer names and sets the correct name for read and save."
+  (or desktop-base-file-name
+      (setq desktop-base-file-name
+        (concat (format-time-string "%d%b%Y-")
+                  (if-let ((buf-name (buffer-name))
+                           ((not (string-match "\\*[[:word:]]*\*" buf-name))))
+                      buf-name
+                    (buffer-name (window-buffer)))))))
+
+
+(add-hook 'desktop-save-hook #'bb-set-buffer-name-for-desktop-mode)
+
+
+;; (add-hook 'desktop-save-hook (lambda()
+;;                                (setq desktop-base-file-name
+;;                                      (concat (format-time-string "%d%b%Y-")
+;;                                              (buffer-name (window-buffer))))))
+
+(add-hook 'desktop-no-desktop-file-hook
+          (lambda()
+            (setq desktop-base-file-name
+                  (bb-get-last-modifiedf-in-dir desktop-dirname))
+            (desktop-read desktop-dirname)))
+
+(desktop-save-mode t)
+
 
 
 ;;;; `hl-todo'
