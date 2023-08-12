@@ -69,6 +69,15 @@
            prot-emacs-packages)))
 
 
+(defun bb-ensure-dir-or-file-exist (arg)
+  "Creates ARG if non-existant. Prefix '.d/' is considered dir otherwise file."
+  (unless (file-exists-p arg)
+    (if (string-suffix-p ".d/" arg)
+        (make-directory arg t)
+      (write-region "" nil arg)))
+  arg)
+
+
 (defun bb-require-bb-lisp-files-in-dir (directory)
   "Requires all elisp files prefixed with \"bb-\" in DIRECTORY."
   (mapcar

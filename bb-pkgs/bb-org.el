@@ -14,10 +14,7 @@
          (notes-file (concat org-dir "/notes.org")))
     (mapc
      (lambda (fd)
-       (unless (file-exists-p fd)
-         (if (string-suffix-p ".d/" fd)
-             (make-directory fd t)
-           (write-region "" nil fd))))
+       (bb-ensure-dir-or-file-exist fd))
      `(,agenda-dir ,notes-file))
 
     (setq org-directory org-dir
