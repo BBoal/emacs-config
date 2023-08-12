@@ -200,7 +200,7 @@ The DWIM behavior of this command is as follows:
 
 - Tries to expand possible yasnippet template before point
 - If major-mode is prog-mode derived, jump through special chars defined in
-`' variable
+`bb-prog-langs-alist' variable
 - In every other case use insert specific character."
   ;; Let's assume a positive arg (forward search)
   (let ((search-bounds 'end-of-paragraph-text)

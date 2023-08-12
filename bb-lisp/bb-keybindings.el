@@ -35,6 +35,10 @@
 (keymap-global-set "<f5>" #'keycast-mode-line-mode)
 (keymap-global-set "<f2>" #'bb-revert-buffer-no-confirm)
 
+(keymap-global-set "s-<f5>" #'desktop-save-in-desktop-dir)
+(keymap-global-set "s-<f8>" #'desktop-read)
+
+
 (keymap-global-set "s-k" #'windmove-up)
 (keymap-global-set "s-j" #'windmove-down)
 (keymap-global-set "s-h" #'windmove-left)
@@ -44,6 +48,7 @@
 (keymap-global-set "s-q" #'bb-kill-buffer-and-delete-window)
 (keymap-global-set "s-!" #'delete-other-windows-vertically)
 
+(keymap-global-set "M-s o" #'occur)
 (keymap-global-set "C-M-=" #'count-words)
 (keymap-global-set "M-k" #'bb-kill-beg-line)
 (keymap-global-set "M-t" #'bb-transpose-words)
@@ -86,6 +91,7 @@
 
 (keymap-global-set "s-f" #'forward-to-word)
 (keymap-global-set "s-b" #'backward-to-word)
+(keymap-global-set "s-*" #'isearch-forward-thing-at-point)
 (keymap-global-set "s-p" #'bb-move-line-above-dwim)
 (keymap-global-set "s-n" #'bb-move-line-below-dwim)
 (keymap-global-set "s-o" #'bb-delete-blank-lines-dwim)
