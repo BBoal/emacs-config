@@ -7,16 +7,21 @@
 
 ;;;;; Window Management
 (defun bb-split-window-right-and-focus()
+    "Spawn and focus a new window right of the current where most recent
+hidden buffer is showed."
   "Spawn a new window right of the current one and focus it."
   (interactive)
   (split-window-right)
-  (windmove-right))
+  (windmove-right)
+  (switch-to-buffer (other-buffer)))
 
 (defun bb-split-window-below-and-focus()
-  "Spawn a new window below the current one and focus it."
+  "Spawn and focus a new window below the current where most recent
+hidden buffer is showed."
   (interactive)
   (split-window-below)
-  (windmove-down))
+  (windmove-down)
+  (switch-to-buffer (other-buffer)))
 
 (defun bb-kill-buffer-and-delete-window()
   "Kill the current buffer and delete its window."
