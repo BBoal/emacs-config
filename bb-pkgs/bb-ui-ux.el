@@ -13,7 +13,7 @@
         (bg-mode-line-inactive "#e6e6e6")))
 
 
-;; desktop-save options
+;;;; `desktop-mode'
 (setq desktop-dirname (bb-ensure-dir-or-file-exist "~/.emacs-desktop.d/")
       desktop-path `(,desktop-dirname)
       desktop-file-name-format 'absolute
@@ -50,7 +50,7 @@
 
 
 
-(defun bb-set-buffer-name-for-desktop-mode()
+(defun bb-set-desktop-file-for-save()
   "Avoids the *temp* buffer names and sets the correct name for read and save."
   (or desktop-base-file-name
       (setq desktop-base-file-name
@@ -60,23 +60,18 @@
                       buf-name
                     (buffer-name (window-buffer)))))))
 
+(defun bb-set-desktop-file-for-read()
+  "Set the desktop file name to be the latest file modified on desktop-dirname"
+  (setq desktop-base-file-name
+        (bb-get-last-modifiedf-in-dir desktop-dirname))
+  (desktop-read desktop-dirname))
 
-(add-hook 'desktop-save-hook #'bb-set-buffer-name-for-desktop-mode)
 
-
-;; (add-hook 'desktop-save-hook (lambda()
-;;                                (setq desktop-base-file-name
-;;                                      (concat (format-time-string "%d%b%Y-")
-;;                                              (buffer-name (window-buffer))))))
-
-(add-hook 'desktop-no-desktop-file-hook
-          (lambda()
-            (setq desktop-base-file-name
-                  (bb-get-last-modifiedf-in-dir desktop-dirname))
-            (desktop-read desktop-dirname)))
+(add-hook 'desktop-save-hook #'bb-set-desktop-file-for-save)
+(add-hook 'desktop-no-desktop-file-hook #'bb-set-desktop-file-for-read)
 
 (desktop-save-mode t)
-
+(tab-bar-mode t)
 
 
 ;;;; `hl-todo'
