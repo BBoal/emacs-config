@@ -43,6 +43,7 @@
 (keymap-global-set "s-j" #'windmove-down)
 (keymap-global-set "s-h" #'windmove-left)
 (keymap-global-set "s-l" #'windmove-right)
+(keymap-global-set "s-r" #'window-swap-states)
 (keymap-global-set "s-\\" #'bb-split-window-right-and-focus)
 (keymap-global-set "s-\-" #'bb-split-window-below-and-focus)
 (keymap-global-set "s-q" #'bb-kill-buffer-and-delete-window)
@@ -53,6 +54,7 @@
 (keymap-global-set "M-k" #'bb-kill-beg-line)
 (keymap-global-set "M-t" #'bb-transpose-words)
 
+(keymap-global-set "M-/" #'hippie-expand)
 
 (keymap-global-set "C-o" #'bb-insert-newline-below)
 (keymap-global-set "M-o" #'bb-insert-newline-above)
