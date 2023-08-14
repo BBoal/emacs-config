@@ -16,31 +16,35 @@
 
 ;;;; `desktop-mode'
 
-(defun bb-get-last-modifiedf-in-dir (&optional directory)
+(defun bb--last-modified-in-dir (&optional directory)
   "Return the last modified file (full-path) in DIRECTORY."
   (interactive "DDirectory: ")
-  (unless directory (setq directory desktop-dirname))
-  (let ((counter 0)
-        files modified-times latest-file)
-    (mapc
-     (lambda (attr)
-       (let ((names (car attr))
-             (times (nth 5 attr)))
-         (if (and (< counter 2)
-                  (or (string-suffix-p "/." names)
-                      (string-suffix-p "/.." names)))
-             (setq counter (1+ counter))
+  (or directory (setq directory desktop-dirname))
+  (cond
+   ((not (file-directory-p directory))
+    (user-error "Error: Directory doesn't seem to exist."))
+   ((not (file-accessible-directory-p directory))
+    (user-error "Error: Unable to open directory. Check permissions."))
+   (t
+    (let (files modified-times latest-file)
+      (mapc
+       (lambda (attr)
+         (let ((names (expand-file-name (car attr))) ; expand-file-name takes '.' and '..'
+               (times (nth 5 attr))) ; 5th position is the modified-time attribute
            (setq files (cons (cons names times)
                              files)
-                 modified-times (cons times modified-times)))))
-     (directory-files-and-attributes directory :full))
-
+                 modified-times (cons times modified-times))))
+      (directory-files-and-attributes directory :full)) ; list of filenames and attrs
+    ;; sort the times in descending order to get the most recent first
     (setq modified-times (nreverse (sort modified-times #'time-less-p))
           latest-file (car (rassq (car modified-times) files)))
-
+    ;; What if the directory is empty? latest-file = directory
+    (when (string= latest-file (expand-file-name directory))
+      (setq latest-file nil))
+    ;; Output the result
     (if (called-interactively-p)
         (message latest-file)
-      latest-file)))
+      latest-file)))))
 
 
 (defun bb-set-desktop-file-for-save()
@@ -59,7 +63,7 @@
   (if (not (file-directory-p directory))
       (user-error "Directory not found... Was it a typo? ")
     (setq desktop-base-file-name
-          (bb-get-last-modifiedf-in-dir directory))
+          (bb--last-modified-in-dir directory))
     (desktop-read directory)
     (load-theme (car custom-enabled-themes))))
 
@@ -107,10 +111,10 @@
 
 (defun bb--tab-bar-new-tab-group()
   "Sets the group of the new tab to the name of the parent directory of file."
-  (capitalize (if (buffer-file-name (current-buffer))
-              ;; (file-name-base buffer-file-name)
-              (file-name-parent-directory buffer-file-name)
-            (buffer-name))))
+  (if (buffer-file-name (current-buffer))
+      ;; (file-name-base buffer-file-name)
+      (abbreviate-file-name (file-name-parent-directory buffer-file-name))
+    (buffer-name)))
 
 (defun bb--tab-bar-tab-group-format-default (tab i &optional current-p)
   (propertize
@@ -119,15 +123,20 @@
    'face (if current-p 'tab-bar-tab-group-current 'tab-bar-tab-group-inactive)))
 
 (defun bb--tab-bar-tab-name-format-default (tab i)
-  (let ((current-p (eq (car tab) 'current-tab)))
+  (let* ((current-p (eq (car tab) 'current-tab))
+         (string (concat (if tab-bar-tab-hints (format "%d\) " i) "")
+                         (alist-get 'name tab)
+                         (or (and tab-bar-close-button-show
+                                  (not (eq tab-bar-close-button-show
+                                           (if current-p 'non-selected 'selected)))
+                                  tab-bar-close-button)
+                             "")))
+         (dif-widthmax-widthstring (- (cadr tab-bar-auto-width-max) (string-width string)))
+         (spaces2add (if (<= dif-widthmax-widthstring 0)
+                         0
+                       (floor dif-widthmax-widthstring 2))))
     (propertize
-     (concat (if tab-bar-tab-hints (format " %d\)  " i) "")
-             (alist-get 'name tab)
-             (or (and tab-bar-close-button-show
-                      (not (eq tab-bar-close-button-show
-                               (if current-p 'non-selected 'selected)))
-                      tab-bar-close-button)
-                 ""))
+     (concat (make-string spaces2add ?\ ) string)
      'face (funcall tab-bar-tab-face-function tab))))
 
 
@@ -144,7 +153,7 @@
       tab-bar-new-tab-choice 'bb--tab-bar-new-tab-choice
       tab-bar-new-tab-group 'bb--tab-bar-new-tab-group
       tab-bar-select-tab-modifiers '(super)
-      tab-bar-tab-group-format-function 'tab-bar-tab-group-format-default
+      tab-bar-tab-group-format-function 'bb--tab-bar-tab-group-format-default
       tab-bar-tab-group-function 'tab-bar-tab-group-default
       tab-bar-tab-hints t
       tab-bar-tab-name-format-function 'bb--tab-bar-tab-name-format-default
