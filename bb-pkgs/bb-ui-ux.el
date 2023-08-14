@@ -1,4 +1,4 @@
-;;; bb-ui-ux.el --- Improving UI and UX -*- lexical-binding: t -*-
+;;;; bb-ui-ux.el --- Improving UI and UX -*- lexical-binding: t -*-
 
 ;;; Commentary:
 ;;; Configuration of packages related to embelish and empower emacs UI/UX
@@ -6,26 +6,20 @@
 ;;; Code:
 
 
-;; modus-themes personal preferences
+;;;; modus-themes personal preferences
 (setq modus-operandi-tinted-palette-overrides
       '((cursor blue-intense)
         (bg-mode-line-active "#d0d6ff")
         (bg-mode-line-inactive "#e6e6e6")))
 
 
+
 ;;;; `desktop-mode'
-(setq desktop-dirname (bb-ensure-dir-or-file-exist "~/.emacs-desktop.d/")
-      desktop-path `(,desktop-dirname)
-      desktop-file-name-format 'absolute
-      desktop-load-locked-desktop nil
-      desktop-restore-eager 6
-      desktop-auto-save-timeout 0
-      desktop-save t)
 
-
-(defun bb-get-last-modifiedf-in-dir (directory)
+(defun bb-get-last-modifiedf-in-dir (&optional directory)
   "Return the last modified file (full-path) in DIRECTORY."
   (interactive "DDirectory: ")
+  (unless directory (setq directory desktop-dirname))
   (let ((counter 0)
         files modified-times latest-file)
     (mapc
@@ -49,29 +43,116 @@
       latest-file)))
 
 
-
 (defun bb-set-desktop-file-for-save()
   "Avoids the *temp* buffer names and sets the correct name for read and save."
-  (or desktop-base-file-name
-      (setq desktop-base-file-name
-        (concat (format-time-string "%d%b%Y-")
-                  (if-let ((buf-name (buffer-name))
-                           ((not (string-match "\\*[[:word:]]*\*" buf-name))))
-                      buf-name
-                    (buffer-name (window-buffer)))))))
-
-(defun bb-set-desktop-file-for-read()
-  "Set the desktop file name to be the latest file modified on desktop-dirname"
   (setq desktop-base-file-name
-        (bb-get-last-modifiedf-in-dir desktop-dirname))
-  (desktop-read desktop-dirname))
+        (concat (format-time-string "%d%b%Y-")
+                (if-let ((buf-name (buffer-name))
+                         ((not (string-match "\\*[[:word:]]*\*" buf-name))))
+                    buf-name
+                  (buffer-name (window-buffer))))))
+
+(defun bb-set-desktop-file-for-read (&optional directory)
+  "Set the desktop file name to be the latest file modified on desktop-dirname"
+  (interactive "DChoose a directory to load from: ")
+  (unless directory (setq directory desktop-dirname))
+  (if (not (file-directory-p directory))
+      (user-error "Directory not found... Was it a typo? ")
+    (setq desktop-base-file-name
+          (bb-get-last-modifiedf-in-dir directory))
+    (desktop-read directory)
+    (load-theme (car custom-enabled-themes))))
 
 
+(setq desktop-dirname (bb-ensure-dir-or-file-exist "~/.emacs-desktop.d/")
+      desktop-path `(,desktop-dirname)
+      desktop-file-name-format 'absolute
+      desktop-load-locked-desktop nil
+      desktop-globals-to-save nil
+      desktop-globals-to-clear nil
+      desktop-lazy-idle-delay 1
+      desktop-locals-to-save '(desktop-locals-to-save
+                               tab-bar-show
+                               truncate-lines
+                               case-fold-search
+                               case-replace
+                               fill-column
+                               overwrite-mode
+                               change-log-default-name
+                               line-number-mode
+                               size-indication-mode
+                               buffer-file-coding-system
+                               indent-tabs-mode
+                               tab-width
+                               indicate-buffer-boundaries
+                               indicate-empty-lines
+                               show-trailing-whitespace)
+      desktop-modes-not-to-save '(tags-table-mode)
+      desktop-restore-eager 6
+      ;; desktop-restore-reuses-frames 'keep
+      desktop-auto-save-timeout 0
+      desktop-save t)
+
+;;;;; Hooks for `desktop-mode'
 (add-hook 'desktop-save-hook #'bb-set-desktop-file-for-save)
 (add-hook 'desktop-no-desktop-file-hook #'bb-set-desktop-file-for-read)
 
-(desktop-save-mode t)
+
+
+;;;; `tab-bar-mode'
+;; 2023-08-13  TODO => Improve to include choices such as *scratch*
+(defun bb--tab-bar-new-tab-choice()
+  "Allows the user to choose the type of the next new tab."
+  (call-interactively 'find-file))
+
+(defun bb--tab-bar-new-tab-group()
+  "Sets the group of the new tab to the name of the parent directory of file."
+  (capitalize (if (buffer-file-name (current-buffer))
+              ;; (file-name-base buffer-file-name)
+              (file-name-parent-directory buffer-file-name)
+            (buffer-name))))
+
+(defun bb--tab-bar-tab-group-format-default (tab i &optional current-p)
+  (propertize
+   (concat (if (and tab-bar-tab-hints (not current-p)) (format " [%d]  " i) "")
+           (funcall tab-bar-tab-group-function tab))
+   'face (if current-p 'tab-bar-tab-group-current 'tab-bar-tab-group-inactive)))
+
+(defun bb--tab-bar-tab-name-format-default (tab i)
+  (let ((current-p (eq (car tab) 'current-tab)))
+    (propertize
+     (concat (if tab-bar-tab-hints (format " %d\)  " i) "")
+             (alist-get 'name tab)
+             (or (and tab-bar-close-button-show
+                      (not (eq tab-bar-close-button-show
+                               (if current-p 'non-selected 'selected)))
+                      tab-bar-close-button)
+                 ""))
+     'face (funcall tab-bar-tab-face-function tab))))
+
+
+(setq tab-bar-auto-width-max '(220 27) ; tweaked with (string-pixel-width (make-string 27 ?\=))
+      tab-bar-close-button-show 'selected
+      tab-bar-close-last-tab-choice 'delete-frame
+      tab-bar-close-tab-select 'left
+      tab-bar-format '(tab-bar-format-history
+                       tab-bar-format-tabs-groups
+                       tab-bar-separator
+                       tab-bar-format-add-tab
+                       tab-bar-format-align-right
+                       tab-bar-format-global)
+      tab-bar-new-tab-choice 'bb--tab-bar-new-tab-choice
+      tab-bar-new-tab-group 'bb--tab-bar-new-tab-group
+      tab-bar-select-tab-modifiers '(super)
+      tab-bar-tab-group-format-function 'tab-bar-tab-group-format-default
+      tab-bar-tab-group-function 'tab-bar-tab-group-default
+      tab-bar-tab-hints t
+      tab-bar-tab-name-format-function 'bb--tab-bar-tab-name-format-default
+      tab-bar-tab-name-function 'tab-bar-tab-name-truncated
+      tab-bar-tab-name-truncated-max (cadr tab-bar-auto-width-max)
+      tab-bar-show t)
 (tab-bar-mode t)
+
 
 
 ;;;; `hl-todo'
