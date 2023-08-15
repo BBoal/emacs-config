@@ -279,5 +279,13 @@ taken into consideration and proper evaluated."
       (if (looking-at regexp) (delete-blank-lines)))))
 
 
+;;;###autoload
+(defun bb-simple-kill-current-buffer()
+  "Kills the current buffer if saved, otherwise prompts you."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+
+
 (provide 'bb-simple)
 ;;; bb-simple.el ends here
