@@ -15,7 +15,7 @@
 
 
 ;;;; `desktop-mode'
-
+;;;;; Functions
 (defun bb--last-modified-in-dir (&optional directory)
   "Return the last modified file (full-path) in DIRECTORY."
   (interactive "DDirectory: ")
@@ -56,19 +56,57 @@
                     buf-name
                   (buffer-name (window-buffer))))))
 
-(defun bb-set-desktop-file-for-read (&optional directory)
-  "Set the desktop file name to be the latest file modified on desktop-dirname"
-  (interactive "DChoose a directory to load from: ")
-  (unless directory (setq directory desktop-dirname))
-  (if (not (file-directory-p directory))
-      (user-error "Directory not found... Was it a typo? ")
-    (setq desktop-base-file-name
-          (bb--last-modified-in-dir directory))
+
+(defun bb-set-desktop-file-for-read (&optional directory filename)
+  "Set the desktop FILENAME name to be loaded from designated DIRECTORY.
+
+Function can be called interactively with completion for the mentioned
+variables or in lisp code by assigning the arguments.
+
+If no arguments are given, DIRECTORY defaults to `desktop-dirname' and FILENAME
+  defaults to the latest modified filename inside that directory."
+  (interactive
+   (let*
+       ((dir (if (buffer-file-name (current-buffer))
+                 (file-name-parent-directory buffer-file-name)
+               desktop-dirname))
+        (file (read-file-name "Choose/Insert a filename to load: " dir nil nil
+                              (file-name-nondirectory (bb--last-modified-in-dir dir))))))
+   (list (file-name-directory file) file))
+  (or directory (setq directory default-desktop-dirname))
+  (or filename (setq filename (bb--last-modified-in-dir directory)))
+  (cond
+   ((not (file-directory-p directory))
+    (user-error "Error: Directory doesn't seem to exist."))
+   ((not (file-accessible-directory-p directory))
+    (user-error "Error: Unable to open directory. Check permissions."))
+   ((not (file-exists-p filename))
+    (user-error "Error: Filename doesn't seem to exist."))
+   ((not (file-readable-p filename))
+    (user-error "Error: Unable to open directory. Check permissions."))
+   (t
+    (setq desktop-base-file-name filename)
+    (desktop-release-lock desktop-dirname)
     (desktop-read directory)
-    (load-theme (car custom-enabled-themes))))
+    (load-theme (car custom-enabled-themes)))))
+
+;; (defun bb-set-desktop-file-for-read (&optional directory)
+;;   "Set the desktop file name to be the latest file modified on desktop-dirname"
+;;   (interactive "DChoose a directory to load from: ")
+;;   (unless directory (setq directory desktop-dirname))
+;;   (if (not (file-directory-p directory))
+;;       (user-error "Directory not found... Was it a typo? ")
+;;     (setq desktop-base-file-name
+;;           (bb--last-modified-in-dir directory))
+;;     (desktop-read directory)
+;;     (load-theme (car custom-enabled-themes))))
 
 
-(setq desktop-dirname (bb-ensure-dir-or-file-exist "~/.emacs-desktop.d/")
+;;;;; Customizations
+(defconst default-desktop-dirname "~/.emacs-desktop.d/"
+  "Directory that holds all desktop files referencing all the projects.")
+
+(setq desktop-dirname (bb-ensure-dir-or-file-exist default-desktop-dirname)
       desktop-path `(,desktop-dirname)
       desktop-file-name-format 'absolute
       desktop-load-locked-desktop nil
@@ -93,7 +131,7 @@
                                show-trailing-whitespace)
       desktop-modes-not-to-save '(tags-table-mode)
       desktop-restore-eager 6
-      ;; desktop-restore-reuses-frames 'keep
+      ;;desktop-restore-reuses-frames 'keep
       desktop-auto-save-timeout 0
       desktop-save t)
 
