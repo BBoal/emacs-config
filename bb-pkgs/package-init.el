@@ -80,7 +80,7 @@
 
 (defun bb-require-bb-lisp-files-in-dir (directory)
   "Requires all elisp files prefixed with \"bb-\" in DIRECTORY."
-  (mapcar
+  (mapc
    (lambda (file)
      (require (intern (file-name-sans-extension file))))
    (directory-files directory nil "^bb-.*\.el$")))
