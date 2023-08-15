@@ -73,8 +73,7 @@
 
 ;; Thanks again to Prot, for giving me peace of windows...
 (add-to-list 'display-buffer-alist
-             ;; '("\\`\\*\\(Warnings\\|Compile-Log\\|Org Links\\)\\*\\'"
-             '("\\`\\*\\(Compile-Log\\|Org Links\\)\\*\\'"
+             '("\\`\\*\\(Warnings\\|Compile-Log\\|Org Links\\)\\*\\'"
                (display-buffer-no-window)
                (allow-no-window . t)))
 
