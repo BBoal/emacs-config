@@ -40,8 +40,8 @@ or produces an error. To achieve this effect, the `search-forward'
 function is used.
 
 Returns DIR, with possible values of 1, when the search is meant to be
-forward; -1, when backward, or 0, when the occurrence matches either
-the values of `line-end-position' or `pos-bol'."
+forward; -1, when backward, or 0, when the occurrence matches neither
+the values of `pos-bol' or `pos-eol'."
 
   (let ((dir 1)
         (bounds (pos-eol)))
@@ -156,6 +156,7 @@ the search. The latter function gets point to the closing delimiter of CHAR
 
 
 ;;;###autoload
+;; 2023-08-15  FIXME => Change this to a function that changes pairs around point
 (defun bb-change-around-char-pairs(char count)
   "Similiar to `bb-change-inside-char-pairs' but also kills surrounding
 delimiters."
@@ -176,7 +177,7 @@ DIR is the return value of `bb--find-occurrence'.
 If DIR is 0, then the occurrence matched either `pos-eol' or
 `pos-bol'. On both cases, the function does not interfere
 with different lines, meaning that the kill is restricted to the same line
-and nothings gets evaluated.
+and nothing gets evaluated.
 
 If DIR is 1, the kill is made from occurrence to `pos-eol'.
 Analogously, if DIR is -1, the kill goes to `pos-bol'."
@@ -184,7 +185,7 @@ Analogously, if DIR is -1, the kill goes to `pos-bol'."
   (interactive "cZap from char: \np")
   (let ((dir (bb--find-occurrence char count)))
     (unless (= dir 0)
-      (kill-region (point) (if (= dir 1)
+      (delete-region (point) (if (= dir 1)
                                (pos-eol)
                              (pos-bol))))))
 
