@@ -76,6 +76,7 @@
 
 
 (setq-default fill-column 79
+              emacs-lisp-docstring-fill-column fill-column
               tab-always-indent 'complete
               tab-first-completion 'word-or-paren-or-punct
               tab-width 4
@@ -87,14 +88,20 @@
               large-file-warning-threshold (* 30 1024 1024))
 
 
+(defvar modes-with-autofill-on
+  '(text-mode-hook message-mode-hook markdown-mode-hook adoc-mode-hook org-mode-hook)
+  "Modes that benefit from auto-fill mode")
+
 ;;; Hooks
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
-(add-hook 'text-mode-hook #'turn-on-auto-fill)
 (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
 (add-hook 'activate-mark-hook (lambda() (setq cursor-type 'bar)))
 (add-hook 'deactivate-mark-hook (lambda() (setq cursor-type t)))
+(mapc (lambda (mode)
+        (add-hook mode #'turn-on-auto-fill))
+      modes-with-autofill-on)
 
 
 ;; Select text is replaced with input
@@ -108,16 +115,21 @@
 
 
 ;;; No warnings and restrictions
-(dolist (unrestricted
-     '(erase-buffer
-       narrow-to-region
-       narrow-to-page
-       dired-find-alternate-file
-       upcase-region
-       downcase-region))
-  (put unrestricted 'disabled nil))
+(defvar restricted-functions
+  '(erase-buffer
+    narrow-to-region
+    narrow-to-page
+    dired-find-alternate-file
+    upcase-region
+    downcase-region)
+  "List of restricted functions by default that we want to always enable.")
+
+(mapc (lambda (restricted)
+        (put restricted 'disabled nil))
+      restricted-functions)
 
 
+;; Allow the following local variables in files
 (setq safe-local-variable-values
       '((eval add-to-list 'whitespace-style 'indentation::tab)
         (eval delete 'indentation whitespace-style)
@@ -131,8 +143,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Adding "bb-" dirs to load-path
-(dolist (dirs (directory-files user-emacs-directory :fullpath "bb-"))
-  (add-to-list 'load-path dirs))
+(mapc (lambda (dir)
+        (add-to-list 'load-path dir))
+      (directory-files user-emacs-directory :fullpath "bb-"))
 
 ;; Initialization
 (require 'package-init)
