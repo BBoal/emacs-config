@@ -103,8 +103,8 @@ position, operate from CHAR to the end of the line."
 
 ;;;###autoload
 (defun bb-simple-add-to-list-elements (receiver-list elements)
-  "Add the ELEMENTS to the RECEIVER-LIST"
-  (mapc
+  "`mapcar' is used to add the ELEMENTS to the RECEIVER-LIST"
+  (mapcar
    (lambda (element)
      (add-to-list receiver-list element))
    elements))
@@ -156,14 +156,14 @@ helper functions."
 
 ;;;###autoload
 (defun bb-simple-keyboard-quit-dwim ()
-  "Source: https://git.sr.ht/~protesilaos/dotfiles
-Do-What-I-Mean behaviour for a general `keyboard-quit'.
+  "Source: <https://git.sr.ht/~protesilaos/dotfiles>
+Do-What-I-Mean behavior for a general `keyboard-quit'.
 
 The generic `keyboard-quit' does not do the expected thing when
 the minibuffer is open.  Whereas we want it to close the
 minibuffer, even without explicitly focusing it.
 
-The DWIM behaviour of this command is as follows:
+The DWIM behavior of this command is as follows:
 
 - When the region is active, disable it.
 - When a minibuffer is open, but not focused, close the minibuffer.
