@@ -88,6 +88,7 @@
         history-delete-duplicates t
         savehist-save-minibuffer-history t
         savehist-additional-variables '(register-alist kill-ring)
+        savehist-ignored-variables '(org-tags-history read-char-history)
         history-length 1000)
   :init
   (savehist-mode))
