@@ -12,9 +12,17 @@
         (bg-mode-line-active "#d0d6ff")
         (bg-mode-line-inactive "#e6e6e6")))
 
-
+
 
 ;;;; `desktop-mode'
+
+;;;;; Customizations
+(defconst default-name-desktop-dir ".emacs-desktop.d/"
+  "Default name for directories that hold desktop files.")
+
+(defconst default-desktop-dirname (concat "~/" default-name-desktop-dir)
+  "Directory that holds all desktop files not referencing specific projects.")
+
 ;;;;; Functions
 (defun bb--last-modified-in-dir (&optional directory)
   "Return the last modified file (full-path) in DIRECTORY."
@@ -60,21 +68,26 @@
 (defun bb-set-desktop-file-for-read (&optional directory filename)
   "Set the desktop FILENAME name to be loaded from designated DIRECTORY.
 
-Function can be called interactively with completion for the mentioned
+This function can be called interactively with completion for the mentioned
 variables or in lisp code by assigning the arguments.
 
-If no arguments are given, DIRECTORY defaults to `desktop-dirname' and FILENAME
+Interactively, if visiting a file, the function searches for `default-name-desktop-dir' from present dir proceeding up in the hierarchy file structure. If DIRECTORY is found, the latest modified FILENAME is suggested.
+
+If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
   defaults to the latest modified filename inside that directory."
   (interactive
    (let*
-       ((dir (if (buffer-file-name (current-buffer))
-                 (file-name-parent-directory buffer-file-name)
-               desktop-dirname))
+       ((dir (or (if buffer-file-name
+                     (locate-dominating-file (file-name-directory buffer-file-name)
+                                             default-name-desktop-dir))
+                 desktop-dirname))
         (file (read-file-name "Choose/Insert a filename to load: " dir nil nil
                               (file-name-nondirectory (bb--last-modified-in-dir dir))))))
    (list (file-name-directory file) file))
-  (or directory (setq directory default-desktop-dirname))
+  ;; If not interactive
+  (or directory (setq directory desktop-dirname))
   (or filename (setq filename (bb--last-modified-in-dir directory)))
+  ;; Error checking
   (cond
    ((not (file-directory-p directory))
     (user-error "Error: Directory doesn't seem to exist."))
@@ -85,9 +98,10 @@ If no arguments are given, DIRECTORY defaults to `desktop-dirname' and FILENAME
    ((not (file-readable-p filename))
     (user-error "Error: Unable to open directory. Check permissions."))
    (t
-    (setq desktop-base-file-name filename)
-    (desktop-release-lock desktop-dirname)
-    (desktop-read directory)
+    (setq desktop-base-file-name filename) ; sets file to load
+    (desktop-release-lock desktop-dirname) ; releases lock if there's a desktop already loaded
+    (desktop-read directory)               ; actual loading of FILENAME in DIRECTORY
+    ;; Refreshes the loaded theme to avoid theme collision
     (load-theme (car custom-enabled-themes)))))
 
 ;; (defun bb-set-desktop-file-for-read (&optional directory)
@@ -102,10 +116,7 @@ If no arguments are given, DIRECTORY defaults to `desktop-dirname' and FILENAME
 ;;     (load-theme (car custom-enabled-themes))))
 
 
-;;;;; Customizations
-(defconst default-desktop-dirname "~/.emacs-desktop.d/"
-  "Directory that holds all desktop files referencing all the projects.")
-
+;;;;; Settings
 (setq desktop-dirname (bb-ensure-dir-or-file-exist default-desktop-dirname)
       desktop-path `(,desktop-dirname)
       desktop-file-name-format 'absolute
@@ -134,6 +145,12 @@ If no arguments are given, DIRECTORY defaults to `desktop-dirname' and FILENAME
       ;;desktop-restore-reuses-frames 'keep
       desktop-auto-save-timeout 0
       desktop-save t)
+
+(defun bb-silent-desktop-read()
+  "xiiu"
+  (interactive)
+  (let ((inhibit-message t))
+    (desktop-read)))
 
 ;;;;; Hooks for `desktop-mode'
 (add-hook 'desktop-save-hook #'bb-set-desktop-file-for-save)
