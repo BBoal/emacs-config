@@ -9,6 +9,21 @@
 
 (keymap-global-set "<escape>" #'bb-simple-keyboard-quit-dwim)
 
+;; (defvar-keymap testing-prefix-f-map
+;;   "e" #'move-end-of-line)
+;; (define-key testing-prefix-map "f" testing-prefix-f-map)
+
+(defvar-keymap s-x-prefix-map
+  "k" #'bb-simple-kill-current-buffer)
+(keymap-global-set "s-x" s-x-prefix-map)
+
+(defvar-keymap s-change-prefix-map
+  "i" #'bb-change-inside-char-pairs
+  "a" #'bb-change-around-char-pairs
+  "u" #'bb-simple-escape-url-dwim)
+(keymap-global-set "s-c" s-change-prefix-map)
+
+
 (defvar-keymap s-help-prefix-map
   "a" #'apropos-command
   "m" #'consult-man
@@ -36,7 +51,7 @@
 (keymap-global-set "<f2>" #'bb-revert-buffer-no-confirm)
 
 (keymap-global-set "s-<f5>" #'desktop-save-in-desktop-dir)
-(keymap-global-set "s-<f8>" #'desktop-read)
+(keymap-global-set "s-<f8>" #'bb-silent-desktop-read)
 
 
 (keymap-global-set "s-k" #'windmove-up)
@@ -51,10 +66,12 @@
 
 (keymap-global-set "M-s o" #'occur)
 (keymap-global-set "C-M-=" #'count-words)
+
+
 (keymap-global-set "M-k" #'bb-kill-beg-line)
 (keymap-global-set "M-t" #'bb-transpose-words)
-
 (keymap-global-set "M-/" #'hippie-expand)
+(keymap-global-set "M-u" #'upcase-dwim)
 
 (keymap-global-set "C-o" #'bb-insert-newline-below)
 (keymap-global-set "M-o" #'bb-insert-newline-above)
@@ -71,16 +88,6 @@
 (keymap-global-set "C-c n" #'bb-find-occurrence-direction-kill-sexp)
 (keymap-global-set "C-c a" #'bb-find-occurrence-direction-kill-around-sexp)
 
-
-(defvar-keymap s-change-prefix-map
-            "i" #'bb-change-inside-char-pairs
-            "a" #'bb-change-around-char-pairs
-            "u" #'bb-simple-escape-url-dwim)
-(keymap-global-set "s-c" s-change-prefix-map)
-
-;; (defvar-keymap testing-prefix-f-map
-;;   "e" #'move-end-of-line)
-;; (define-key testing-prefix-map "f" testing-prefix-f-map)
 
 (keymap-global-set "s-z" #'bb-zap-from-char-to-end)
 (keymap-global-set "M-z" #'zap-up-to-char)
@@ -99,10 +106,10 @@
 (keymap-global-set "s-o" #'bb-delete-blank-lines-dwim)
 
 
-(defvar-keymap s-notmuch-prefix-map
-            "m" #'notmuch-hello)
-            ;; "u" #'notmuch-sort-saved-searches)
-(keymap-global-set "s-m" s-notmuch-prefix-map)
+;; (defvar-keymap s-notmuch-prefix-map
+  ;; "m" #'notmuch-hello)
+  ;; "u" #'notmuch-sort-saved-searches)
+(keymap-global-set "s-m" #'notmuch-hello) ;; s-notmuch-prefix-map)
 
 (with-eval-after-load 'notmuch
   (keymap-set notmuch-search-mode-map "/" #'notmuch-search-filter) ; alias for l
@@ -110,6 +117,12 @@
   (keymap-set notmuch-search-mode-map "R" #'notmuch-search-reply-to-thread-sender)
   (keymap-set notmuch-show-mode-map "r" #'notmuch-show-reply)
   (keymap-set notmuch-show-mode-map "R" #'notmuch-show-reply-sender))
+
+
+;;;; dired
+(with-eval-after-load 'dired
+  (keymap-set dired-mode-map "º" #'dired-up-directory)
+  (keymap-unset dired-jump-map "j" :remove))
 
 
 (provide 'bb-keybindings)
