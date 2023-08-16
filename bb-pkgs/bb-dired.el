@@ -5,6 +5,8 @@
 
 ;;; Code:
 
+(require 'gnus-dired)
+
 
 ; When there are two Dired buffers side-by-side make Emacs
 ;; automatically suggest the other one as the target of copy or rename
@@ -41,23 +43,26 @@
 ;; Avoid opening a new dired buffer for each new visited dir
 (setq dired-kill-when-opening-new-dired-buffer t)
 
+;; Ask for creation of destination dir and treat '/' specially
+(setq dired-create-destination-dirs 'ask
+      dired-create-destination-dirs-on-trailing-dirsep t)
+
 ;; Automatically hide the detailed listing when visiting a Dired buffer.  This
 ;; can always be toggled on/off by calling the `dired-hide-details-mode'
 ;; interactively with M-x or its keybindings (the left parenthesis by default).
 (add-hook 'dired-mode-hook #'dired-hide-details-mode)
 
 
-;; ;;;; `diredfl'
-;; (use-package diredfl
-;;   :hook (dired-mode . (lambda()
-;;                         (diredfl-mode)
-;;                         (gnus-dired-mode)))
-;;   :config
-;;   (require 'gnus-dired))
 
+;;;; `diredfl'
+(use-package diredfl
+  :defer 1
+  :config
+  (add-hook 'dired-mode-hook #'diredfl-mode)
+  (add-hook 'dired-mode-hook #'gnus-dired-mode))
 
 (use-package dired-preview
-  :defer 1
+  :defer 2
   :config
   (add-hook 'dired-mode-hook #'dired-preview-mode))
 
