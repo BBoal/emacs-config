@@ -83,22 +83,35 @@ kills the text before point."
 
 
 
+;;;###autoload
 (defun bb-insert-newline-above(&optional arg)
-  "Inserts a new line before the current one or, with prefix, before
-ARG number of lines."
-  (interactive "p")
-  (forward-line (1+ (- arg)))
-  (save-excursion
-    (goto-char (pos-bol))
-    (insert "\n")))
+  "Inserts a new line before the current one or, with prefix, ARG number of lines.
 
-(defun bb-insert-newline-below(&optional arg)
-  "Inserts a new line after the current one or, with prefix, after
-ARG number of lines."
+With negative prefix calls mirror function `bb-insert-newline-below' passing ARG."
   (interactive "p")
-  (forward-line (1- arg))
+  (or arg (setq arg 1))
+  (if (< arg 0) (bb-insert-newline-below (- arg)))
+  (goto-char (pos-bol))
+  (insert "\n")
+  (forward-line -1)
+    (while (> arg 1)
+      (insert "\n")
+      (setq arg (1- arg))))
+
+;;;###autoload
+(defun bb-insert-newline-below(&optional arg)
+  "Inserts a new line after the current one or, with prefix, ARG number of lines.
+
+With negative prefix calls mirror function `bb-insert-newline-above' passing ARG."
+  (interactive "p")
+  (or arg (setq arg 1))
+  (if (< arg 0) (bb-insert-newline-above (- arg)))
   (goto-char (pos-eol))
-  (insert "\n"))
+  (insert "\n")
+  (save-excursion
+    (while (> arg 1)
+      (insert "\n")
+      (setq arg (1- arg)))))
 
 
 
