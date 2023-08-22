@@ -17,11 +17,11 @@
     (keymap-set (symbol-value (derived-mode-map-name mode))
                 "C-c C-c" #'compile)
     (cond
-     ((or (eq mode c-ts-mode)
-          (eq mode c-mode))
+     ((or (eq mode 'c-ts-mode)
+          (eq mode 'c-mode))
       (prot-find-project-root mode "Makefile"))
-     ((or (eq mode c++-ts-mode)
-          (eq mode c++-mode))
+     ((or (eq mode 'c++-ts-mode)
+          (eq mode 'c++-mode))
       (prot-find-project-root mode "CMakeList.txt")))))
 
 ;; Setting compile-command
@@ -43,27 +43,35 @@
                           (file-name-nondirectory buffer-file-name)
                           " && ./" filename-bin)))))
 
+
 (defun bb-func-bundle-cc-modes()
   (interactive)
   (add-hook 'before-save-hook #'bb-eglot-arrange-file :depth :local)
   (bb-programming-hooks)
   (eglot-ensure)
   (bb-set-compile-command)
-  (bb-setup-cc-project-root))
+  (bb-setup-cc-project-root)
+  (setq-local comment-style 'extra-line
+              comment-start "/*"
+              comment-end "*/"
+              comment-padding 2
+              comment-continue (make-string (1+ (length comment-start)) ?\ )))
 
 
 ;;;;;; `cc-mode'
 (use-package cc-mode
   :config
-    (dolist (hook '(c++-mode-hook c-mode-hook))
-      (add-hook hook #'bb-func-bundle-cc-modes)))
+  (mapc (lambda (hook)
+          (add-hook hook #'bb-func-bundle-cc-modes))
+        '(c++-mode-hook c-mode-hook)))
 
 
-;;;;;; `c-ts-mode'
+;;;;;; `c-ts-mode' and `c++-ts-mode'
 (use-package c-ts-mode
   :config
-    (dolist (hook '(c-ts-mode-hook c++-ts-mode-hook))
-      (add-hook hook #'bb-func-bundle-cc-modes)))
+  (mapc (lambda (hook)
+          (add-hook hook #'bb-func-bundle-cc-modes))
+        '(c++-ts-mode-hook c-ts-mode-hook)))
 
 
 ;;;;;; `cpp-auto-include'
