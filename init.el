@@ -85,7 +85,15 @@
               kill-do-not-save-duplicates t
               cursor-in-non-selected-windows nil
               bidi-paragraph-direction 'left-to-right
-              large-file-warning-threshold (* 30 1024 1024))
+              large-file-warning-threshold (* 30 1024 1024)
+              project-vc-extra-root-markers '( ".dir-locals.el"
+                                               "package.json"
+                                               "Makefile"
+                                               "Gemfile"
+                                               "Dockerfile"
+                                               "CMakeLists.txt"
+                                               "autogen.sh"
+                                               "main.*"))
 
 
 (defvar modes-with-autofill-on
