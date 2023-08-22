@@ -14,7 +14,8 @@
 ;; (define-key testing-prefix-map "f" testing-prefix-f-map)
 
 (defvar-keymap s-x-prefix-map
-  "k" #'bb-simple-kill-current-buffer)
+  "k" #'bb-simple-kill-current-buffer
+  "o" #'bb-delete-blank-lines-dwim)
 (keymap-global-set "s-x" s-x-prefix-map)
 
 (defvar-keymap s-change-prefix-map
@@ -103,7 +104,6 @@
 (keymap-global-set "s-*" #'isearch-forward-thing-at-point)
 (keymap-global-set "s-p" #'bb-move-line-above-dwim)
 (keymap-global-set "s-n" #'bb-move-line-below-dwim)
-(keymap-global-set "s-o" #'bb-delete-blank-lines-dwim)
 
 
 ;; (defvar-keymap s-notmuch-prefix-map

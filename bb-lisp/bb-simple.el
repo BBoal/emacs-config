@@ -28,7 +28,7 @@
 ;;; Code:
 
 
-(defvar bb-common-url-regexp
+(defconst bb-common-url-regexp
   (concat
    "~?\\<\\([-a-zA-Z0-9+&@#/%?=~_|!:,.;]*\\)"
    "[.@]"
@@ -90,6 +90,18 @@ position, operate from CHAR to the end of the line."
       (display-line-numbers-mode 'toggle)
     (setq-local display-line-numbers 'visual)))
 
+
+
+;;;###autoload
+(defun bb-simple-add-to-list-elements (receiver-list elements)
+  "`mapcar' is used to add the ELEMENTS to the RECEIVER-LIST"
+  (mapcar
+   (lambda (element)
+     (add-to-list receiver-list element))
+   elements))
+
+
+
 ;;;###autoload
 (defun bb-simple-indent-tabs-spaces-rest ()
   (interactive)
@@ -100,14 +112,6 @@ position, operate from CHAR to the end of the line."
               tab-width 2)
   (untabify (point-min) (point-max))
   (indent-tabs-mode nil))
-
-;;;###autoload
-(defun bb-simple-add-to-list-elements (receiver-list elements)
-  "`mapcar' is used to add the ELEMENTS to the RECEIVER-LIST"
-  (mapcar
-   (lambda (element)
-     (add-to-list receiver-list element))
-   elements))
 
 (defun bb-simple--indent (tabs-or-spaces width)
   "Removes values in `'whitespace-style' that would have precedence over user
@@ -153,6 +157,7 @@ helper functions."
     (indent-region min max 0)
     (indent-region min max)))
 
+
 
 ;;;###autoload
 (defun bb-simple-keyboard-quit-dwim ()
@@ -180,6 +185,7 @@ The DWIM behavior of this command is as follows:
    (t
     (keyboard-quit))))
 
+
 
 (defun bb-simple-ç-dwim(arg)
   (interactive "p")
@@ -217,7 +223,7 @@ The DWIM behavior of this command is as follows:
    (t
     (insert (char-to-string char-number))))))
 
-
+
 
 (defun bb-maybe-eval-string (string)
   "Maybe evaluate elisp in a given STRING."
@@ -267,9 +273,10 @@ taken into consideration and proper evaluated."
     (when-let ((string (thing-at-point 'sexp :no-properties)))
       (bb-show-string-and-eval-in-other-buffer string mode))))
 
+
 
 ;;;###autoload
-(defun bb-delete-blank-lines-dwim(beg end)
+(defun bb-delete-blank-lines-dwim(&optional beg end)
   "Delete all blank lines either surrounding point or, between BEG and END."
   (interactive "*r")
   (let ((regexp "^[ \t]*$"))
@@ -278,6 +285,7 @@ taken into consideration and proper evaluated."
       (delete-blank-lines)
       (if (looking-at regexp) (delete-blank-lines)))))
 
+
 
 ;;;###autoload
 (defun bb-simple-kill-current-buffer()
