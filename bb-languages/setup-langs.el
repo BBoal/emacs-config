@@ -5,13 +5,20 @@
 
 ;;; Code:
 
+(defconst bb--regex-general-f "[!\"#$%&'()*+,-./:;<=>\?\\@\[\]\^_`{|}~]"
+  "General Regex for common usage")
 
-;; 2023-07-26  TODO => Get different regexp's for different languages. Aliases??
+(defconst bb--regex-lisp-f "[()`'\"@,]"
+  "Regex for Lisp families programming languages")
+
+(defconst bb--regex-shell-f "[\"'\[\({,;~=+-/%]"
+  "Regex for shell families")
+
 (defcustom bb-prog-langs-alist
-  '((lisp-interaction-mode . "[()`'\"@,]")
-    (emacs-lisp-mode       . "[()`'\"@,]")
-    (bash-ts-mode          . "[\"'\[\({,;~=+-/%]")
-    (sh-mode               . "[\"'\[\({,;~=+-/%]"))
+  `((lisp-interaction-mode . ,bb--regex-lisp-f)
+    (Emacs-lisp-mode       . ,bb--regex-lisp-f)
+    (bash-ts-mode          . ,bb--regex-shell-f)
+    (sh-mode               . ,bb--regex-shell-f))
   "Alist of characters, language specific, used by `bb-simple-ç-dwim'")
 
 
@@ -23,7 +30,7 @@ according to the major-mode, the user can \"jump\" to designated chars to quickl
 re-edit the current paragraph."
   (interactive "p")
   (let ((regexp (or (alist-get major-mode bb-prog-langs-alist)
-                    "[!\"#$%&'()*+,-./:;<=>\?\\@\[\]\^_`{|}~]"))
+                    bb--regex-general-f))
         (bound (save-excursion
                  (funcall paragraph-boundary)
                  (point))))
