@@ -27,3 +27,4 @@ scratch*
 !lessons/*.el
 tree-sitter/
 pushmacs
+ido.last
