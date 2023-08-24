@@ -17,10 +17,10 @@
 ;;;; `desktop-mode'
 
 ;;;;; Customizations
-(defconst default-name-desktop-dir ".emacs-desktop.d/"
+(defcustom default-name-desktop-dir ".emacs-desktop.d/"
   "Default name for directories that hold desktop files.")
 
-(defconst default-desktop-dirname (concat "~/" default-name-desktop-dir)
+(defcustom default-desktop-dirname (concat "~/" default-name-desktop-dir)
   "Directory that holds all desktop files not referencing specific projects.")
 
 ;;;;; Functions
@@ -55,14 +55,68 @@
       latest-file)))))
 
 
-(defun bb-set-desktop-file-for-save()
-  "Avoids the *temp* buffer names and sets the correct name for read and save."
-  (setq desktop-base-file-name
-        (concat (format-time-string "%d%b%Y-")
-                (if-let ((buf-name (buffer-name))
-                         ((not (string-match "\\*[[:word:]]*\*" buf-name))))
-                    buf-name
-                  (buffer-name (window-buffer))))))
+(defun bb--choose-dir-desktop-save ()
+  "Helper to set a possible directory string for saving desktop layout files"
+  (let* ((dir (if buffer-file-name
+                  (file-name-directory buffer-file-name)
+                default-desktop-dirname))
+         (possible-dir (locate-dominating-file dir default-name-desktop-dir))
+         (default-dir (abbreviate-file-name
+                       (file-name-parent-directory default-desktop-dirname))))
+
+    (when (or (string-equal possible-dir default-dir)
+              (not possible-dir))
+      (let ((answer
+             (yes-or-no-p
+              "Didn't found a desktop-dir in current dir for saving the layout, press 'y' to choose one or 'n' to save in default")))
+        (setq possible-dir (if answer
+                               (file-name-as-directory
+                                (read-directory-name "Insert directory where project desktop-dir should be created: " dir))
+                             default-dir))))
+    (concat possible-dir default-name-desktop-dir)))
+
+
+;; 2023-08-24 NOTE => Improve to allow user to choose existing .emacs-desktop
+;; dir without creating another similar directory inside of the previous one.
+(defun bb-set-desktop-file-for-save(&optional directory filename)
+  "Avoids the *temp/scratch* buffer names and sets the directory and filename for
+`desktop-save'."
+  (interactive)
+
+  (or directory (setq directory (bb--choose-dir-desktop-save)))
+  (let* ((parent-dir (file-name-parent-directory directory))
+         (existing-parent-dir (progn
+                                (while (not (file-directory-p parent-dir))
+                                  (setq parent-dir (file-name-parent-directory parent-dir)))
+                                parent-dir))
+         (writable-existing-parent-dir (file-writable-p existing-parent-dir))
+         (dir-exists (file-directory-p directory))
+         (dir-writable (file-writable-p directory)))
+    (cond
+     ((and dir-exists (not dir-writable))
+      (user-error "Error: Unable to write to directory. Check permissions"))
+     ((and (not dir-exists) writable-existing-parent-dir)
+      (if (yes-or-no-p "Directory doesn't exist but can be created. Should I? ")
+          (progn
+            (message "Creating %s..." directory)
+            (make-directory directory :parents)
+            (message "Done"))
+        (user-error "Exiting without creating dir")))
+     ((and (not dir-exists) (not writable-existing-parent-dir))
+      (user-error "Error: Unable to create child directory. Check permissions of parent dir"))
+     (t
+      (message "Processing desktop file...")))
+
+    ;; following block of code must be outside of `t' othewise when the
+    ;; directory has to be created the filename will not be processed.
+    (or filename
+        (setq filename (concat
+                        (format-time-string "%d%b%Y-")
+                        (if-let ((buf-name (buffer-name))
+                                 ((not (string-match "\\*[[:word:]]+\*" buf-name))))
+                            buf-name
+                          (buffer-name (window-buffer))))))
+    (setq desktop-base-file-name (concat directory filename))))
 
 
 (defun bb-set-desktop-file-for-read (&optional directory filename)
@@ -71,24 +125,32 @@
 This function can be called interactively with completion for the mentioned
 variables or in lisp code by assigning the arguments.
 
-Interactively, if visiting a file, the function searches for `default-name-desktop-dir' from present dir proceeding up in the hierarchy file structure. If DIRECTORY is found, the latest modified FILENAME is suggested.
+Interactively, if visiting a file, the function searches for
+`default-name-desktop-dir' from present dir proceeding up in the hierarchy file
+structure. If DIRECTORY is found, the latest modified FILENAME is suggested.
 
-If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
-  defaults to the latest modified filename inside that directory."
+If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
+  FILENAME defaults to the latest modified filename inside that directory."
   (interactive
    (let*
-       ((dir (or (if buffer-file-name
-                     (locate-dominating-file (file-name-directory buffer-file-name)
-                                             default-name-desktop-dir))
-                 desktop-dirname))
-        (file (read-file-name "Choose/Insert a filename to load: " dir nil nil
-                              (file-name-nondirectory (bb--last-modified-in-dir dir))))))
+       ((possible-dir
+         (when buffer-file-name
+                 (locate-dominating-file (file-name-directory buffer-file-name)
+                                         default-name-desktop-dir)))
+        (final-dir (if possible-dir
+                       (concat possible-dir default-name-desktop-dir)
+                     desktop-dirname))
+        (file
+         (read-file-name "Choose/Insert a filename to load: " final-dir nil nil
+                         (file-name-nondirectory (bb--last-modified-in-dir final-dir))))))
    (list (file-name-directory file) file))
   ;; If not interactive
   (or directory (setq directory desktop-dirname))
   (or filename (setq filename (bb--last-modified-in-dir directory)))
   ;; Error checking
   (cond
+   ((not (stringp directory))
+    (user-error "Error: Directory name should be passed as 'string'"))
    ((not (file-directory-p directory))
     (user-error "Error: Directory doesn't seem to exist."))
    ((not (file-accessible-directory-p directory))
@@ -96,24 +158,16 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
    ((not (file-exists-p filename))
     (user-error "Error: Filename doesn't seem to exist."))
    ((not (file-readable-p filename))
-    (user-error "Error: Unable to open directory. Check permissions."))
+    (user-error "Error: Unable to read file. Check permissions."))
    (t
-    (setq desktop-base-file-name filename) ; sets file to load
+    ;; sets file to load
+    (setq desktop-base-file-name filename)
     (desktop-release-lock desktop-dirname) ; releases lock if there's a desktop already loaded
     (desktop-read directory)               ; actual loading of FILENAME in DIRECTORY
+    ;; I don't want the filename to be added to file-name-history
+    (setq file-name-history (delete filename file-name-history))
     ;; Refreshes the loaded theme to avoid theme collision
     (load-theme (car custom-enabled-themes)))))
-
-;; (defun bb-set-desktop-file-for-read (&optional directory)
-;;   "Set the desktop file name to be the latest file modified on desktop-dirname"
-;;   (interactive "DChoose a directory to load from: ")
-;;   (unless directory (setq directory desktop-dirname))
-;;   (if (not (file-directory-p directory))
-;;       (user-error "Directory not found... Was it a typo? ")
-;;     (setq desktop-base-file-name
-;;           (bb--last-modified-in-dir directory))
-;;     (desktop-read directory)
-;;     (load-theme (car custom-enabled-themes))))
 
 
 ;;;;; Settings
@@ -142,12 +196,12 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
                                show-trailing-whitespace)
       desktop-modes-not-to-save '(tags-table-mode)
       desktop-restore-eager 6
-      ;;desktop-restore-reuses-frames 'keep
+      desktop-restore-reuses-frames 'keep
       desktop-auto-save-timeout 0
       desktop-save t)
 
 (defun bb-silent-desktop-read()
-  "xiiu"
+  "Kill the `No desktop file message` minibuffer message"
   (interactive)
   (let ((inhibit-message t))
     (desktop-read)))
@@ -156,7 +210,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
 (add-hook 'desktop-save-hook #'bb-set-desktop-file-for-save)
 (add-hook 'desktop-no-desktop-file-hook #'bb-set-desktop-file-for-read)
 
-
+
 
 ;;;; `tab-bar-mode'
 ;; 2023-08-13  TODO => Improve to include choices such as *scratch*
@@ -217,7 +271,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
       tab-bar-show t)
 (tab-bar-mode t)
 
-
+
 
 ;;;; `hl-todo'
 (use-package hl-todo
@@ -239,6 +293,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
           ("HACK"     . "#1E90FF")))
   (global-hl-todo-mode))
 
+
 
 ;;;; `goggles'
 (use-package goggles
@@ -247,6 +302,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
   :config
   (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
 
+
 
 ;;;; `lin'
 (use-package lin
@@ -255,6 +311,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
   (setq lin-face 'lin-red)
   (lin-global-mode))
 
+
 
 ;;;; `rainbow-mode'
 (use-package rainbow-mode
@@ -271,6 +328,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
   (setq rainbow-ansi-colors nil
         rainbow-x-colors nil))
 
+
 
 ;;;; `modus-themes'
 (use-package modus-themes)
@@ -282,7 +340,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and FILENAME
   :config
   (load-theme hour-sets-theme))
 
-
+
 
 ;;;; `modeline-setup'
 (defvar bb-modeline-major-mode
@@ -455,6 +513,7 @@ Specific to the current window's mode line.")
       '((capitalize (format-time-string " %a,%d %b %R "))))
 (display-time-mode 1)
 
+
 
 ;;;; `keycast'
 (use-package keycast
@@ -474,9 +533,7 @@ Specific to the current window's mode line.")
                    mwheel-scroll))
     (add-to-list 'keycast-substitute-alist `(,event nil))))
 
-
-
-
+
 
 ;;;; `which-key'
 (use-package which-key
@@ -498,6 +555,7 @@ Specific to the current window's mode line.")
   (which-key-mode)
   (which-key-setup-side-window-right-bottom))
 
+
 
 ;;;; `bicycle'
 (use-package bicycle
@@ -511,6 +569,7 @@ Specific to the current window's mode line.")
            #'(outline-minor-mode)
            #'(hs-minor-mode))))
 
+
 
 ;;;; `pulsar'
 (use-package pulsar
@@ -524,6 +583,7 @@ Specific to the current window's mode line.")
         pulsar--face 'pulsar-yellow)
   (pulsar-global-mode 1))
 
+
 
 ;;;; `kind-icon'
 (use-package kind-icon
@@ -534,7 +594,7 @@ Specific to the current window's mode line.")
         kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
-
+
 
 ;;;; `indent-guide'
 (use-package indent-guide
@@ -544,11 +604,11 @@ Specific to the current window's mode line.")
     "It will return either a symbol or a color from the current palette."
     (or
      (car
-     (alist-get arg
-                (symbol-value
-                 (intern-soft
-                  (format "%s-palette"
-                          (car custom-enabled-themes))))))
+      (alist-get arg
+                 (symbol-value
+                  (intern-soft
+                   (format "%s-palette"
+                           (car custom-enabled-themes))))))
      (face-foreground 'cursor nil 'default)))
 
   (defun bb-get-color(arg)
@@ -565,7 +625,9 @@ theme palette, recursively if necessary."
   (defun bb--update-indent-guide-face(_theme)
     (when indent-guide-mode
       (set-face-foreground 'indent-guide-face (bb-get-color 'cursor))))
+  ;; Updating the indent-guide every time a theme is enabled
   (add-hook 'enable-theme-functions 'bb--update-indent-guide-face))
+
 
 
 (provide 'bb-ui-ux)
