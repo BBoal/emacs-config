@@ -70,12 +70,31 @@
 
 
 (defun bb-ensure-dir-or-file-exist (arg)
-  "Creates ARG if non-existant. Prefix '.d/' is considered dir otherwise file."
-  (unless (file-exists-p arg)
-    (if (string-suffix-p ".d/" arg)
-        (make-directory arg t)
+  "Creates ARG if non-existant. Prefix '/' is considered dir otherwise file."
+  (interactive "G")
+  (let* ((pdir arg)
+         (edir (progn
+                 (while (not (file-exists-p pdir))
+                   (setq pdir (file-name-parent-directory pdir)))
+                 pdir))
+         (bdir (file-name-directory arg)))
+    (cond
+     ((file-exists-p arg)
+      (if (called-interactively-p)
+          (user-error "Error: Destination already exists")))
+     ((not (file-writable-p edir))
+      (user-error "Error: Destination is not writable. Check permissions"))
+     ((string-suffix-p "/" arg)
+      (message "Creating dir %s" arg)
+      (make-directory arg :parents))
+     ((not (string-equal edir bdir))
+      (message "Creating dir %s" bdir)
+      (make-directory bdir :parents)
+      (message "Creating file %s" arg)
+      (write-region "" nil arg))
+     (t
       (write-region "" nil arg)))
-  arg)
+    arg))
 
 
 (defun bb-require-bb-lisp-files-in-dir (directory)
