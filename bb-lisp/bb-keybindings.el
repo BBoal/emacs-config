@@ -51,7 +51,7 @@
 (keymap-global-set "<f5>" #'keycast-mode-line-mode)
 (keymap-global-set "<f2>" #'bb-revert-buffer-no-confirm)
 
-(keymap-global-set "s-<f5>" #'desktop-save-in-desktop-dir)
+(keymap-global-set "s-<f5>" #'bb-set-desktop-file-for-save)
 (keymap-global-set "s-<f8>" #'bb-silent-desktop-read)
 
 

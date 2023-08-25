@@ -14,20 +14,60 @@
 
 
 
-;;;; `desktop-mode'
 
+;;;; `desktop-mode'
 ;;;;; Customizations
 (defcustom default-name-desktop-dir ".emacs-desktop.d/"
   "Default name for directories that hold desktop files.")
 
-(defcustom default-desktop-dirname (concat "~/" default-name-desktop-dir)
+(defcustom default-desktop-dirname (concat user-emacs-directory default-name-desktop-dir)
   "Directory that holds all desktop files not referencing specific projects.")
 
+
+;;;;; Hooks for `desktop-mode'
+;; (add-hook 'desktop-save-hook #'bb-set-desktop-file-for-save)
+;; (add-hook 'desktop-no-desktop-file-hook #'bb-set-desktop-file-for-read)
+
+
+;;;;; Settings
+(setq desktop-dirname (bb-ensure-dir-or-file-exist default-desktop-dirname)
+      desktop-path `(,desktop-dirname)
+      desktop-file-name-format 'absolute
+      ;; desktop-load-locked-desktop nil
+      desktop-globals-to-save nil
+      desktop-globals-to-clear nil
+      desktop-lazy-idle-delay 1
+      desktop-locals-to-save '(desktop-locals-to-save
+                               tab-bar-show
+                               truncate-lines
+                               case-fold-search
+                               case-replace
+                               fill-column
+                               overwrite-mode
+                               change-log-default-name
+                               line-number-mode
+                               size-indication-mode
+                               buffer-file-coding-system
+                               indent-tabs-mode
+                               tab-width
+                               indicate-buffer-boundaries
+                               indicate-empty-lines
+                               show-trailing-whitespace)
+      desktop-modes-not-to-save '(tags-table-mode)
+      desktop-restore-eager 6
+      ;; desktop-restore-reuses-frames 'keep
+      desktop-auto-save-timeout 0
+      desktop-save t)
+
+
 ;;;;; Functions
-(defun bb--last-modified-in-dir (&optional directory)
+(defun bb-last-modified-in-dir (&optional directory)
   "Return the last modified file (full-path) in DIRECTORY."
   (interactive "DDirectory: ")
-  (or directory (setq directory desktop-dirname))
+  (or directory
+      (setq directory (if buffer-file-name
+                          (file-name-directory buffer-file-name)
+                        (read-directory-name "Choose a directory: "))))
   (cond
    ((not (file-directory-p directory))
     (user-error "Error: Directory doesn't seem to exist."))
@@ -48,7 +88,7 @@
           latest-file (car (rassq (car modified-times) files)))
     ;; What if the directory is empty? latest-file = directory
     (when (string= latest-file (expand-file-name directory))
-      (setq latest-file nil))
+      (setq latest-file ""))
     ;; Output the result
     (if (called-interactively-p)
         (message latest-file)
@@ -64,14 +104,13 @@
          (default-dir (abbreviate-file-name
                        (file-name-parent-directory default-desktop-dirname))))
 
-    (when (or (string-equal possible-dir default-dir)
-              (not possible-dir))
+    (when (not possible-dir)
       (let ((answer
              (yes-or-no-p
-              "Didn't found a desktop-dir in current dir for saving the layout, press 'y' to choose one or 'n' to save in default")))
+              "Didn't found a desktop-dir in current location, press 'y' to choose, 'n' to save in default")))
         (setq possible-dir (if answer
                                (file-name-as-directory
-                                (read-directory-name "Insert directory where project desktop-dir should be created: " dir))
+                                (read-directory-name "Insert directory where desktop-dir should be created: " dir))
                              default-dir))))
     (concat possible-dir default-name-desktop-dir)))
 
@@ -96,7 +135,7 @@
      ((and dir-exists (not dir-writable))
       (user-error "Error: Unable to write to directory. Check permissions"))
      ((and (not dir-exists) writable-existing-parent-dir)
-      (if (yes-or-no-p "Directory doesn't exist but can be created. Should I? ")
+      (if (yes-or-no-p "Directory doesn't exist but can be created. Proceed? ")
           (progn
             (message "Creating %s..." directory)
             (make-directory directory :parents)
@@ -110,13 +149,18 @@
     ;; following block of code must be outside of `t' othewise when the
     ;; directory has to be created the filename will not be processed.
     (or filename
-        (setq filename (concat
+        (setq filename (file-name-with-extension
+                        (concat
                         (format-time-string "%d%b%Y-")
                         (if-let ((buf-name (buffer-name))
                                  ((not (string-match "\\*[[:word:]]+\*" buf-name))))
                             buf-name
-                          (buffer-name (window-buffer))))))
-    (setq desktop-base-file-name (concat directory filename))))
+                          (buffer-name (window-buffer)))) "desktop")))
+    ;; (add-to-list 'desktop-path directory)
+    (setq desktop-dirname directory
+          desktop-base-file-name filename)
+    (desktop-save directory :release)
+    (message "Desktop file saved as %s%s" desktop-dirname desktop-base-file-name)))
 
 
 (defun bb-set-desktop-file-for-read (&optional directory filename)
@@ -135,80 +179,50 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
    (let*
        ((possible-dir
          (when buffer-file-name
-                 (locate-dominating-file (file-name-directory buffer-file-name)
-                                         default-name-desktop-dir)))
+           (locate-dominating-file (file-name-directory buffer-file-name)
+                                   default-name-desktop-dir)))
         (final-dir (if possible-dir
                        (concat possible-dir default-name-desktop-dir)
                      desktop-dirname))
         (file
          (read-file-name "Choose/Insert a filename to load: " final-dir nil nil
-                         (file-name-nondirectory (bb--last-modified-in-dir final-dir))))))
-   (list (file-name-directory file) file))
+                         (file-name-nondirectory (bb-last-modified-in-dir final-dir)))))
+     (list (file-name-directory file) (file-name-nondirectory file))))
   ;; If not interactive
   (or directory (setq directory desktop-dirname))
-  (or filename (setq filename (bb--last-modified-in-dir directory)))
+  (or filename (setq filename (bb-last-modified-in-dir directory)))
   ;; Error checking
-  (cond
-   ((not (stringp directory))
-    (user-error "Error: Directory name should be passed as 'string'"))
-   ((not (file-directory-p directory))
-    (user-error "Error: Directory doesn't seem to exist."))
-   ((not (file-accessible-directory-p directory))
-    (user-error "Error: Unable to open directory. Check permissions."))
-   ((not (file-exists-p filename))
-    (user-error "Error: Filename doesn't seem to exist."))
-   ((not (file-readable-p filename))
-    (user-error "Error: Unable to read file. Check permissions."))
-   (t
-    ;; sets file to load
-    (setq desktop-base-file-name filename)
-    (desktop-release-lock desktop-dirname) ; releases lock if there's a desktop already loaded
-    (desktop-read directory)               ; actual loading of FILENAME in DIRECTORY
-    ;; I don't want the filename to be added to file-name-history
-    (setq file-name-history (delete filename file-name-history))
-    ;; Refreshes the loaded theme to avoid theme collision
-    (load-theme (car custom-enabled-themes)))))
+  (let ((full-path (concat directory filename)))
+    (cond
+     ((not (stringp directory))
+      (user-error "Error: Directory name should be passed as 'string'"))
+     ((not (file-directory-p directory))
+      (user-error "Error: Directory doesn't seem to exist."))
+     ((not (file-accessible-directory-p directory))
+      (user-error "Error: Unable to open directory. Check permissions."))
+     ((not (file-exists-p full-path))
+      (user-error "Error: Filename doesn't seem to exist."))
+     ((not (file-readable-p full-path))
+      (user-error "Error: Unable to read file. Check permissions."))
+     (t
+      ;; sets file to load
+      (ignore-errors
+        (desktop-release-lock))         ; releases lock if there's a desktop already loaded
+      (add-to-list 'desktop-path directory)
+      (setq desktop-dirname directory
+            desktop-base-file-name filename)
+      (desktop-read)                    ; actual loading of FILENAME in DIRECTORY
+      ;; I don't want the filename to be added to file-name-history
+      (setq file-name-history (delete filename file-name-history))
+      ;; Refreshes the loaded theme to avoid theme collision
+      (load-theme (car custom-enabled-themes))))))
 
-
-;;;;; Settings
-(setq desktop-dirname (bb-ensure-dir-or-file-exist default-desktop-dirname)
-      desktop-path `(,desktop-dirname)
-      desktop-file-name-format 'absolute
-      desktop-load-locked-desktop nil
-      desktop-globals-to-save nil
-      desktop-globals-to-clear nil
-      desktop-lazy-idle-delay 1
-      desktop-locals-to-save '(desktop-locals-to-save
-                               tab-bar-show
-                               truncate-lines
-                               case-fold-search
-                               case-replace
-                               fill-column
-                               overwrite-mode
-                               change-log-default-name
-                               line-number-mode
-                               size-indication-mode
-                               buffer-file-coding-system
-                               indent-tabs-mode
-                               tab-width
-                               indicate-buffer-boundaries
-                               indicate-empty-lines
-                               show-trailing-whitespace)
-      desktop-modes-not-to-save '(tags-table-mode)
-      desktop-restore-eager 6
-      desktop-restore-reuses-frames 'keep
-      desktop-auto-save-timeout 0
-      desktop-save t)
 
 (defun bb-silent-desktop-read()
   "Kill the `No desktop file message` minibuffer message"
   (interactive)
-  (let ((inhibit-message t))
-    (desktop-read)))
+  (call-interactively 'bb-set-desktop-file-for-read))
 
-;;;;; Hooks for `desktop-mode'
-(add-hook 'desktop-save-hook #'bb-set-desktop-file-for-save)
-(add-hook 'desktop-no-desktop-file-hook #'bb-set-desktop-file-for-read)
 
 
 
