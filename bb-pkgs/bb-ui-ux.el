@@ -12,9 +12,8 @@
         (bg-mode-line-active "#d0d6ff")
         (bg-mode-line-inactive "#e6e6e6")))
 
+
 
-
-
 ;;;; `desktop-mode'
 ;;;;; Customizations
 (defcustom default-name-desktop-dir ".emacs-desktop.d/"
@@ -107,7 +106,7 @@
     (when (not possible-dir)
       (let ((answer
              (yes-or-no-p
-              "Didn't found a desktop-dir in current location, press 'y' to choose, 'n' to save in default")))
+              "Unsure where to save desktop file: press 'y' to choose dir, 'n' to save in default")))
         (setq possible-dir (if answer
                                (file-name-as-directory
                                 (read-directory-name "Insert directory where desktop-dir should be created: " dir))
@@ -224,8 +223,8 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
   (call-interactively 'bb-set-desktop-file-for-read))
 
 
-
 
+
 ;;;; `tab-bar-mode'
 ;; 2023-08-13  TODO => Improve to include choices such as *scratch*
 (defun bb--tab-bar-new-tab-choice()
@@ -268,7 +267,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
       tab-bar-close-last-tab-choice 'delete-frame
       tab-bar-close-tab-select 'left
       tab-bar-format '(tab-bar-format-history
-                       tab-bar-format-tabs-groups
+                       tab-bar-format-tabs
                        tab-bar-separator
                        tab-bar-format-add-tab
                        tab-bar-format-align-right
