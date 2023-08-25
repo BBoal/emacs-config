@@ -76,6 +76,7 @@
 
 
 (setq-default fill-column 79
+              comment-fill-column 99
               emacs-lisp-docstring-fill-column fill-column
               tab-always-indent 'complete
               tab-first-completion 'word-or-paren-or-punct
