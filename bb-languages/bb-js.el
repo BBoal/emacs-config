@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+
 ;;;; `js-mode'
 (with-eval-after-load 'js
   (add-hook 'js-mode-hook #'js-ts-mode)
@@ -15,6 +16,7 @@
               (bb-programming-hooks)))
 
   (prot-find-project-root js-ts-mode "jsconfig.json"))
+
 
 (provide 'bb-js)
 ;;; bb-js.el ends here

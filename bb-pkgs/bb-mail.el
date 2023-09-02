@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+
 ;;;; `smtpmail'
 (use-package smtpmail
   :demand t
@@ -16,15 +17,20 @@
         smtpmail-queue-mail nil))
 
 
+
+
 ;;;; `sendmail'
 (use-package sendmail
   :config
   (setq send-mail-function 'smtpmail-send-it))
 
 
+
+
 ;;;; `notmuch'
 (use-package notmuch
   :demand t
+  :ensure-system-package notmuch
   :load-path "/usr/share/emacs/site-lisp/"
   :config
   (setq notmuch-identities '("Bruno Boal <egomet@bboal.com>")
@@ -32,11 +38,11 @@
         notmuch-show-logo nil))
 
 
+
+
 ;;;; `notmuch-indicator'
 (use-package notmuch-indicator
   :demand t
-  :vc (:url "https://git.sr.ht/~protesilaos/notmuch-indicator"
-       :rev :newest)
   :config
   (setq notmuch-indicator-args
         '((:terms "tag:unread" :label " U:" :face warning)))

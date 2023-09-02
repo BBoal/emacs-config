@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+
 ;;;; `racket-mode'
 (use-package racket-mode
   :hook (racket-mode . eglot-ensure))

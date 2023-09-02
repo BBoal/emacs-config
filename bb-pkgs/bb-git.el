@@ -19,6 +19,8 @@
   (keymap-set vc-git-log-view-mode-map "<return>" #'log-view-find-revision))
 
 
+
+
 ;;;; `vundo'
 (use-package vundo
   :defer 2
@@ -26,12 +28,16 @@
   (setq vundo-glyph-alist vundo-unicode-symbols))
 
 
+
+
 ;;;; `magit'
 (use-package magit
   :defer 2
   :bind ("C-c m s" . magit-status))
 
 
+
+
 ;;;; `magit-annex'
 (use-package magit-annex)
 

@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+
 ;;;; `repeat'
 (use-package repeat
   :defer 3
@@ -20,15 +21,17 @@
         set-mark-command-repeat-pop t)
   (repeat-mode))
 
-
 
+
+
 ;;;; `smart-hungry-delete'
 (use-package smart-hungry-delete
   :bind (("C-<backspace>" . smart-hungry-delete-backward-char)
          ("C-d" . smart-hungry-delete-forward-char)))
 
-
 
+
+
 ;;;; `ediff'
 (use-package ediff
   :defer 3
@@ -36,8 +39,9 @@
   (setq ediff-split-window-function #'split-window-horizontally
         ediff-window-setup-function #'ediff-setup-windows-plain))
 
-
 
+
+
 ;;;; `wgrep'
 ;; Make grep buffers editable
 (use-package wgrep
@@ -50,8 +54,9 @@
   (setq wgrep-auto-save-buffer t
         wgrep-change-readonly-file t))
 
-
 
+
+
 ;;;; `beframe'
 (use-package beframe
   :demand t
@@ -83,8 +88,9 @@
     (add-to-list 'consult-buffer-sources 'beframe--consult-source))
   (beframe-mode))
 
-
 
+
+
 ;;;; `savehist'
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
@@ -98,14 +104,16 @@
   :init
   (savehist-mode))
 
-
 
+
+
 ;;;; `expand-region'
 (use-package expand-region
   :bind ("C-=" . er/expand-region))
 
-
 
+
+
 ;; TODO try mc/insert-numbers
 ;;;; `multiple-cursors'
 (use-package multiple-cursors
@@ -114,13 +122,15 @@
          ( "C-<" . mc/mark-previous-like-this)
          ("C-c C-<" . mc/mark-all-like-this)))
 
-
 
+
+
+;;;; `newcomment'
 (with-eval-after-load 'newcomment
-  (setq comment-empty-lines t ;; default nil
-        comment-inline-offset 2 ;; default 1
-        comment-multi-line t ;; default nil
-        comment-style 'extra-line)) ;; default 'indent
+  (setq comment-empty-lines t        ;; default nil
+        comment-inline-offset 2      ;; default 1
+        comment-multi-line t         ;; default nil
+        comment-style 'extra-line))  ;; default 'indent
 
 
 

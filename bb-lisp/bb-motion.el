@@ -5,7 +5,8 @@
 
 ;;; Code:
 
-;;;;; Window Management
+
+;;;; Window Management
 (defun bb-split-window-right-and-focus()
     "Spawn and focus a new window right of the current where most recent
 hidden buffer is showed."
@@ -81,8 +82,9 @@ kills the text before point."
       (kill-ring-save (region-beginning) (region-end))
     (kill-ring-save (pos-bol) (pos-eol))))
 
-
 
+
+
 ;;;###autoload
 (defun bb-insert-newline-above(&optional arg)
   "Inserts a new line before the current one or, with prefix, ARG number of lines.
@@ -113,8 +115,9 @@ With negative prefix calls mirror function `bb-insert-newline-above' passing ARG
       (insert "\n")
       (setq arg (1- arg)))))
 
-
 
+
+
 (defun bb-duplicate-line-above-dwim(arg)
   "Duplicate line or region ARGth times below point/region.
 If ARG is nil, do it one time."
@@ -186,14 +189,12 @@ A positive prefix leave the duplicates above, a negative, below."
       (if diff-eol-mark (set-mark (- (point) diff-eol-mark))))))
 
 
+
 
-
-
 (defun bb-transpose-words (&optional arg)
   "Transpose words around point or around/after point and mark "
   (interactive "p")
   (transpose-words (if (region-active-p) 0 arg)))
-
 
 
 (defun bb--move-line(count)

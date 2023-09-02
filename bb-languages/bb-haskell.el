@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+
 ;;;; `haskell-mode'
 (use-package haskell-mode
   :hook
@@ -20,12 +21,13 @@
   (haskell-indent-mode t))
 
 
+
+
 ;;;; `ormolu'
 (use-package ormolu
   :hook (haskell-mode . (ormolu-format-on-save-mode))
   :bind (:map haskell-mode-map
               ("C-c r" . ormolu-format-buffer)))
-
 
 
 (provide 'bb-haskell)

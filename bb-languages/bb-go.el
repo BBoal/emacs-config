@@ -21,13 +21,14 @@
               tab-width 4))
 
 
+
+
 ;;;; `go-add-tags'
 (use-package go-add-tags
   :bind (:map go-mode-map
   		      ("C-c t" . go-add-tags))
   :config
   (setq go-add-tags-style 'snake-case))
-
 
 
 (provide 'bb-go)

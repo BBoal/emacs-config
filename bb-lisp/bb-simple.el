@@ -90,8 +90,9 @@ position, operate from CHAR to the end of the line."
       (display-line-numbers-mode 'toggle)
     (setq-local display-line-numbers 'visual)))
 
-
 
+
+
 ;;;###autoload
 (defun bb-simple-add-to-list-elements (receiver-list elements)
   "`mapcar' is used to add the ELEMENTS to the RECEIVER-LIST"
@@ -100,8 +101,9 @@ position, operate from CHAR to the end of the line."
      (add-to-list receiver-list element))
    elements))
 
-
 
+
+
 ;;;###autoload
 (defun bb-simple-indent-tabs-spaces-rest ()
   (interactive)
@@ -157,8 +159,9 @@ helper functions."
     (indent-region min max 0)
     (indent-region min max)))
 
-
 
+
+
 ;;;###autoload
 (defun bb-simple-keyboard-quit-dwim ()
   "Source: <https://git.sr.ht/~protesilaos/dotfiles>
@@ -185,8 +188,9 @@ The DWIM behavior of this command is as follows:
    (t
     (keyboard-quit))))
 
-
 
+
+
 (defun bb-simple-ç-dwim(arg)
   (interactive "p")
   (if (< arg 0)
@@ -223,8 +227,9 @@ The DWIM behavior of this command is as follows:
    (t
     (insert (char-to-string char-number))))))
 
-
 
+
+
 (defun bb-maybe-eval-string (string)
   "Maybe evaluate elisp in a given STRING."
   (or
@@ -273,8 +278,9 @@ taken into consideration and proper evaluated."
     (when-let ((string (thing-at-point 'sexp :no-properties)))
       (bb-show-string-and-eval-in-other-buffer string mode))))
 
-
 
+
+
 ;;;###autoload
 (defun bb-delete-blank-lines-dwim(&optional beg end)
   "Delete all blank lines either surrounding point or, between BEG and END."
@@ -285,14 +291,14 @@ taken into consideration and proper evaluated."
       (delete-blank-lines)
       (if (looking-at regexp) (delete-blank-lines)))))
 
-
 
+
+
 ;;;###autoload
 (defun bb-simple-kill-current-buffer()
   "Kills the current buffer if saved, otherwise prompts you."
   (interactive)
   (kill-buffer (current-buffer)))
-
 
 
 (provide 'bb-simple)
