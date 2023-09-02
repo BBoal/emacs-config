@@ -198,30 +198,31 @@
      ((and (not dir-exists) writable-existing-parent-dir)
       (if (yes-or-no-p "Directory doesn't exist but can be created. Proceed? ")
           (progn
-            (message "Creating %s..." directory)
-            (make-directory directory :parents)
-            (message "Done"))
+            (princ (format "Creating %s  ...  " directory))
+            (unless (make-directory directory :parents) ;; meaning directory was created
+              (princ "Done!")))
         (user-error "Exiting without creating dir")))
      ((and (not dir-exists) (not writable-existing-parent-dir))
       (user-error "Error: Unable to create child directory. Check permissions of parent dir"))
      (t
-      (message "Processing desktop file...")))
+      (princ "Processing desktop file... ")))
 
     ;; following block of code must be outside of `t' othewise when the
     ;; directory has to be created the filename will not be processed.
     (or filename
         (setq filename (file-name-with-extension
                         (concat
-                        (format-time-string "%d%b%Y-")
-                        (if-let ((buf-name (buffer-name))
-                                 ((not (string-match "\\*[[:word:]]+\*" buf-name))))
-                            buf-name
-                          (buffer-name (window-buffer)))) "desktop")))
+                         (format-time-string "%d%b%Y-")
+                         (if-let ((buf-name (buffer-name))
+                                  ((not (string-match "\\*[[:word:]]+\*" buf-name))))
+                             buf-name
+                           (buffer-name (window-buffer)))) "desktop")))
     ;; (add-to-list 'desktop-path directory)
     (setq desktop-dirname directory
           desktop-base-file-name filename)
     (desktop-save directory :release)
-    (message "Desktop file saved as %s%s" desktop-dirname desktop-base-file-name)))
+    (princ (format "Desktop file saved as %s%s"
+                   desktop-dirname desktop-base-file-name))))
 
 
 (defun bb-set-desktop-file-for-read (&optional directory filename)
