@@ -28,6 +28,7 @@
 (setq use-package-always-ensure t
       use-package-always-defer t)
 
+
 ;;;; `auto-package-update'
 (use-package auto-package-update
   :hook ((auto-package-update-after . package-autoremove)
@@ -40,25 +41,25 @@
   (auto-package-update-maybe))
 
 
+;;;; `use-package-ensure-system-package'
+(use-package use-package-ensure-system-package)
+
+
 (defvar prot-emacs-packages
   '(agitate
-    altcaps
     beframe
-    cursory
     denote
     dired-preview
     ef-themes
     fontaine
     lin
     logos
-    mct
     modus-themes
     notmuch-indicator
     pulsar
     spacious-padding
     standard-themes
     substitute
-    sxhkdrc-mode
     tmr)
   "List of symbols representing the packages Prot develops/maintains.")
 
