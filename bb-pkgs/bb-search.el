@@ -10,7 +10,7 @@
 ;; to write to the disk as a final step before closing Emacs.  Though
 ;; this can lead to data loss, such as in the case of a power failure.
 ;; Storing the data outright mitigates this problem.
-(defun prot/bookmark-save-no-prompt (&rest _)
+(defun prot-bookmark-save-no-prompt (&rest _)
   "Run `bookmark-save' without prompts.
 
 The intent of this function is to be added as an :after advice to
@@ -21,7 +21,7 @@ setting a bookmark and we want to automatically save bookmarks at
 that point."
   (funcall 'bookmark-save))
 
-(advice-add 'bookmark-set-internal :after 'prot/bookmark-save-no-prompt)
+(advice-add 'bookmark-set-internal :after 'prot-bookmark-save-no-prompt)
 
 
 
@@ -32,10 +32,11 @@ that point."
       search-whitespace-regexp ".*?")
 
 
+
+
 ;;;; `substitute'
 (use-package substitute
-  :defer 1)
-
+  :defer 3)
 
 
 (provide 'bb-search)
