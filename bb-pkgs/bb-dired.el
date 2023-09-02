@@ -5,8 +5,8 @@
 
 ;;; Code:
 
-(require 'gnus-dired)
 
+(require 'gnus-dired)
 
 ; When there are two Dired buffers side-by-side make Emacs
 ;; automatically suggest the other one as the target of copy or rename
@@ -54,6 +54,7 @@
 
 
 
+
 ;;;; `diredfl'
 (use-package diredfl
   :defer 1
@@ -61,6 +62,10 @@
   (add-hook 'dired-mode-hook #'diredfl-mode)
   (add-hook 'dired-mode-hook #'gnus-dired-mode))
 
+
+
+
+;;;; `dired-preview'
 (use-package dired-preview
   :defer 2
   :config
