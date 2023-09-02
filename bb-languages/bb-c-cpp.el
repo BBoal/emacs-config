@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+
 ;;;; GDB
 (setq gdb-many-windows t
       gdb-show-main    t
@@ -58,6 +59,8 @@
               comment-continue (make-string (1+ (length comment-start)) ?\ )))
 
 
+
+
 ;;;;;; `cc-mode'
 (use-package cc-mode
   :config
@@ -66,6 +69,8 @@
         '(c++-mode-hook c-mode-hook)))
 
 
+
+
 ;;;;;; `c-ts-mode' and `c++-ts-mode'
 (use-package c-ts-mode
   :config
@@ -74,21 +79,29 @@
         '(c++-ts-mode-hook c-ts-mode-hook)))
 
 
+
+
 ;;;;;; `cpp-auto-include'
 (use-package cpp-auto-include)
 
 
+
+
 ;;;;;; `clang-capf'
 (use-package clang-capf
+  :defer 3
   :after cape
   :hook (c-ts-mode c-mode c++-ts-mode c++-mode objc-mode)
   :config
   (add-to-list 'completion-at-point-functions #'clang-capf))
 
 
+
+
 ;;;; `disaster'
 (use-package disaster
-:bind (("C-c d" . disaster)))
+  :defer 3
+  :bind (("C-c d" . disaster)))
 
 
 (provide 'bb-c-cpp)

@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+
 ;;;; `nov'
 (use-package nov
   :defer 2
@@ -17,10 +18,15 @@
   (add-hook 'nov-mode-hook 'my-nov-font-setup))
 
 
+
+
 ;;;; `pdf-tools'
-(use-package pdf-tools)
+(use-package pdf-tools
+  :defer 3)
 
 
+
+
 ;;;; `csv-mode'
 (use-package csv-mode
   :defer 2
@@ -29,6 +35,8 @@
   (setq csv-separators '("," ";" "|" " ")))
 
 
+
+
 ;;;; `adoc-mode'
 (use-package adoc-mode
   :defer 2
@@ -36,6 +44,8 @@
   ("\\.adoc\\'" . adoc-mode))
 
 
+
+
 ;;;; `markdown-mode'
 (use-package markdown-mode
   :defer 2
