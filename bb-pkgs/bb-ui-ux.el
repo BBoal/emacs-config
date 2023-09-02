@@ -13,6 +13,68 @@
         (bg-mode-line-inactive "#e6e6e6")))
 
 
+
+
+;;;; `olivetti'
+(use-package olivetti
+  :defer 3
+  :hook ((olivetti-mode-on . ensure-active-hl-line-mode)
+         (olivetti-mode-off . recall-hl-line-mode-state))
+
+  :config
+  (setq-default olivetti-body-width 0.75)
+
+  (defun ensure-active-hl-line-mode()
+    (defvar-local olivetti--hl-line-mode nil
+      "Value of `hl-line-mode' when when `olivetti-mode' is enabled.")
+    (unless (bound-and-true-p olivetti--hl-line-mode)
+      (setq olivetti--hl-line-mode hl-line-mode))
+    (hl-line-mode 1))
+
+  (defun recall-hl-line-mode-state()
+    (cond
+     ((and olivetti--hl-line-mode (not hl-line-mode))
+      (hl-line-mode 1))
+     ((and (not olivetti--hl-line-mode) hl-line-mode)
+      (hl-line-mode -1)))
+    (kill-local-variable 'olivetti--hl-line-mode)))
+
+
+
+
+;;;; `logos'
+(use-package logos
+  :defer 3
+  :after olivetti
+  :hook ((logos-page-motion . prot-logos--recenter-top)
+         (modus-themes-post-load . logos-update-fringe-in-buffers)
+         (ef-themes-post-load . logos-update-fringe-in-buffers))
+  :config
+  (defun prot-logos--recenter-top()
+    "Use `recenter' to reposition the view at the top."
+    (unless (derived-mode-p 'prog-mode)
+   ;; (unless ((/ (float (line-number-at-pos))(window-total-height))
+      (recenter 1))) ; Use 0 for the absolute top
+
+  (setq logos-outlines-are-pages t
+        logos-outline-regexp-alist
+        `((emacs-lisp-mode . "^;;;; ")
+          (org-mode . ,(format "\\(^\\*+ +\\|^-\\{5\\}$\\|%s\\)" logos-page-delimiter))
+          (markdown-mode . ,(format "\\(^\\#+ +\\|^[*-]\\{5\\}$\\|^\\* \\* \\*$\\|%s\\)" logos-page-delimiter))
+          (conf-toml-mode . "^\\[")
+          (adoc-mode . "^=\\{1,6\\} \\|^\\[.*\\]$")))
+
+  ;; the following variable are buffer-local
+  (setq-default logos-hide-mode-line t
+                logos-hide-buffer-boundaries t
+                logos-hide-fringe t
+                logos-variable-pitch nil
+                logos-buffer-read-only nil
+                logos-scroll-lock nil
+                logos-olivetti t))
+
+
+
 
 ;;;; `desktop-mode'
 ;;;;; Customizations
@@ -226,42 +288,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
 
 
 ;;;; `tab-bar-mode'
-;; 2023-08-13  TODO => Improve to include choices such as *scratch*
-(defun bb--tab-bar-new-tab-choice()
-  "Allows the user to choose the type of the next new tab."
-  (call-interactively 'find-file))
-
-(defun bb--tab-bar-new-tab-group()
-  "Sets the group of the new tab to the name of the parent directory of file."
-  (if (buffer-file-name (current-buffer))
-      ;; (file-name-base buffer-file-name)
-      (abbreviate-file-name (file-name-parent-directory buffer-file-name))
-    (buffer-name)))
-
-(defun bb--tab-bar-tab-group-format-default (tab i &optional current-p)
-  (propertize
-   (concat (if (and tab-bar-tab-hints (not current-p)) (format " [%d]  " i) "")
-           (funcall tab-bar-tab-group-function tab))
-   'face (if current-p 'tab-bar-tab-group-current 'tab-bar-tab-group-inactive)))
-
-(defun bb--tab-bar-tab-name-format-default (tab i)
-  (let* ((current-p (eq (car tab) 'current-tab))
-         (string (concat (if tab-bar-tab-hints (format "%d\) " i) "")
-                         (alist-get 'name tab)
-                         (or (and tab-bar-close-button-show
-                                  (not (eq tab-bar-close-button-show
-                                           (if current-p 'non-selected 'selected)))
-                                  tab-bar-close-button)
-                             "")))
-         (dif-widthmax-widthstring (- (cadr tab-bar-auto-width-max) (string-width string)))
-         (spaces2add (if (<= dif-widthmax-widthstring 0)
-                         0
-                       (floor dif-widthmax-widthstring 2))))
-    (propertize
-     (concat (make-string spaces2add ?\ ) string)
-     'face (funcall tab-bar-tab-face-function tab))))
-
-
+;;;;; Settings
 (setq tab-bar-auto-width-max '(220 27) ; tweaked with (string-pixel-width (make-string 27 ?\=))
       tab-bar-close-button-show 'selected
       tab-bar-close-last-tab-choice 'delete-frame
@@ -282,10 +309,49 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
       tab-bar-tab-name-function 'tab-bar-tab-name-truncated
       tab-bar-tab-name-truncated-max (cadr tab-bar-auto-width-max)
       tab-bar-show t)
+
+;;;;; Functions
+;; 2023-08-13  TODO => Improve to include choices such as *scratch*
+(defun bb--tab-bar-new-tab-choice()
+  "Allows the user to choose the type of the next new tab."
+  (call-interactively 'find-file))
+
+(defun bb--tab-bar-new-tab-group()
+  "Sets the group of the new tab to the name of the parent directory of file."
+  (if (buffer-file-name (current-buffer))
+      ;; (file-name-base buffer-file-name)
+      (abbreviate-file-name (file-name-parent-directory buffer-file-name))
+    (buffer-name)))
+
+(defun bb--tab-bar-tab-group-format-default (tab i &optional current-p)
+  (propertize
+   (concat (if (and tab-bar-tab-hints (not current-p)) (format " [%d]  " i) "")
+           (funcall tab-bar-tab-group-function tab))
+   'face (if current-p 'tab-bar-tab-group-current 'tab-bar-tab-group-inactive)))
+
+(defun bb--tab-bar-tab-name-format-default (tab i)
+  (let* ((current-p (eq (car tab) 'current-tab))
+         (string (concat (if tab-bar-tab-hints (format "%d\. " i) "")
+                         (alist-get 'name tab)
+                         (or (and tab-bar-close-button-show
+                                  (not (eq tab-bar-close-button-show
+                                           (if current-p 'non-selected 'selected)))
+                                  tab-bar-close-button)
+                             "")))
+         (dif-widthmax-widthstring (- (cadr tab-bar-auto-width-max) (string-width string)))
+         (spaces2add (if (<= dif-widthmax-widthstring 0)
+                         0
+                       (floor dif-widthmax-widthstring 2))))
+    (propertize
+     (concat (make-string spaces2add ?\ ) string)
+     'face (funcall tab-bar-tab-face-function tab))))
+
+;;;;; Enable the tab-bar
 (tab-bar-mode t)
 
-
 
+
+
 ;;;; `hl-todo'
 (use-package hl-todo
   :defer 1
@@ -315,17 +381,19 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
   :config
   (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
 
-
 
+
+
 ;;;; `lin'
 (use-package lin
   :defer 1
   :config
-  (setq lin-face 'lin-red)
+  (setq lin-face 'lin-yellow)
   (lin-global-mode))
 
-
 
+
+
 ;;;; `rainbow-mode'
 (use-package rainbow-mode
   :defer 1
@@ -582,22 +650,22 @@ Specific to the current window's mode line.")
            #'(outline-minor-mode)
            #'(hs-minor-mode))))
 
-
 
+
+
 ;;;; `pulsar'
 (use-package pulsar
-  :defer 2
   :demand t
   :config
   (setq pulsar-pulse t
-        pulsar-delay 0.055
-        pulsar-iterations 20
-        pulsar-face 'pulsar-green
-        pulsar--face 'pulsar-yellow)
+        pulsar-delay 0.03
+        pulsar-iterations 40
+        pulsar-face 'pulsar-green)
   (pulsar-global-mode 1))
 
-
 
+
+
 ;;;; `kind-icon'
 (use-package kind-icon
   :defer 1
