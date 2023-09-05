@@ -14,11 +14,56 @@
   ;; your current input. Works with pasting as well.
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
   :config
+  (defun not-current-or-previous-dir-p (str)
+    "Return nil if passed argument end in either \"/.\" or \"/..\""
+    (let ((final-dir (car (last (file-name-split str)))))
+      (not (or (string-equal "." final-dir)
+               (string-equal ".." final-dir)))))
+
+
+  (defcustom backup-sort-function #'vertico-sort-history-length-alpha
+    "Default backup sorting function, similarly to vertico-sort-function."
+    :type `(choice
+            (const :tag "No sorting" nil)
+            (const :tag "By history, length and alpha" ,#'vertico-sort-history-length-alpha)
+            (const :tag "By history and alpha" ,#'vertico-sort-history-alpha)
+            (const :tag "By length and alpha" ,#'vertico-sort-length-alpha)
+            (const :tag "Alphabetically" ,#'vertico-sort-alpha)
+            (function :tag "Custom function")))
+
+
+  (defun vertico-latest-files (candidates)
+    "CANDIDATES, when `minibuffer-contents-no-properties' points to a existing
+directory, are presented in last-modified order, when
+not,`backup-sort-function' is used for completion and sorting."
+    (if-let ((input (minibuffer-contents-no-properties))
+             ((file-directory-p input))
+             ((string-suffix-p "/" input)))
+        (let (list-files list-attr ordered-files)
+          (mapc (lambda (file)
+                  (let* ((cfile (concat input file))
+                         (time (nth 5 (file-attributes cfile))))
+                    (setq list-files (cons (cons file time)
+                                           list-files)
+                          list-attr (cons time
+                                          list-attr))))
+                candidates)
+          (sort list-attr #'time-less-p)
+          (while list-attr
+            (setq ordered-files (cons (car (rassq (car list-attr) list-files))
+                                      ordered-files)
+                  list-attr (cdr list-attr)))
+          ordered-files)
+      (funcall backup-sort-function candidates)))
+
   (setq vertico-preselect 'prompt
         vertico-scroll-margin 1
         vertico-count 5
         vertico-resize nil
+        vertico-multiform-categories '((file (vertico-sort-function . vertico-latest-files)))
         vertico-cycle t)
+  (vertico-multiform-mode 1)
+
   :init
   (vertico-mode))
 
@@ -42,7 +87,6 @@
              "[a-z]+://\\S-+"
              "<?[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>?")))
 
-  (vertico-multiform-mode 1)
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 25))))
 
@@ -72,8 +116,6 @@
          ;; Minibuffer history
          :map minibuffer-local-map
          ("C-s" . consult-history))
-         ;; ("M-s" . consult-history)       ;; orig. next-matching-history-element
-         ;; ("M-r" . consult-history))      ;; orig. previous-matching-history-element
 
   ;; Enable automatic preview at point in the *Completions* buffer. This is
   ;; relevant when you use the default completion UI.
@@ -142,36 +184,6 @@
 (use-package marginalia
   :init
   (marginalia-mode))
-
-
-
-;; 
-;; ;;;; `embark'
-;; (use-package embark
-;;   :defer 2
-;;   :bind
-;;   (("C-." . embark-act)                 ;; pick some comfortable binding
-;;    ("C-," . embark-dwim))                ;; good alternative: M-.
-;;   :init
-;;   ;; Optionally replace the key help with a completing-read interface
-;;   (setq prefix-help-command #'embark-prefix-help-command)
-;;   :config
-;;   ;; Hide the mode line of the Embark live/completions buffers
-;;   (add-to-list 'display-buffer-alist
-;;                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-;;                  nil
-;;                  (window-parameters (mode-line-format . none)))))
-;;
-;;
-;;
-;; 
-;; ;;;; `embark-consult'
-;; (use-package embark-consult
-;;   :defer 3 ; only necessary if you have the hook below
-;;   ;; if you want to have consult previews as you move around an
-;;   ;; auto-updating embark collect buffer
-;;   :hook
-;;   (embark-collect-mode . consult-preview-at-point-mode))
 
 
 
