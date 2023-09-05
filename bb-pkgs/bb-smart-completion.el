@@ -33,12 +33,10 @@
 
 
   (defun vertico-latest-files (candidates)
-    "CANDIDATES, when `minibuffer-contents-no-properties' points to a existing
-directory, are presented in last-modified order, when
-not,`backup-sort-function' is used for completion and sorting."
-    (if-let ((input (minibuffer-contents-no-properties))
-             ((file-directory-p input))
-             ((string-suffix-p "/" input)))
+    "CANDIDATES are sorted in last-modified order, `backup-sort-function' is used as
+a fallback."
+    (if-let ((input (file-name-directory (minibuffer-contents-no-properties)))
+             ((file-directory-p input)))
         (let (list-files list-attr ordered-files)
           (mapc (lambda (file)
                   (let* ((cfile (concat input file))
