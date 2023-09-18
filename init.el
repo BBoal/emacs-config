@@ -78,6 +78,7 @@
 (setq-default fill-column 79
               comment-fill-column 99
               emacs-lisp-docstring-fill-column fill-column
+              eval-expression-print-length nil
               tab-always-indent 'complete
               tab-first-completion 'word-or-paren-or-punct
               tab-width 4
@@ -160,6 +161,12 @@
 (require 'package-init)
 (require 'project)
 (require 'setup-langs)
+(require 'server)
 
 ;; Loads all "bb-" elisp files from "bb-" dirs
 (bb-require-lisp-files-in-dir-matching user-emacs-directory "bb-")
+
+;; Allow access from emacsclient
+(add-hook 'after-init-hook (lambda ()
+                             (unless (server-running-p)
+                               (server-start))))
