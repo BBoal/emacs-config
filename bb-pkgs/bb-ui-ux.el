@@ -92,7 +92,8 @@
 
 ;;;;; Settings
 (setq desktop-dirname (bb-ensure-dir-or-file-exist default-desktop-dirname)
-      desktop-path `(,desktop-dirname)
+      desktop-path `(,desktop-dirname) ;; 2023-09-02 TODO => Use this var to check for desktop-mode savefile
+
       desktop-file-name-format 'absolute
       ;; desktop-load-locked-desktop nil
       desktop-globals-to-save nil
@@ -373,8 +374,9 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
           ("HACK"     . "#1E90FF")))
   (global-hl-todo-mode))
 
-
 
+
+
 ;;;; `goggles'
 (use-package goggles
   :defer 1
@@ -410,37 +412,49 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
   (setq rainbow-ansi-colors nil
         rainbow-x-colors nil))
 
-
 
+
+
 ;;;; `modus-themes'
 (use-package modus-themes)
 
 
+
+
 ;;;; `ef-themes'
 (use-package ef-themes
   :demand t
   :config
   (load-theme hour-sets-theme))
 
-
 
+
+
 ;;;; `modeline-setup'
-(defvar bb-modeline-major-mode
-  (list (propertize "%[" 'face 'error)
-        '(:eval
-          (propertize
-           (capitalize
-            (replace-regexp-in-string
-             "-mode"
-             ""
-             (symbol-name major-mode)))
-           'mouse-face 'mode-line-highlight))
-        '("" mode-line-process)
-        (propertize "%]" 'face 'error)
-        " ")
+
+(defface prot-modeline-intense
+  '((default :inherit bold)
+    (((class color) (min-colors 88) (background light))
+     :background "#0000aa" :foreground "#ffffff")
+    (((class color) (min-colors 88) (background dark))
+     :background "#77aaff" :foreground "#000000")
+    (t :inverse-video t))
+  "Face for intense mode line constructs.")
+
+(defun bb-modeline--style-major-mode()
+  "Return string referring `major-mode', capitalized and with \"-mode\" deleted."
+  (capitalize
+   (string-replace "-mode" "" (symbol-name major-mode))))
+
+(defvar-local bb-modeline-major-mode
+  '(:eval
+    (list (propertize (bb-modeline--style-major-mode)
+                      'mouse-face 'mode-line-highlight)
+          '("" mode-line-process)
+          " "))
   "Mode line construct for displaying major modes.")
 
-(defvar prot-modeline-vc-branch
+(defvar-local prot-modeline-vc-branch
   '(:eval
     (when-let* (((mode-line-window-selected-p))
                 (branches (vc-git-branches))
@@ -461,7 +475,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
   "Mode line construct to return propertized VC branch.")
 
 
-(defvar prot-modeline-align-right
+(defvar-local prot-modeline-align-right
   '(:eval (propertize
            " " 'display
            `((space :align-to
@@ -472,7 +486,7 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
 Read Info node `(elisp) Pixel Specification'.") ;; 2023-06-30  REMINDER => See this in detail
 
 
-(defvar prot-modeline-misc-info
+(defvar-local prot-modeline-misc-info
   '(:eval
     (when (mode-line-window-selected-p)
       mode-line-misc-info))
@@ -480,20 +494,10 @@ Read Info node `(elisp) Pixel Specification'.") ;; 2023-06-30  REMINDER => See t
 Specific to the current window's mode line.")
 
 
-(defface prot-modeline-intense
-  '((default :inherit bold)
-    (((class color) (min-colors 88) (background light))
-     :background "#0000aa" :foreground "#ffffff")
-    (((class color) (min-colors 88) (background dark))
-     :background "#77aaff" :foreground "#000000")
-    (t :inverse-video t))
-  "Face for intense mode line constructs.")
-
-
 (setq mode-line-defining-kbd-macro
       (propertize " KMacro " 'face 'prot-modeline-intense))
 
-(defvar prot-modeline-kbd-macro
+(defvar-local prot-modeline-kbd-macro
   '(:eval
     (when (and defining-kbd-macro (mode-line-window-selected-p))
       mode-line-defining-kbd-macro))
@@ -501,12 +505,12 @@ Specific to the current window's mode line.")
 Specific to the current window's mode line.")
 
 
-(defvar prot-modeline-buffer-identification
+(defvar-local prot-modeline-buffer-identification
   (propertized-buffer-identification "%b")
   "Mode line construct for identifying the buffer being displayed.")
 
 
-(defvar prot-modeline--line-and-column
+(defvar-local prot-modeline--line-and-column
   `((line-number-mode
      (column-number-mode
       (column-number-indicator-zero-based
@@ -536,7 +540,7 @@ Specific to the current window's mode line.")
   "Mode line construct for formatting `prot-modeline-position'.")
 
 
-(defvar prot-modeline-position
+(defvar-local prot-modeline-position
   '(:eval
     (when (mode-line-window-selected-p)
       prot-modeline--line-and-column))
@@ -548,7 +552,7 @@ Specific to the current window's mode line.")
 (column-number-mode 1)
 
 
-(defvar prot-modeline-flymake
+(defvar-local prot-modeline-flymake
   '(:eval
     (when (and (bound-and-true-p flymake-mode)
                (mode-line-window-selected-p))
@@ -559,17 +563,7 @@ Specific to the current window's mode line.")
 Specific to the current window's mode line.")
 
 
-(dolist (variables '(bb-modeline-major-mode
-                     prot-modeline-align-right
-                     prot-modeline-buffer-identification
-                     prot-modeline-flymake
-                     prot-modeline-kbd-macro
-                     prot-modeline-misc-info
-                     prot-modeline-position
-                     prot-modeline-vc-branch))
-  (put variables 'risky-local-variable t))
-
-
+;; Final assembly for the mode-line
 (setq-default mode-line-format
               '("%e"
                 prot-modeline-kbd-macro
@@ -589,14 +583,32 @@ Specific to the current window's mode line.")
                 prot-modeline-misc-info ;; everything else not defined particularly
                 mode-line-end-spaces))
 
+(defcustom bb--mode-line-defining-strings
+  '(prot-modeline-kbd-macro
+    prot-modeline-buffer-identification
+    bb-modeline-major-mode
+    prot-modeline-flymake
+    prot-modeline-position
+    prot-modeline-vc-branch
+    prot-modeline-align-right
+    prot-modeline-misc-info)
+  "List of variables that compose and define the mode-line-format")
+
+
+;; Making the variables that compose the mode-line 'risky-local-variable. This
+;; is mandatory, otherwise they will not be displayed.
+(mapc (lambda (variable)
+        (put variable 'risky-local-variable t))
+      bb--mode-line-defining-strings)
 
 ;; Clock in the modeline
 (setq display-time-string-forms
       '((capitalize (format-time-string " %a,%d %b %R "))))
 (display-time-mode 1)
 
-
 
+
+
 ;;;; `keycast'
 (use-package keycast
   :defer 2
@@ -615,8 +627,9 @@ Specific to the current window's mode line.")
                    mwheel-scroll))
     (add-to-list 'keycast-substitute-alist `(,event nil))))
 
-
 
+
+
 ;;;; `which-key'
 (use-package which-key
   :defer 1
@@ -637,8 +650,9 @@ Specific to the current window's mode line.")
   (which-key-mode)
   (which-key-setup-side-window-right-bottom))
 
-
 
+
+
 ;;;; `bicycle'
 (use-package bicycle
   :defer 2
@@ -676,8 +690,9 @@ Specific to the current window's mode line.")
         kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
-
 
+
+
 ;;;; `indent-guide'
 (use-package indent-guide
   :defer 2

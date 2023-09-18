@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+
 (defconst bb--regex-general-f "[!\"#$%&'()*+,-./:;<=>\?\\@\[\]\^_`{|}~]"
   "General Regex for common usage")
 
@@ -42,8 +43,12 @@ re-edit the current paragraph."
         (forward-char -1)
         (re-search-forward regexp bound t arg)
         (forward-char 1)))))
+;; 2023-08-18 BUG => `start-of-paragraph' is inconsistent with
+;; `end-of-paragraph-text'
 
 
+
+
 ;;;; `bb-programming-hooks'
 (defun bb-programming-hooks ()
   "Useful hooks for programming."
@@ -54,6 +59,8 @@ re-edit the current paragraph."
   (hs-minor-mode t))
 
 
+
+
 ;;;; `bb-eglot-arrange-file'
 (defun bb-eglot-arrange-file()
   "Imports and formats programming file using Eglot"
@@ -66,6 +73,8 @@ re-edit the current paragraph."
   (eglot-format-buffer))
 
 
+
+
 ;;;; `prot-find-project-root'
 (defmacro prot-find-project-root (mode file)
   "Define project root check for MODE given FILE.
@@ -86,8 +95,6 @@ is a string."
          (add-hook 'project-find-functions #',project-find-fn :depth :local))
 
        (add-hook ',(intern (format "%s-hook" mode)) #',major-mode-fn))))
-
-
 
 
 (provide 'setup-langs)
