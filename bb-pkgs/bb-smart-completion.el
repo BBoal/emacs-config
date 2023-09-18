@@ -22,7 +22,7 @@
 
 
   (defcustom backup-sort-function #'vertico-sort-history-length-alpha
-    "Default backup sorting function, similarly to vertico-sort-function."
+    "Default backup sorting function, identical to vertico-sort-function."
     :type `(choice
             (const :tag "No sorting" nil)
             (const :tag "By history, length and alpha" ,#'vertico-sort-history-length-alpha)
