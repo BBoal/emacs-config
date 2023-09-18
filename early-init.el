@@ -53,6 +53,7 @@
                                  (vertical-scroll-bars)
                                  (background-color . ,(face-background 'default))
                                  (menu-bar-lines . 0)
+                                 (tab-bar-lines . 1)
                                  (tool-bar-lines . 0)))
 
 
@@ -95,7 +96,8 @@ Make windows dividers for THEME invisible."
       user-login-name   "bb"
       user-mail-address "egomet@bboal.com")
 
-(eval '(setq inhibit-startup-echo-area-message user-full-name));; 2023-07-12  REMINDER => Reason for the eval
+(eval '(setq inhibit-startup-echo-area-message user-full-name))
+;; 2023-07-12  REMINDER => Reason for the eval is byte-compilation
 
 
 (defun bb-emacs-re-enable-frame-theme (_frame)
