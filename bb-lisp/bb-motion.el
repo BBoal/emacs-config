@@ -86,34 +86,34 @@ kills the text before point."
 
 
 ;;;###autoload
-(defun bb-insert-newline-above(&optional arg)
+(defun bb-insert-newline-above(arg)
   "Inserts a new line before the current one or, with prefix, ARG number of lines.
 
 With negative prefix calls mirror function `bb-insert-newline-below' passing ARG."
   (interactive "p")
-  (or arg (setq arg 1))
   (if (< arg 0) (bb-insert-newline-below (- arg)))
   (goto-char (pos-bol))
   (insert "\n")
   (forward-line -1)
-    (while (> arg 1)
-      (insert "\n")
-      (setq arg (1- arg))))
+  (while (> arg 1)
+    (insert "\n")
+    (setq arg (1- arg)))
+  (indent-according-to-mode))
 
 ;;;###autoload
-(defun bb-insert-newline-below(&optional arg)
+(defun bb-insert-newline-below(arg)
   "Inserts a new line after the current one or, with prefix, ARG number of lines.
 
 With negative prefix calls mirror function `bb-insert-newline-above' passing ARG."
   (interactive "p")
-  (or arg (setq arg 1))
   (if (< arg 0) (bb-insert-newline-above (- arg)))
   (goto-char (pos-eol))
   (insert "\n")
   (save-excursion
     (while (> arg 1)
       (insert "\n")
-      (setq arg (1- arg)))))
+      (setq arg (1- arg))))
+  (indent-according-to-mode))
 
 
 
@@ -191,7 +191,7 @@ A positive prefix leave the duplicates above, a negative, below."
 
 
 
-(defun bb-transpose-words (&optional arg)
+(defun bb-transpose-words (arg)
   "Transpose words around point or around/after point and mark "
   (interactive "p")
   (transpose-words (if (region-active-p) 0 arg)))
@@ -231,22 +231,43 @@ A positive prefix leave the duplicates above, a negative, below."
       (if diff-eol-mark
           (set-mark (- (point) diff-eol-mark)))
       ;; either way go to same point location reference initial motion
-      (goto-char (- (point) diff-eol-point)))))
+      (goto-char (- (point) diff-eol-point))))
+  (indent-according-to-mode))
 
 (defun bb--move-line-user-error (boundary)
   "Return `user-error' with message accounting for BOUNDARY.
       BOUNDARY is a buffer position, expected to be `point-min' or `point-max'."
   (when-let ((bound (line-number-at-pos boundary))
-             (string-bound (if (= boundary (point-min)) "first" "last"))
+             (string-bound (if (= boundary (point-min))
+                               "first line!"
+                             "last line!"))
              (scope (cond
+                     ;; Region
                      ((and (use-region-p)
                            (or (= (line-number-at-pos (point)) bound)
                                (= (line-number-at-pos (mark)) bound)))
                       "region is ")
+                     ;; At last line, with solo "\n" and shifting above
+                     ((and (eobp)
+                           (= boundary (point-min))
+                           (= (current-column) 0))
+                      (setq string-bound "EOB! Unable to shift, moving the point up...")
+                      (forward-line -1)
+                      "")
+                     ;; Second to last line with "\n" as eob next and shifting below
+                     ((and (= boundary (point-max))
+                           (= (line-number-at-pos (point)) (1- bound))
+                           (save-excursion
+                             (goto-char boundary)
+                             (bolp)))
+                      (setq string-bound "bottom, with only EOB below!")
+                      "")
+                     ;; Line
                      ((= (line-number-at-pos (point)) bound)
                       "")
+                     ;; No errors
                      (t nil))))
-    (user-error (format "Warning: %salready in the %s line!" scope string-bound))))
+    (user-error (format "WARNING: %salready at the %s" scope string-bound))))
 
 
 (defun bb-move-line-above-dwim(arg)
