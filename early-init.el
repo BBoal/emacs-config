@@ -92,12 +92,11 @@ Make windows dividers for THEME invisible."
 
 
 ;; User info
-(setq user-full-name    "Bruno Boal"
-      user-login-name   "bb"
-      user-mail-address "egomet@bboal.com")
-
-(eval '(setq inhibit-startup-echo-area-message user-full-name))
-;; 2023-07-12  REMINDER => Reason for the eval is byte-compilation
+(eval '(setq user-full-name    "Bruno Boal"
+             user-login-name   "bb"
+             user-mail-address "egomet@bboal.com"
+             inhibit-startup-echo-area-message user-full-name))
+;; 2023-07-12  REMINDER => eval is used for byte-compilation
 
 
 (defun bb-emacs-re-enable-frame-theme (_frame)
