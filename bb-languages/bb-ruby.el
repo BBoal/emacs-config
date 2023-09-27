@@ -33,14 +33,10 @@
 ;;;; `enh-ruby-mode'
 (use-package enh-ruby-mode
   :defer 3
-  :after inf-ruby ruby-electric
   :mode "\\.rb\\'"
   :interpreter "ruby"
-  :functions inf-ruby-keys
   :hook ((enh-ruby-mode . inf-ruby-minor-mode)
-         (enh-ruby-mode . ruby-electric-mode))
-  :config
-    (inf-ruby-keys))
+         (enh-ruby-mode . ruby-electric-mode)))
 
 
 
