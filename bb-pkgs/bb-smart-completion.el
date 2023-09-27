@@ -336,11 +336,23 @@ Useful for prompts such as `eval-expression' and `shell-command'."
         eglot-confirm-server-initiated-edits nil))
 
 
+
+
 ;;;; `consult-eglot'
 (use-package consult-eglot
   :defer 3
   :after (consult eglot))
 
+
+
+
+;;;; `immersive-translate'
+(use-package immersive-translate
+  :defer 2
+  :config
+  (setq immersive-translate-backend 'trans
+        immersive-translate-trans-source-language "de"
+        immersive-translate-trans-target-language "en"))
 
 
 (provide 'bb-smart-completion)
