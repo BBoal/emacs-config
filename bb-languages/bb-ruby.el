@@ -7,8 +7,15 @@
 
 
 ;;;; `inf-ruby'
+;; (use-package inf-ruby
+;;   :defer 3
+;;   :bind (:map inf-ruby-minor-mode-map
+;;               ("C-c r c" . inf-ruby-console-auto))
+;;   :hook (compilation-filter . inf-ruby-auto-enter-and-focus))
 (use-package inf-ruby
   :defer 3
+  :vc ( :url "https://github.com/BBoal/inf-ruby"
+        :rev :newest)
   :bind (:map inf-ruby-minor-mode-map
               ("C-c r c" . inf-ruby-console-auto))
   :hook (compilation-filter . inf-ruby-auto-enter-and-focus))
