@@ -107,9 +107,15 @@
 
 
 
-;;;; `expand-region'
-(use-package expand-region
-  :bind ("C-=" . er/expand-region))
+;;;; `expreg'
+(use-package expreg
+  :demand t
+  :hook (text-mode . #'add-expreg-sentence)
+  :bind (("C-«" . expreg-expand)
+         ("C-»" . expreg-contract))
+  :config
+  (defun add-expreg-sentence()
+    (add-to-list 'expreg-functions #'expreg--sentence)))
 
 
 
@@ -118,9 +124,9 @@
 ;;;; `multiple-cursors'
 (use-package multiple-cursors
   :bind (("C-S-c C-S-c" . mc/edit-lines)
-         ( "C->" . mc/mark-next-like-this)
-         ( "C-<" . mc/mark-previous-like-this)
-         ("C-c C-<" . mc/mark-all-like-this)))
+         ( "C-<" . mc/mark-next-like-this)
+         ( "C->" . mc/mark-previous-like-this)
+         ("C-c s-<" . mc/mark-more-like-this-extended)))
 
 
 
