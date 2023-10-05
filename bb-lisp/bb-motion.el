@@ -93,10 +93,9 @@ With negative prefix calls mirror function `bb-insert-newline-below' passing ARG
   (interactive "p")
   (if (< arg 0) (bb-insert-newline-below (- arg)))
   (goto-char (pos-bol))
-  (insert "\n")
-  (forward-line -1)
-  (while (> arg 1)
+  (while (> arg 0)
     (insert "\n")
+    (forward-line -1)
     (setq arg (1- arg)))
   (indent-according-to-mode))
 
@@ -108,11 +107,9 @@ With negative prefix calls mirror function `bb-insert-newline-above' passing ARG
   (interactive "p")
   (if (< arg 0) (bb-insert-newline-above (- arg)))
   (goto-char (pos-eol))
-  (insert "\n")
-  (save-excursion
-    (while (> arg 1)
-      (insert "\n")
-      (setq arg (1- arg))))
+  (while (> arg 0)
+    (insert "\n")
+    (setq arg (1- arg)))
   (indent-according-to-mode))
 
 
