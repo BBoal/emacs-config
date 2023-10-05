@@ -188,12 +188,13 @@ a fallback."
 
 ;;;; `corfu'
 (use-package corfu
+  :demand t
   :bind (:map corfu-map
               ("s-SPC" . corfu-insert-separator)
               ("J" . corfu-next)
               ("K" . corfu-previous))
   :hook (minibuffer-setup . contrib/corfu-enable-always-in-minibuffer)
-  :config
+  :init
   ;; Adapted from Corfu's manual.
   (defun contrib/corfu-enable-always-in-minibuffer ()
     "Enable Corfu in the minibuffer if Vertico is not active.
@@ -202,7 +203,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
       (setq-local corfu-echo-delay nil     ;; Disable automatic echo and popup
                   corfu-popupinfo-delay nil)
       (corfu-mode 1)))
-
+  :config
   (setq corfu-min-width 40
         corfu-max-width 80
         corfu-cycle t                      ;; Enable cycling for `corfu-next/previous'
