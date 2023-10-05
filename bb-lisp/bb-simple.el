@@ -35,10 +35,10 @@
    "\\([-a-zA-Z0-9+&@#/%?=~_|!:,.;]+\\)/?\\>")
   "Regular expression to match (most?) URLs or email addresses.")
 
-(defun bb-simple--pos-url-on-line (&optional char)
+(defun bb-simple--pos-url-on-line (char)
   "Return position of `bb-common-url-regexp' on line or at CHAR."
   (save-excursion
-    (goto-char (or char (pos-bol)))
+    (goto-char char)
     (re-search-forward bb-common-url-regexp (pos-eol) :noerror)))
 
 ;;;###autoload
@@ -47,16 +47,20 @@
 By default, start operating from `pos-bol' to the
 end of the current line. With optional CHAR as a buffer
 position, operate from CHAR to the end of the line."
-  (interactive)
+  (interactive
+   (list (if current-prefix-arg
+             (re-search-forward bb-common-url-regexp (pos-eol) :no-error
+                                (prefix-numeric-value current-prefix-arg))
+           (pos-bol))))
   (when-let ((regexp-end (bb-simple--pos-url-on-line char)))
-    (save-excursion
       (goto-char regexp-end)
       (unless (looking-at ">")
         (insert ">")
         (search-backward "\s")
         (forward-char 1)
-        (insert "<")))
-    (bb-simple-escape-url-line (1+ regexp-end))))
+        (insert "<"))
+      (bb-simple-escape-url-line (1+ regexp-end)))
+  (goto-char (pos-eol)))
 
 ;;;###autoload
 (defun bb-simple-escape-url-region (beg end)
@@ -65,15 +69,15 @@ position, operate from CHAR to the end of the line."
    (if (region-active-p)
        (list (region-beginning) (region-end))
      (error "There is no region!")))
-  (unless (> end beg)
-    (cl-rotatef end beg))
-  (save-excursion
-    (goto-char beg)
-    (setq beg (pos-bol))
-    (while (<= beg end)
-      (bb-simple-escape-url-line beg)
-      (beginning-of-line 2)
-      (setq beg (point)))))
+  (let ((beg (min beg end))
+        (end (max beg end)))
+    (save-excursion
+      (goto-char beg)
+      (setq beg (pos-bol))
+      (while (<= beg end)
+        (bb-simple-escape-url-line beg)
+        (beginning-of-line 2)
+        (setq beg (point))))))
 
 ;;;###autoload
 (defun bb-simple-escape-url-dwim ()
@@ -285,11 +289,13 @@ taken into consideration and proper evaluated."
 (defun bb-delete-blank-lines-dwim(&optional beg end)
   "Delete all blank lines either surrounding point or, between BEG and END."
   (interactive "*r")
-  (let ((regexp "^[ \t]*$"))
+  (let ((regexp "^[ \t]*$")
+        (col (current-column)))
     (if (region-active-p)
         (flush-lines regexp (region-beginning) (region-end) nil)
       (delete-blank-lines)
-      (if (looking-at regexp) (delete-blank-lines)))))
+      (if (looking-at regexp) (delete-blank-lines)))
+    (move-to-column col)))
 
 
 
