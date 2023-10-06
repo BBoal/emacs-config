@@ -17,7 +17,7 @@
 
 (defcustom bb-prog-langs-alist
   `((lisp-interaction-mode . ,bb--regex-lisp-f)
-    (Emacs-lisp-mode       . ,bb--regex-lisp-f)
+    (emacs-lisp-mode       . ,bb--regex-lisp-f)
     (bash-ts-mode          . ,bb--regex-shell-f)
     (sh-mode               . ,bb--regex-shell-f))
   "Alist of characters, language specific, used by `bb-simple-ç-dwim'")

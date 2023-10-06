@@ -110,7 +110,7 @@
 ;;;; `expreg'
 (use-package expreg
   :demand t
-  :hook (text-mode . #'add-expreg-sentence)
+  :hook (text-mode . add-expreg-sentence)
   :bind (("C-«" . expreg-expand)
          ("C-»" . expreg-contract))
   :config
