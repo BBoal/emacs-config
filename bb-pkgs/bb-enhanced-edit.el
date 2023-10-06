@@ -111,9 +111,25 @@
 (use-package expreg
   :demand t
   :hook (text-mode . add-expreg-sentence)
-  :bind (("C-«" . expreg-expand)
+  :bind (("C-«" . bb-expreg-try-expand-symbol)
          ("C-»" . expreg-contract))
   :config
+  (defun bb-expreg-expand (n)
+    "Expand to N syntactic units, defaulting to 1 in interactive use."
+    (interactive "p")
+    (while (> n 0)
+      (expreg-expand)
+      (setq n (1- n))))
+
+  (defun bb-expreg-try-expand-symbol ()
+    "If point is over a symbol, mark it, otherwise fall-back to regular
+`expreg-expand'."
+    (interactive)
+    (if (and (bounds-of-thing-at-point 'symbol)
+             (not (use-region-p)))
+        (expreg-expand))
+    (expreg-expand))
+
   (defun add-expreg-sentence()
     (add-to-list 'expreg-functions #'expreg--sentence)))
 
