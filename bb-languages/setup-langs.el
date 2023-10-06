@@ -23,30 +23,6 @@
   "Alist of characters, language specific, used by `bb-simple-ç-dwim'")
 
 
-(defun bb-try-jump-args-direction(arg paragraph-boundary)
-  " Jump ARG times through user specific chars bounded by PARAGRAPH-BOUNDARY.
-
-According to a specific regexp described in the 'bb-prog-langs-list' obtained
-according to the major-mode, the user can \"jump\" to designated chars to quickly
-re-edit the current paragraph."
-  (interactive "p")
-  (let ((regexp (or (alist-get major-mode bb-prog-langs-alist)
-                    bb--regex-general-f))
-        (bound (save-excursion
-                 (funcall paragraph-boundary)
-                 (point))))
-
-    (if (> arg 0)
-        (re-search-forward regexp bound t arg)
-      ;; else  arg < 0
-      (unless (or (bobp) (eq (point) (1+ (point-min))))
-        (forward-char -1)
-        (re-search-forward regexp bound t arg)
-        (forward-char 1)))))
-;; 2023-08-18 BUG => `start-of-paragraph' is inconsistent with
-;; `end-of-paragraph-text'
-
-
 
 
 ;;;; `bb-programming-hooks'

@@ -195,17 +195,28 @@ The DWIM behavior of this command is as follows:
 
 
 
-(defun bb-simple-ç-dwim(arg)
-  (interactive "p")
-  (if (< arg 0)
-    (message "This function only searches forward. Ignoring the signed prefix"))
-  (bb--simple-ç-or-Ç-worker (abs arg)))
+(defun bb-try-jump-args-direction(arg paragraph-boundary)
+  " Jump ARG times through user specific chars bounded by PARAGRAPH-BOUNDARY.
 
-(defun bb-simple-Ç-dwim(arg)
+According to a specific regexp described in the 'bb-prog-langs-list' obtained
+according to the major-mode, the user can \"jump\" to designated chars to quickly
+re-edit the current paragraph."
   (interactive "p")
-  (if (< arg 0)
-      (message "This function only searches backward. Ignoring the signed prefix"))
-  (bb--simple-ç-or-Ç-worker (- (abs arg))))
+  (let ((regexp (or (alist-get major-mode bb-prog-langs-alist)
+                    bb--regex-general-f))
+        (bound (save-excursion
+                 (funcall paragraph-boundary)
+                 (point))))
+
+    (if (> arg 0)
+        (and (not (looking-at "\n+$"))
+             (re-search-forward regexp bound t arg))
+      ;; else  arg < 0
+      (unless (or (bobp) (eq (point) (1+ (point-min))))
+        (forward-char -1)
+        (re-search-forward regexp bound t arg)
+        (forward-char 1)))))
+
 
 (defun bb--simple-ç-or-Ç-worker(arg)
   "Do-What-I-Mean behavior for the 'ç' or 'Ç' key.
@@ -230,6 +241,19 @@ The DWIM behavior of this command is as follows:
     (bb-try-jump-args-direction arg search-bounds))
    (t
     (insert (char-to-string char-number))))))
+
+
+(defun bb-simple-ç-dwim(arg)
+  (interactive "p")
+  (if (< arg 0)
+    (message "This function only searches forward. Ignoring the signed prefix"))
+  (bb--simple-ç-or-Ç-worker (abs arg)))
+
+(defun bb-simple-Ç-dwim(arg)
+  (interactive "p")
+  (if (< arg 0)
+      (message "This function only searches backward. Ignoring the signed prefix"))
+  (bb--simple-ç-or-Ç-worker (- (abs arg))))
 
 
 
