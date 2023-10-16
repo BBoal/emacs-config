@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: print
+# key: p
+# expand-env: ((yas-indent-line 'fixed))
+# contributor: Bruno Boal <egomet@bboal.com>
+# --
+print($1)$0

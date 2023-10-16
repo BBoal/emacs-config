@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: define a variable
+# key:  v
+# expand-env: ((yas-indent-line 'fixed))
+# contributor: Bruno Boal <egomet@bboal.com>
+# --
+${1:name} = ${2:value}
+$0
