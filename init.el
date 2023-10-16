@@ -52,6 +52,7 @@
 
 ;;; User preferences
 (setq bidi-inhibit-bpa t
+      show-paren-delay 0
       scroll-conservatively 101
       x-stretch-cursor t
       ring-bell-function 'ignore
@@ -78,6 +79,7 @@
 (setq-default fill-column 79
               comment-fill-column 99
               emacs-lisp-docstring-fill-column fill-column
+              sentence-end-double-space nil
               eval-expression-print-length nil
               tab-always-indent 'complete
               tab-first-completion 'word-or-paren-or-punct

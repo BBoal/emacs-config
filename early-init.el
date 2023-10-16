@@ -56,6 +56,8 @@
                                  (tab-bar-lines . 1)
                                  (tool-bar-lines . 0)))
 
+(menu-bar-mode -1)
+
 
 ;; Early options to consider
 (eval '(setq native-comp-async-report-warnings-errors  'silent
