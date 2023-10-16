@@ -19,6 +19,7 @@
      (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
      (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
      (ruby "https://github.com/tree-sitter/tree-sitter-ruby" "master" "src")
+     (rust "https://github.com/tree-sitter/tree-sitter-rust" "master" "src")
      (ocaml "https://github.com/tree-sitter/tree-sitter-ocaml" "master" "ocaml/src")
      (haskell "https://github.com/tree-sitter/tree-sitter-haskell" "master" "src")
      (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
@@ -40,6 +41,7 @@
         (tsx-mode . tsx-ts-mode)
         (typescript-mode . typescript-ts-mode)
         (ruby-mode . ruby-ts-mode)
+        (rust-mode . rust-ts-mode)
         (yaml-mode . yaml-ts-mode)))
 
 

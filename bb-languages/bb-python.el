@@ -13,7 +13,8 @@
                           (eglot-ensure)
                           (flymake-ruff-load)))
   :config
-  (setq python-indent-guess-indent-offset-verbose nil)
+  (setq python-indent-guess-indent-offset-verbose nil
+        python-indent-offset 4)
   (python-black-on-save-mode t))
 
 

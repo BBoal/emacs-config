@@ -15,6 +15,7 @@
 (defconst bb--regex-shell-f "[\"'\[\({,;~=+-/%]"
   "Regex for shell families")
 
+;; (provided-mode-derived-p 'python-ts-mode 'python-base-mode)
 (defcustom bb-prog-langs-alist
   `((lisp-interaction-mode . ,bb--regex-lisp-f)
     (emacs-lisp-mode       . ,bb--regex-lisp-f)
@@ -41,9 +42,13 @@
 (defun bb-eglot-arrange-file()
   "Imports and formats programming file using Eglot"
   (interactive)
-  (if (or (eq major-mode 'c++-mode)
-          (eq major-mode 'c++-ts-mode))
-      (cpp-auto-include))
+  (cond
+   ((or (eq major-mode 'c++-mode)
+        (eq major-mode 'c++-ts-mode))
+    (cpp-auto-include))
+   ((or (eq major-mode 'rust-mode)
+        (eq major-mode 'rust-ts-mode))
+    (prettify-symbols-mode)))
   (ignore-errors
     (eglot-code-action-organize-imports (point-min)))
   (eglot-format-buffer))
