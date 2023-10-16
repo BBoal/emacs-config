@@ -94,7 +94,7 @@
 ;;;; Function keys
 (keymap-global-set "<f12>" #'save-buffer)
 (keymap-global-set "<f10>" #'save-buffers-kill-emacs)
-(keymap-global-set "<f9>" #'menu-bar-mode)
+(keymap-global-set "<f9>" #'bb-simple-cycle-menu-bar-mode)
 (keymap-global-set "<f8>" #'logos-focus-mode)
 (keymap-global-set "<f7>" #'bb-simple-cycle-display-line-numbers)
 (keymap-global-set "<f6>" #'whitespace-mode)

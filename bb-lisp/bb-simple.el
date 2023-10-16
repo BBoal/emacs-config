@@ -87,12 +87,23 @@ position, operate from CHAR to the end of the line."
        #'bb-simple-escape-url-region
      #'bb-simple-escape-url-line)))
 
+
+
+
 ;;;###autoload
 (defun bb-simple-cycle-display-line-numbers ()
   (interactive)
   (if display-line-numbers
       (display-line-numbers-mode 'toggle)
     (setq-local display-line-numbers 'visual)))
+
+
+
+
+;;;###autoload
+(defun bb-simple-cycle-menu-bar-mode()
+  (interactive)
+  (menu-bar-mode (if menu-bar-mode -1 1)))
 
 
 
