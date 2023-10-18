@@ -28,3 +28,4 @@ scratch*
 tree-sitter/
 pushmacs
 ido.last
+.emacs-desktop.d/
