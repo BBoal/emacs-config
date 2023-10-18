@@ -64,6 +64,7 @@
              load-prefer-newer                         t
              package-enable-at-startup                 nil
              package-quickstart                        t
+             package-install-upgrade-built-in          t
              use-dialog-box                            nil
              inhibit-startup-screen                    t
              inhibit-startup-buffer-menu               t

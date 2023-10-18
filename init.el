@@ -88,6 +88,7 @@
               indent-tabs-mode nil
               kill-do-not-save-duplicates t
               cursor-in-non-selected-windows nil
+              save-place-mode t
               bidi-paragraph-direction 'left-to-right
               large-file-warning-threshold (* 30 1024 1024)
               project-vc-extra-root-markers '( ".dir-locals.el"
