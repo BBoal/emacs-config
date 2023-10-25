@@ -116,6 +116,8 @@
         (add-hook mode #'turn-on-auto-fill))
       modes-with-autofill-on)
 
+;; Depth indication of recursive minibuffers
+(minibuffer-depth-indicate-mode t)
 
 ;; Select text is replaced with input
 (delete-selection-mode t)
