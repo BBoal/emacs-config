@@ -60,11 +60,11 @@
 ;;;; `beframe'
 (use-package beframe
   :demand t
-  :bind (("C-x f" . other-frame-prefix)    ; override `set-fill-column'
+  :bind ("C-x f" . other-frame-prefix)    ; override `set-fill-column'
   ;; Replace the generic `buffer-menu'.  With a prefix argument, this
   ;; commands prompts for a frame.  Call the `buffer-menu' via M-x if
   ;; you absolutely need the global list of buffers.
-  ("C-x C-b" . beframe-buffer-menu))
+  ;;("C-x C-b" . beframe-buffer-menu)
   :config
   (setq beframe-functions-in-frames '(project-prompt-project-dir))
   (defvar consult-buffer-sources)
@@ -87,6 +87,14 @@
 
     (add-to-list 'consult-buffer-sources 'beframe--consult-source))
   (beframe-mode))
+
+
+
+
+;;;; `bufler'
+(use-package bufler
+  :defer 1
+  :bind ("C-x C-b" . bufler-list))
 
 
 
