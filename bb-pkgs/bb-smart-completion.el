@@ -31,6 +31,9 @@
             (const :tag "Alphabetically" ,#'vertico-sort-alpha)
             (function :tag "Custom function")))
 
+  (defcustom bb-list-of-hidden-files '(".zlua" ".gnupg/" ".Xauthority")
+    "List of files that should not appear when sorted with `vertico-latest-files'
+function")
 
   (defun vertico-latest-files (candidates)
     "CANDIDATES are sorted in last-modified order, `backup-sort-function' is used as
@@ -41,10 +44,11 @@ a fallback."
           (mapc (lambda (file)
                   (let* ((cfile (concat input file))
                          (time (nth 5 (file-attributes cfile))))
-                    (setq list-files (cons (cons file time)
-                                           list-files)
-                          list-attr (cons time
-                                          list-attr))))
+                    (unless (member file bb-list-of-hidden-files)
+                      (setq list-files (cons (cons file time)
+                                             list-files)
+                            list-attr (cons time
+                                            list-attr)))))
                 candidates)
           (sort list-attr #'time-less-p)
           (while list-attr
