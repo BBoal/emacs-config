@@ -8,14 +8,27 @@
 
 ;;;; `python-mode'
 (use-package python-mode
-  :hook (python-mode . (lambda()
-                          (bb-programming-hooks)
-                          (eglot-ensure)
-                          (flymake-ruff-load)))
   :config
-  (setq python-indent-guess-indent-offset-verbose nil
-        python-indent-offset 4)
-  (python-black-on-save-mode t))
+  (defun bb-python-configs ()
+    "Personal hooks and commands to run when python mode is active"
+    (bb-programming-hooks)
+    (eglot-ensure)
+    (flymake-ruff-load)
+    (setq-local python-indent-guess-indent-offset-verbose nil
+                python-indent-offset 4
+                indent-bars-treesit-support t
+                indent-bars-no-descend-string t
+                indent-bars-treesit-ignore-blank-lines-types '("module")
+                indent-bars-treesit-wrap '((python
+                                            argument_list
+                                            parameters
+                                            list list_comprehension
+                                            dictionary
+                                            dictionary_comprehension
+                                            parenthesized_expression
+                                            subscript))))
+  (python-black-on-save-mode t)
+  :hook (python-base-mode . bb-python-configs))
 
 
 

@@ -32,7 +32,7 @@
   (interactive)
   (electric-pair-local-mode t)
   (subword-mode t)
-  (indent-guide-mode t)
+  (indent-bars-mode t)
   (hs-minor-mode t))
 
 
