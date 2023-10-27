@@ -27,13 +27,19 @@
 (setq-default custom-file (make-temp-file "emacs-custom-"))
 
 
-;; garbage collection setup
+;; Tweaking some variables for improved startup time
 (let ((normal-gc-cons-threshold (* 1024 1024 1024))
-      (init-gc-cons-threshold (* 4 1024 1024 1024)))
-  (setq gc-cons-threshold init-gc-cons-threshold)
+      (normal-file-name-handler-alist file-name-handler-alist)
+      (normal-vc-handled-backends vc-handled-backends))
+  ;; Initial values
+  (setq gc-cons-threshold (* 8 1024 1024 1024)
+        file-name-handler-alist nil
+        vc-handled-backends nil)
   (add-hook 'emacs-startup-hook
             (lambda ()
-              (setq gc-cons-threshold normal-gc-cons-threshold))))
+              (setq gc-cons-threshold normal-gc-cons-threshold
+                    file-name-handler-alist normal-file-name-handler-alist
+                    vc-handled-backends normal-vc-handled-backends))))
 
 
 ;; Setting themes and avoid flash of light during startup
@@ -68,6 +74,7 @@
              use-dialog-box                            nil
              inhibit-startup-screen                    t
              inhibit-startup-buffer-menu               t
+             inhibit-x-resources                       t
              frame-resize-pixelwise                    t
              frame-inhibit-implied-resize              t
              garbage-collection-messages               t
@@ -75,11 +82,28 @@
              package-native-compile                    t))
 
 
-;; Thanks again to Prot, for giving me peace of windows...
-(add-to-list 'display-buffer-alist
-             '("\\`\\*\\(Warnings\\|Compile-Log\\|Org Links\\)\\*\\'"
-               (display-buffer-no-window)
-               (allow-no-window . t)))
+
+(defun bb-add-to-list-elems(list &rest elements)
+  "Simple way to add several ELEMENTS to a given LIST. LIST should be quoted and
+will be created if does not exist"
+  (if (nlistp elements)
+      (user-error "ERROR: Unable to add element(s)")
+    (mapc (lambda (elem)
+            (set list (cons elem (symbol-value list))))
+          elements)))
+
+;; Through `display-buffer-alist' we can configure specific options for windows
+;; Thanks to Prot for teaching me to successfully silence Warnings/Compile errors
+(if display-buffer-alist (setq display-buffer-alist nil))
+(bb-add-to-list-elems 'display-buffer-alist
+                      '("\\`\\*\\(Warnings\\|Compile-Log\\|Org Links\\)\\*\\'"
+                        (display-buffer-no-window)
+                        (allow-no-window . t))
+                      '("\\`\\*Bufler\\*\\'"
+                        (display-buffer-pop-up-window)
+                        (inhibit-same-window . t)))
+
+
 
 (defun bb-emacs-invisible-dividers (_theme)
   "Source: https://github.com/protesilaos/dotfiles
