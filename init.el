@@ -31,7 +31,7 @@
 ;;; Set default font
 (set-face-attribute 'default nil
                     :family "Iosevka Zenodotus"
-                    :height 120)
+                    :height 130)
 ;; (set-frame-font "FantasqueSansMono Nerd Font Mono 13" nil t t)
 
 
@@ -88,7 +88,6 @@
               indent-tabs-mode nil
               kill-do-not-save-duplicates t
               cursor-in-non-selected-windows nil
-              save-place-mode t
               bidi-paragraph-direction 'left-to-right
               large-file-warning-threshold (* 30 1024 1024)
               project-vc-extra-root-markers '( ".dir-locals.el"
@@ -127,6 +126,9 @@
 
 ;; File name shadow mode
 (file-name-shadow-mode t)
+
+;; Remember last position on file
+(save-place-mode t)
 
 
 ;;; No warnings and restrictions
