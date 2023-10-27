@@ -86,6 +86,7 @@
 (defvar-keymap s-x-prefix-map
   "k" #'bb-simple-kill-current-buffer
   "n" #'logos-narrow-dwim
+  "m" #'minimap-mode
   "o" #'bb-delete-blank-lines-dwim)
 (keymap-global-set "s-x" s-x-prefix-map)
 
