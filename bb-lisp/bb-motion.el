@@ -76,35 +76,36 @@ kills the text before point."
       (kill-region (point) end))))
 
 (defun bb-kill-ring-save-line(arg)
-  "Save region when selected or, with prefix, ARG number of lines."
-  ;; 2023-10-27  TODO => Allow for a numeric prefix
+  "Save region when selected or, with prefix, ARG number of lines, backward of
+forward"
   (interactive "p")
-  (if arg 0 (setq arg 1))
-  (cond
-   ((region-active-p)
-    (kill-ring-save (region-beginning) (region-end))
-    (message "Region yanked to the kill-ring"))
-   ((> arg 0)
-    (let* ((beg (pos-bol))
-           real-yanked
-           (end (save-excursion
-                  (setq real-yanked (- arg (forward-line (1- arg))))
-                  (pos-eol))))
+  (if (= arg 0) (user-error "ERROR: Invalid numeric prefix"))
+  (if (region-active-p)
+      (progn
+        (kill-ring-save (region-beginning) (region-end))
+        (message "Region yanked to the kill-ring"))
+    (let (beg end real-yanked)
+      (if (> arg 0)
+          (setq beg (pos-bol)
+                end (save-excursion
+                      (setq real-yanked (- arg (forward-line (1- arg))))
+                      (pos-eol)))
+
+        ;; (< arg 0)
+        (setq beg (pos-eol)
+              end (save-excursion
+                    (setq real-yanked (- (forward-line (1+ arg)) arg))
+                    (pos-bol))))
       (kill-ring-save beg end)
-      (if (> real-yanked 1)
-          (message "The next %d lines were yanked to the kill-ring" real-yanked)
-        (message "Line yanked to the kill-ring"))))
-   ((< arg 0)
-    (let* ((beg (pos-eol))
-           real-yanked
-           (end (save-excursion
-                  (setq real-yanked (- (forward-line (1+ arg)) arg)))))
-      (kill-ring-save beg end)
-      (if (> real-yanked 1)
-          (message "The previous %d lines were yanked to the kill-ring" real-yanked)
-        (message "Line yanked to the kill-ring"))))
-   (t
-    nil)))
+      (cond
+       ((= real-yanked 1)
+        (message "Line yanked to the kill-ring"))
+       ((< arg 0)
+        (message "The previous %d lines were yanked to the kill-ring" real-yanked))
+       ((> arg 0)
+        (message "The next %d lines were yanked to the kill-ring" real-yanked))
+       (t
+        nil)))))
 
 
 
@@ -283,7 +284,7 @@ A positive prefix leave the duplicates above, a negative, below."
                              (bolp)))
                       (setq string-bound "bottom, with only EOB below!")
                       "")
-                     ;; 2023-10-24  TODO => Put there the above condition of not having EOB in the last line
+                     ;; 2023-10-24  TODO => Put there the above condition of not having EOB in the last line. Check 2nd to last line without eob
 
                      ;; Line
                      ((= (line-number-at-pos (point)) bound)
