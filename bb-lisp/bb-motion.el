@@ -75,12 +75,36 @@ kills the text before point."
         (kill-line 0)
       (kill-region (point) end))))
 
-(defun bb-kill-ring-save-line()
-  "Save region when selected, or line otherwise."
-  (interactive)
-  (if (region-active-p)
-      (kill-ring-save (region-beginning) (region-end))
-    (kill-ring-save (pos-bol) (pos-eol))))
+(defun bb-kill-ring-save-line(arg)
+  "Save region when selected or, with prefix, ARG number of lines."
+  ;; 2023-10-27  TODO => Allow for a numeric prefix
+  (interactive "p")
+  (if arg 0 (setq arg 1))
+  (cond
+   ((region-active-p)
+    (kill-ring-save (region-beginning) (region-end))
+    (message "Region yanked to the kill-ring"))
+   ((> arg 0)
+    (let* ((beg (pos-bol))
+           real-yanked
+           (end (save-excursion
+                  (setq real-yanked (- arg (forward-line (1- arg))))
+                  (pos-eol))))
+      (kill-ring-save beg end)
+      (if (> real-yanked 1)
+          (message "The next %d lines were yanked to the kill-ring" real-yanked)
+        (message "Line yanked to the kill-ring"))))
+   ((< arg 0)
+    (let* ((beg (pos-eol))
+           real-yanked
+           (end (save-excursion
+                  (setq real-yanked (- (forward-line (1+ arg)) arg)))))
+      (kill-ring-save beg end)
+      (if (> real-yanked 1)
+          (message "The previous %d lines were yanked to the kill-ring" real-yanked)
+        (message "Line yanked to the kill-ring"))))
+   (t
+    nil)))
 
 
 
@@ -259,6 +283,8 @@ A positive prefix leave the duplicates above, a negative, below."
                              (bolp)))
                       (setq string-bound "bottom, with only EOB below!")
                       "")
+                     ;; 2023-10-24  TODO => Put there the above condition of not having EOB in the last line
+
                      ;; Line
                      ((= (line-number-at-pos (point)) bound)
                       "")
