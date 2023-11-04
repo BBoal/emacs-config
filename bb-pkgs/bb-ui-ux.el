@@ -15,6 +15,31 @@
 
 
 
+;;;; `minimap'
+(use-package minimap
+  :init
+  (setq minimap-major-modes nil)
+
+  (defun bb-minimap-mode()
+    "Sets `minimap-major-mode' to the current major-mode before calling
+`minimap-mode'"
+    (interactive)
+    (if (not (member major-mode minimap-major-modes))
+        (add-to-list 'minimap-major-modes major-mode))
+    (minimap-mode 'toggle))
+
+  :after modus-themes ef-themes
+  :config
+  (custom-set-faces
+   '(minimap-active-region-background ((t :background unspecified)))
+   '(minimap-font-face ((t :family unspecified :height 0.35))))
+  (setq minimap-width-fraction 0.18
+        minimap-window-location 'right
+        minimap-hide-fringes nil))
+
+
+
+
 ;;;; `olivetti'
 (use-package olivetti
   :defer 3
@@ -416,7 +441,8 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
 
 
 ;;;; `modus-themes'
-(use-package modus-themes)
+(use-package modus-themes
+  :demand t)
 
 
 
@@ -455,23 +481,23 @@ If no arguments are passed, DIRECTORY defaults to `desktop-dirname' and
   "Mode line construct for displaying major modes.")
 
 (defvar-local prot-modeline-vc-branch
-  '(:eval
-    (when-let* (((mode-line-window-selected-p))
-                (branches (vc-git-branches))
-                (branch (car branches))
-                ((stringp branch))
-                (state (vc-state (buffer-file-name) 'Git))
-                (face (pcase state
-                        ('added 'vc-locally-added-state)
-                        ('edited 'vc-edited-state)
-                        ('removed 'vc-removed-state)
-                        ('missing 'vc-missing-state)
-                        ('conflict 'vc-conflict-state)
-                        ('locked 'vc-locked-state)
-                        (_ 'vc-up-to-date-state))))
-      (concat "   " (propertize (capitalize branch)
-                               'face face
-                               'mouse-face 'mode-line-highlight))))
+    '(:eval
+      (when-let (((mode-line-window-selected-p))
+                 (branches (vc-git-branches))
+                 (branch (car-safe branches))
+                 ((stringp branch))
+                 (state (vc-state (buffer-file-name) 'Git))
+                 (face (pcase state
+                         ('added 'vc-locally-added-state)
+                         ('edited 'vc-edited-state)
+                         ('removed 'vc-removed-state)
+                         ('missing 'vc-missing-state)
+                         ('conflict 'vc-conflict-state)
+                         ('locked 'vc-locked-state)
+                         (_ 'vc-up-to-date-state))))
+        (concat "   " (propertize (capitalize branch)
+                                   'face face
+                                   'mouse-face 'mode-line-highlight))))
   "Mode line construct to return propertized VC branch.")
 
 
@@ -522,7 +548,7 @@ Specific to the current window's mode line.")
                 "%c" "%C" (car mode-line-position-column-line-format)))
         ,@mode-line-position--column-line-properties))
       (:propertize
-	   mode-line-position-line-format
+       mode-line-position-line-format
        ,@mode-line-position--column-line-properties))
      (column-number-mode
       (:propertize
@@ -692,38 +718,57 @@ Specific to the current window's mode line.")
 
 
 
+;; 
+;; ;;;; `indent-guide'
+;; (use-package indent-guide
+;;   :defer 2
+;;   :config
+;;   (defun bb-maybe--get-color(arg)
+;;     "It will return either a symbol or a color from the current palette."
+;;     (or
+;;      (car
+;;       (alist-get arg
+;;                  (symbol-value
+;;                   (intern-soft
+;;                    (format "%s-palette"
+;;                            (car custom-enabled-themes))))))
+;;      (face-foreground 'cursor nil 'default)))
+;;
+;;   (defun bb-get-color(arg)
+;;     "To use with Ef or Modus themes. Get's the ARG color from the current
+;; theme palette, recursively if necessary."
+;;     (interactive)
+;;     (let ((maybe-color (bb-maybe--get-color arg)))
+;;       (if (stringp maybe-color)
+;;           maybe-color
+;;         (bb-maybe--get-color maybe-color))))
+;;
+;;   (setq indent-guide-char "")
+;;
+;;   (defun bb--update-indent-guide-face(_theme)
+;;     (when indent-guide-mode
+;;       (set-face-foreground 'indent-guide-face (bb-get-color 'cursor))))
+;;   ;; Updating the indent-guide every time a theme is enabled
+;;   (add-hook 'enable-theme-functions 'bb--update-indent-guide-face))
+
+
+
 
-;;;; `indent-guide'
-(use-package indent-guide
-  :defer 2
+;;;; `indent-bars'
+(use-package indent-bars
+  :vc ( :url "https://github.com/jdtsmith/indent-bars"
+        :rev :newest)
   :config
-  (defun bb-maybe--get-color(arg)
-    "It will return either a symbol or a color from the current palette."
-    (or
-     (car
-      (alist-get arg
-                 (symbol-value
-                  (intern-soft
-                   (format "%s-palette"
-                           (car custom-enabled-themes))))))
-     (face-foreground 'cursor nil 'default)))
-
-  (defun bb-get-color(arg)
-    "To use with Ef or Modus themes. Get's the ARG color from the current
-theme palette, recursively if necessary."
-    (interactive)
-    (let ((maybe-color (bb-maybe--get-color arg)))
-      (if (stringp maybe-color)
-          maybe-color
-        (bb-maybe--get-color maybe-color))))
-
-  (setq indent-guide-char "")
-
-  (defun bb--update-indent-guide-face(_theme)
-    (when indent-guide-mode
-      (set-face-foreground 'indent-guide-face (bb-get-color 'cursor))))
-  ;; Updating the indent-guide every time a theme is enabled
-  (add-hook 'enable-theme-functions 'bb--update-indent-guide-face))
+  ;; minimal colorpop
+  (setq indent-bars-color '(highlight :face-bg t :blend 0.15)
+        indent-bars-pattern "."
+        indent-bars-width-frac 0.2
+        indent-bars-pad-frac 0.4
+        indent-bars-zigzag nil
+        indent-bars-color-by-depth '(:regexp "outline-\\([0-9]+\\)" :blend 1) ; blend=1: blend with BG only
+        indent-bars-highlight-current-depth '(:blend 0.5) ; pump up the BG blend on current
+        indent-bars-display-on-blank-lines t)
+  :hook (yaml-ts-mode . indent-bars-mode))
 
 
 
