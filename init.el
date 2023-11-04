@@ -53,6 +53,7 @@
 ;;; User preferences
 (setq bidi-inhibit-bpa t
       show-paren-delay 0
+      blink-matching-paren nil
       scroll-conservatively 101
       x-stretch-cursor t
       ring-bell-function 'ignore
