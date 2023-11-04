@@ -45,7 +45,7 @@
 ;; Setting themes and avoid flash of light during startup
 (defun bb-emacs-avoid-flash-of-light-at-startup()
   (if (and (> (string-to-number(format-time-string "%H")) 7 )
-           (< (string-to-number(format-time-string "%H")) 19))
+           (< (string-to-number(format-time-string "%H")) 17))
       (progn
         (set-face-background 'default "#edf4f8")
         (setq hour-sets-theme 'ef-maris-light))
@@ -54,8 +54,8 @@
 
 
 ;; setting the UI
-(modify-all-frames-parameters  `((left-fringe . 10)
-                                 (right-fringe . 10)
+(modify-all-frames-parameters  `((left-fringe . 13)
+                                 (right-fringe . 13)
                                  (vertical-scroll-bars)
                                  (background-color . ,(face-background 'default))
                                  (menu-bar-lines . 0)
@@ -111,6 +111,7 @@ Make windows dividers for THEME invisible."
   (let ((bg (face-background 'default)))
     (custom-set-faces
      `(fringe ((t :background ,bg :foreground ,bg)))
+     ;; `(vertical-border ((t :background ,bg :foreground ,bg)))
      `(window-divider ((t :background ,bg :foreground ,bg)))
      `(window-divider-first-pixel ((t :background ,bg :foreground ,bg)))
      `(window-divider-last-pixel ((t :background ,bg :foreground ,bg))))))
