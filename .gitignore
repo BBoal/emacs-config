@@ -30,3 +30,4 @@ pushmacs
 ido.last
 .emacs-desktop.d/
 places
+persistent-scratch/
