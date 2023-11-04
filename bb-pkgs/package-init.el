@@ -73,6 +73,8 @@
 (defun bb-ensure-dir-or-file-exist (arg)
   "Creates ARG if non-existant. Prefix '/' is considered dir otherwise file."
   (interactive "G")
+  (if (or (listp arg) (not (stringp arg)))
+    (user-error "ERR: Argument must be a solo string"))
   (let* ((pdir arg)
          (edir (progn
                  (while (not (file-exists-p pdir))
