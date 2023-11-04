@@ -56,8 +56,8 @@ position, operate from CHAR to the end of the line."
     (goto-char regexp-end)
     (unless (looking-at ">")
       (insert ">")
-      (search-backward "\s")
-      (forward-char 1)
+      (if (search-backward "\s" (line-beginning-position) :noerror)
+          (forward-char 1))
       (insert "<"))
     (bb-simple-escape-url-line (1+ regexp-end)))
   (goto-char (pos-eol)))
@@ -68,16 +68,14 @@ position, operate from CHAR to the end of the line."
   (interactive
    (if (region-active-p)
        (list (region-beginning) (region-end))
-     (error "There is no region!")))
-  (let ((beg (min beg end))
-        (end (max beg end)))
+     (user-error "There is no region!")))
     (save-excursion
       (goto-char beg)
       (setq beg (pos-bol))
       (while (<= beg end)
         (bb-simple-escape-url-line beg)
         (beginning-of-line 2)
-        (setq beg (point))))))
+        (setq beg (point)))))
 
 ;;;###autoload
 (defun bb-simple-escape-url-dwim ()
