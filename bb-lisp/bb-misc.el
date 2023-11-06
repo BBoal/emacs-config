@@ -28,7 +28,27 @@
 ;;; Code:
 
 
+(defconst wrapping-symbols
+  '(?\( ?\) ?\{ ?\} ?\[ ?\] ?\< ?\>
+    ?\! ?\" ?\# ?\$ ?\% ?\& ?\+ ?\`
+    ?\, ?\- ?\. ?\/ ?\' ?\* ?\- ?\=
+    ?\: ?\; ?\= ?\? ?\\ ?\@ ?\^ ?\_
+    ?\| ?\~ ?\')
+    "List of most common used wrapping symbols. Space and Backspace are used for
+specific options in user defined functions")
 
+(defconst symbol-pairs
+  '((?\( . ?\))
+    (?\{ . ?\})
+    (?\[ . ?\])
+    (?\` . ?\')
+    (?\< . ?\>))
+  "Most used open and closing symbol pairs")
+
+
+
+
+;;;###autoload
 (defun bb--find-occurrence(char count)
   "This is a helper function usually called by:
 `bb-find-occurrence-direction-kill-sexp'
@@ -55,56 +75,7 @@ the values of `pos-bol' or `pos-eol'."
 
 
 
-(defun bb--kill-sexp-in-direction(dir)
-  "This is a helper function. Usually called by
-`bb-find-occurrences-direction-kill-sexp' or
-`bb-find-occurrences-direction-kill-around-sexp'.
-
-DIR is the return value of `bb--find-occurrence'.
-
-If DIR is 0, then the occurrence matched either `pos-eol' or
-`pos-bol'. On both cases, the function does not interfere
-with different lines, meaning that the kill is restricted to the same line
-and nothings gets evaluated.
-
-If DIR is 1, the kill direction is set forward and the next sexp is killed.
-Analogously, if DIR is -1, the previous sexp is killed."
-
-  (unless (= dir 0)
-    (kill-sexp dir)))
-
-
-
 ;;;###autoload
-(defun bb-find-occurrence-direction-kill-sexp(char count)
-  "A search is conducted for a specific CHAR, COUNTth times using the
-`bb--find-occurrence' helper function.
-
-If CHAR is found, the return value is then passed to `bb-kill-sexp-in-direction'
-for directional processing and possible `kill-sexp' usage."
-
-  (interactive "cKill sexp next to char: \np")
-  (bb--kill-sexp-in-direction (bb--find-occurrence char count)))
-
-
-
-;;;###autoload
-(defun bb-find-occurrence-direction-kill-around-sexp(char count)
-  "A search is conducted for a specific CHAR, COUNTth times using the
-`bb--find-occurrence' helper function.
-
-If CHAR is found, the area to kill is enlarged by means or moving the point
-away from the desired kill area. The possible kill direction is determined
-by the return value of `bb--find-occurrence'. Processing is made with the
-`bb--kill-sexp-in-direction' function."
-
-  (interactive "cKill sexp around char: \np")
-  (let ((kill-dir (bb--find-occurrence char count)))
-    (forward-char (- kill-dir))
-    (bb--kill-sexp-in-direction kill-dir)))
-
-
-
 (defun bb--find-2nd-delimiter(char dir)
   "This is a helper function called by `bb-change-inside-char-pairs' to get
 the second pair of a delimiter of a given CHAR.
@@ -115,14 +86,9 @@ list, it is assumed that CHAR is the closing delimiter for CHAR.
 DIR will let you work on both directions with open<->closing as well as
 closing<->open delimiters."
 
-  (let* ((pairs '((?\( . ?\))
-                  (?\{ . ?\})
-                  (?\[ . ?\])
-                  (?\` . ?\')
-                  (?\< . ?\>)))
-         (closing-delim (if (>= dir 0)
-                            (cdr (assq char pairs))
-                          (car (rassq char pairs)))))
+  (let ((closing-delim (if (>= dir 0)
+                           (cdr (assq char symbol-pairs))
+                         (car (rassq char symbol-pairs)))))
     (bb--find-occurrence (or closing-delim char)
                            dir)))
 
@@ -151,12 +117,11 @@ the search. The latter function gets point to the closing delimiter of CHAR
     (setq first-char (point))
     (bb--find-2nd-delimiter char abs-count)
     (forward-char (- abs-count))
-    (kill-region first-char (point))))
+    (delete-region first-char (point))))
 
 
 
 ;;;###autoload
-;; 2023-08-15  FIXME => Change this to a function that changes pairs around point
 (defun bb-change-around-char-pairs(char count)
   "Similiar to `bb-change-inside-char-pairs' but also kills surrounding
 delimiters."
@@ -167,6 +132,99 @@ delimiters."
 
 
 
+
+;;;; Wrap region functions
+(defun bb-wrap-get-exp-fun()
+  "Returns function responsible for region expansion of bb-t"
+  (cond
+   ((fboundp 'bb-expreg-try-expand-symbol)
+    'bb-expreg-try-expand-symbol)
+   ((fboundp 'expreg-expand)
+    'expreg-expand)
+   (t
+    'mark-sexp)))
+
+
+(defun bb-wrap-check-pairs(beg end)
+  ""
+  (let ((open-pair (char-before beg))
+        (close-pair (char-after end)))
+    (or (and (eq open-pair close-pair)
+             (memq open-pair wrapping-symbols))
+        (eq open-pair (car (rassq close-pair symbol-pairs))))))
+
+
+(defun bb-wrap-clear (beg end)
+  ""
+  (save-excursion
+    (cl-mapc (lambda (pos dir)
+               (goto-char pos)
+               (delete-char dir))
+             `(,end ,beg) '(1 -1))))
+
+
+(defun bb-wrap-region (beg end)
+  "Wraps the selected region or, the region resulting of `expreg-expand' call, if
+available. Otherwise signal an error."
+  (interactive
+   (let ((exp-fun (bb-wrap-get-exp-fun)))
+     (cond
+      ((use-region-p)
+       (unless (bb-wrap-check-pairs (region-beginning) (region-end))
+         (user-error "ERR: Selected region doesn't have defined delimiters")))
+      (t
+       (funcall exp-fun)
+       (while (not (bb-wrap-check-pairs (region-beginning) (region-end)))
+         (funcall exp-fun))))
+     (list (region-beginning) (region-end))))
+
+  (let ((char (read-char-exclusive
+               "Surrounding options (Backspace[substitution], Spacebar[clear], Delimiter[wrap]): ")))
+    (cond
+     ((eq char 32) ;; spacebar (clear)
+      (bb-wrap-clear beg end))
+     ((eq char 127) ;; backspace (substitution)
+      (bb-wrap-clear beg end)
+      (bb-wrap-around (region-beginning) (region-end) nil))
+     ((eq char 27)
+      (keyboard-quit))
+     (t
+      (bb-wrap-around beg end char)))))
+
+
+(defun bb-wrap-around (beg end char)
+  ""
+  (while (not (memq char wrapping-symbols))
+    (when char (princ "Char not a member of `wrapping-symbols' list. Try again.")
+          (sit-for 1.2 t))
+    (setq char (read-char-exclusive "Wrap with: ")))
+  (let ((final-pos (point))
+        (close-pair (cdr (assq char symbol-pairs)))
+        (open-pair (car (rassq char symbol-pairs))))
+    (cond
+     ;; assume char is the open pair
+     (close-pair
+      (setq open-pair char
+            final-pos (1+ beg)))
+     ;; assume char is the closing pair
+     (open-pair
+      (setq close-pair char
+            final-pos (+ 2 end)))
+     ;; not in `symbol-pairs' so equal open-close chars
+     (t
+      (setq open-pair char
+            close-pair char
+            final-pos (+ 2 end))))
+    (cl-mapc (lambda (pos pair)
+               (goto-char pos)
+               (insert pair))
+             `(,end ,beg) `(,close-pair ,open-pair))
+    (goto-char final-pos)
+    (message "Wrapped region with  %c ... %c" open-pair close-pair)))
+
+
+
+
 ;;;###autoload
 (defun bb-zap-from-char-to-end(char count)
   "A search is conducted for a specific CHAR, COUNTth times using the

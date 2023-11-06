@@ -47,6 +47,7 @@
 (defvar-keymap s-change-prefix-map
   "i" #'bb-change-inside-char-pairs
   "a" #'bb-change-around-char-pairs
+  "w" #'bb-wrap-region
   "u" #'bb-simple-escape-url-dwim)
 (keymap-global-set "s-c" s-change-prefix-map)
 
@@ -138,9 +139,6 @@
 
 (keymap-global-set "C-+" #'bb-push-mark-no-activate)
 (keymap-global-set "M-+" #'bb-jump-to-mark)
-
-(keymap-global-set "C-c n" #'bb-find-occurrence-direction-kill-sexp)
-(keymap-global-set "C-c a" #'bb-find-occurrence-direction-kill-around-sexp)
 
 (keymap-global-set "s-z" #'bb-zap-from-char-to-end)
 (keymap-global-set "M-z" #'zap-up-to-char)
