@@ -26,6 +26,18 @@
 
 
 
+;;;; `package-lint-flymake'
+(use-package package-lint-flymake
+  :defer 1
+  :hook (flymake-diagnostic-functions . package-lint-flymake)
+  :config
+  (require 'flymake)
+  (setq flymake-start-on-flymake-mode t
+        flymake-no-changes-timeout nil
+        flymake-start-on-save-buffer t))
+
+
+
 ;;;; `bb-programming-hooks'
 (defun bb-programming-hooks ()
   "Useful hooks for programming."
