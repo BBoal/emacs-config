@@ -105,7 +105,7 @@
   (mapc
    (lambda (file)
      (require (intern (file-name-sans-extension file))))
-   (directory-files directory nil "^bb-.*\.el$")))
+   (directory-files directory nil "\\`bb-.*\\.el\\'")))
 
 
 (defun bb-require-lisp-files-in-dir-matching (parent-dir regex-string)
