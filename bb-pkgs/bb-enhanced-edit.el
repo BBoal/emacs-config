@@ -9,8 +9,6 @@
 ;;;; `persistent-scratch'
 (use-package persistent-scratch
   :init
-  (persistent-scratch-autosave-mode)
-
   (defvar persistent-scratch-dir
     (expand-file-name "persistent-scratch/" user-emacs-directory)
     "Directory where persistent-scratch files should be saved.")
@@ -20,20 +18,19 @@
     (setq persistent-scratch-save-file
           (concat persistent-scratch-dir
                   (format-time-string "%F_%T"))))
-
   :config
   (bb-persistent-scratch-set-filename ())
   (setq persistent-scratch-autosave-interval 3600
         persistent-scratch-before-save-commit-functions
-        '(bb-persistent-scratch-set-filename)))
-
+        '(bb-persistent-scratch-set-filename))
+  (persistent-scratch-autosave-mode))
 
 
 
 
 ;;;; `repeat'
 (use-package repeat
-  :defer 3
+  :demand t
   :config
   (setq repeat-on-final-keystroke t
         repeat-exit-timeout 5
