@@ -78,8 +78,8 @@
                                            ("" "Emacs - %b ")))
 
 
-(setq-default fill-column 79
-              comment-fill-column 99
+(setq-default fill-column 80
+              comment-fill-column fill-column
               emacs-lisp-docstring-fill-column fill-column
               sentence-end-double-space nil
               eval-expression-print-length nil
