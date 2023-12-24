@@ -20,7 +20,9 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this file.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary: Still a sapling dreaming of becoming a tree
+;;; Commentary:
+;;
+;; Still a sapling dreaming of becoming a tree
 
 ;;; Code:
 
@@ -31,7 +33,7 @@
 ;;; Set default font
 (set-face-attribute 'default nil
                     :family "Iosevka Zenodotus"
-                    :height 130)
+                    :height 120)
 ;; (set-frame-font "FantasqueSansMono Nerd Font Mono 13" nil t t)
 
 
@@ -56,6 +58,7 @@
       blink-matching-paren nil
       delete-pair-blink-delay 0
       scroll-conservatively 101
+      scroll-preserve-screen-position t
       x-stretch-cursor t
       ring-bell-function 'ignore
       use-short-answers t
@@ -64,30 +67,29 @@
       save-interprogram-paste-before-kill t
       kill-read-only-ok t
       revert-without-query '(".*")
-      imenu-auto-rescan t
       help-window-select t
+      help-window-keep-selected t
       kill-whole-line t
       mouse-yank-at-point t
-      calendar-week-start-day 1
       custom-safe-themes t
-      dictionary-server "dict.org"
+      delete-window-choose-selected 'pos
+      switch-to-prev-buffer-skip 'this
       enable-recursive-minibuffers t
       show-paren-context-when-offscreen 'overlay
-      set-mark-command-repeat-pop t ;; C-u C-SPC once, then C-SPC, C-SPC, ...
       frame-title-format '(multiple-frames "%b"
                                            ("" "Emacs - %b ")))
 
 
 (setq-default fill-column 80
+              tab-width 4
+              scroll-margin 4
+              indent-tabs-mode nil
               comment-fill-column fill-column
               emacs-lisp-docstring-fill-column fill-column
               sentence-end-double-space nil
               eval-expression-print-length nil
               tab-always-indent 'complete
               tab-first-completion 'word-or-paren-or-punct
-              tab-width 4
-              scroll-margin 4
-              indent-tabs-mode nil
               kill-do-not-save-duplicates t
               cursor-in-non-selected-windows nil
               bidi-paragraph-direction 'left-to-right
@@ -103,19 +105,28 @@
 
 
 (defvar modes-with-autofill-on
-  '(text-mode-hook message-mode-hook markdown-mode-hook adoc-mode-hook org-mode-hook)
-  "Modes that benefit from auto-fill mode")
+  '(text-mode-hook
+    message-mode-hook
+    markdown-mode-hook
+    adoc-mode-hook
+    emacs-lisp-mode-hook
+    org-mode-hook)
+  "Modes that benefit from auto-fill mode.")
 
 ;;; Hooks
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 (add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
-(add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
+(add-hook 'emacs-lisp-mode-hook
+          (lambda() (setq sentence-end-double-space t) (eldoc-mode 1)))
 (add-hook 'activate-mark-hook (lambda() (setq cursor-type 'bar)))
 (add-hook 'deactivate-mark-hook (lambda() (setq cursor-type t)))
 (mapc (lambda (mode)
         (add-hook mode #'turn-on-auto-fill))
       modes-with-autofill-on)
+
+;; No cursor blinking
+(blink-cursor-mode -1)
 
 ;; Depth indication of recursive minibuffers
 (minibuffer-depth-indicate-mode t)
@@ -179,3 +190,7 @@
 (add-hook 'after-init-hook (lambda ()
                              (unless (server-running-p)
                                (server-start))))
+
+
+(provide 'init)
+;;; init.el ends here

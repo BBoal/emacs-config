@@ -12,34 +12,34 @@
 ;; (define-key testing-prefix-map "s-m" testing-prefix-motion-map)
 
 
-
+(with-eval-after-load 'consult
 ;;;; "M-g" g-goto-prefix-map
-(defvar-keymap g-goto-prefix-map
-  "e"   #'consult-compile-error
-  "M-g" #'consult-goto-line     ;; orig. goto-line
-  "o"   #'consult-outline       ;; Alternative: consult-org-heading
-  "m"   #'consult-mark
-  "M-m" #'consult-global-mark
-  "i"   #'consult-imenu
-  "I"   #'consult-imenu-multi)
-(keymap-global-set "M-g" g-goto-prefix-map)
+  (defvar-keymap g-goto-prefix-map
+    "e"   #'consult-compile-error
+    "M-g" #'consult-goto-line     ;; orig. goto-line
+    "o"   #'consult-outline       ;; Alternative: consult-org-heading
+    "m"   #'consult-mark
+    "M-m" #'consult-global-mark
+    "i"   #'consult-imenu
+    "I"   #'consult-imenu-multi)
+  (keymap-global-set "M-g" g-goto-prefix-map)
 
 
 
 ;;;; "M-s" s-search-prefix-map
-(defvar-keymap s-search-prefix-map
-  "G" #'consult-git-grep
-  "L" #'consult-line-multi
-  "f" #'consult-find
-  "g" #'consult-grep
-  "k" #'consult-keep-lines
-  "l" #'consult-line
-  "m" #'consult-multi-occur
-  "o" #'occur
-  "r" #'consult-ripgrep
-  "s" #'consult-isearch-history
-  "u" #'consult-focus-lines)
-(keymap-global-set "M-s" s-search-prefix-map)
+  (defvar-keymap s-search-prefix-map
+    "G" #'consult-git-grep
+    "L" #'consult-line-multi
+    "f" #'consult-find
+    "g" #'consult-grep
+    "k" #'consult-keep-lines
+    "l" #'consult-line
+    "m" #'consult-multi-occur
+    "o" #'occur
+    "r" #'consult-ripgrep
+    "s" #'consult-isearch-history
+    "u" #'consult-focus-lines)
+  (keymap-global-set "M-s" s-search-prefix-map))
 
 
 
@@ -85,6 +85,7 @@
 
 ;;;; "s-x" s-x-prefix-map
 (defvar-keymap s-x-prefix-map
+  "f" #'find-all-files
   "k" #'bb-simple-kill-current-buffer
   "n" #'logos-narrow-dwim
   "m" #'bb-minimap-mode
@@ -165,9 +166,14 @@
   (keymap-set notmuch-show-mode-map "R" #'notmuch-show-reply-sender))
 
 ;; (defvar-keymap s-notmuch-prefix-map
-  ;; "m" #'notmuch-hello)
-  ;; "u" #'notmuch-sort-saved-searches)
-(keymap-global-set "s-m" #'notmuch-hello) ;; s-notmuch-prefix-map)
+;; "m" #'notmuch-hello)
+;; "u" #'notmuch-sort-saved-searches)
+
+(defun bb-notmuch-new-mail ()
+  "Open unread email."
+  (interactive)
+  (notmuch-tree "tag:new or tag:unread"))
+(keymap-global-set "s-m" #'bb-notmuch-new-mail)
 
 
 
@@ -179,6 +185,7 @@
 
 
 ;;;; other bindings
+(keymap-global-set "C-x C-b" #'ibuffer)
 (keymap-global-set "s-t" #'vterm-other-window)
 (keymap-global-set "M-/" #'hippie-expand)
 (keymap-global-set "C-M-=" #'count-words)

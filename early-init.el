@@ -42,8 +42,12 @@
                     vc-handled-backends normal-vc-handled-backends))))
 
 
+(defvar hour-sets-theme nil
+  "Global variable that stores theme name to be loaded at startup.")
+
 ;; Setting themes and avoid flash of light during startup
-(defun bb-emacs-avoid-flash-of-light-at-startup()
+(defun bb-emacs-avoid-flash-of-light-at-startup ()
+  "Set background according to time of day before loading the theme."
   (if (and (> (string-to-number(format-time-string "%H")) 7 )
            (< (string-to-number(format-time-string "%H")) 17))
       (progn
@@ -54,15 +58,18 @@
 
 
 ;; setting the UI
-(modify-all-frames-parameters  `((left-fringe . 13)
-                                 (right-fringe . 13)
-                                 (vertical-scroll-bars)
-                                 (background-color . ,(face-background 'default))
-                                 (menu-bar-lines . 0)
-                                 (tab-bar-lines . 1)
-                                 (tool-bar-lines . 0)))
+(modify-all-frames-parameters `((internal-border-width . 8)
+                                (left-fringe . 12)
+                                (right-fringe . 12)
+                                (vertical-scroll-bars)
+                                (background-color . ,(face-background 'default))
+                                (menu-bar-lines . 0)
+                                (tab-bar-lines . 1)
+                                (tool-bar-lines . 0)))
 
 (menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
 
 
 ;; Early options to consider
@@ -83,14 +90,20 @@
 
 
 
-(defun bb-add-to-list-elems(list &rest elements)
-  "Simple way to add several ELEMENTS to a given LIST. LIST should be quoted and
-will be created if does not exist"
-  (if (nlistp elements)
-      (user-error "ERROR: Unable to add element(s)")
+(defun bb-add-to-list-elems (list &rest elements)
+  "Simple way to add several ELEMENTS to a given LIST.
+LIST should be quoted and will be created if does not exist. ELEMENTS should
+also be quoted and given separately. E.g.
+ (bb-add-to-list \\='my-list \\='my-elem \\='my-another-elem)
+  \\='my-yet-another-elem)
+
+A check with the `member' function is executed to avoid duplicate elements."
+    (or (boundp list) (set list ()))
     (mapc (lambda (elem)
-            (set list (cons elem (symbol-value list))))
-          elements)))
+            (let ((value-list (symbol-value list)))
+              (unless (member elem value-list)
+                (set list (cons elem value-list)))))
+            elements)))
 
 ;; Through `display-buffer-alist' we can configure specific options for windows
 ;; Thanks to Prot for teaching me to successfully silence Warnings/Compile errors
@@ -98,16 +111,13 @@ will be created if does not exist"
 (bb-add-to-list-elems 'display-buffer-alist
                       '("\\`\\*\\(Warnings\\|Compile-Log\\|Org Links\\)\\*\\'"
                         (display-buffer-no-window)
-                        (allow-no-window . t))
-                      '("\\`\\*Bufler\\*\\'"
-                        (display-buffer-pop-up-window)
-                        (inhibit-same-window . t)))
+                        (allow-no-window . t)))
 
 
 
 (defun bb-emacs-invisible-dividers (_theme)
-  "Source: https://github.com/protesilaos/dotfiles
-Make windows dividers for THEME invisible."
+"Make windows dividers for THEME invisible.
+Source: https://github.com/protesilaos/dotfiles"
   (let ((bg (face-background 'default)))
     (custom-set-faces
      `(fringe ((t :background ,bg :foreground ,bg)))
@@ -128,10 +138,9 @@ Make windows dividers for THEME invisible."
 
 
 (defun bb-emacs-re-enable-frame-theme (_frame)
-  "Source: https://github.com/protesilaos/dotfiles
-Re-enable active theme, if any, upon FRAME creation.
-Add this to `after-make-frame-functions' so that new frames do
-not retain the generic background set above."
+"Re-enable active theme, if any, upon FRAME creation.
+Add this to `after-make-frame-functions' so that new frames do not retain the
+generic background set above. Source: https://github.com/protesilaos/dotfiles"
   (when-let ((theme (car custom-enabled-themes)))
     (enable-theme theme)))
 
