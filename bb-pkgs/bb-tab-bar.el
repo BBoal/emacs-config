@@ -1,21 +1,37 @@
 ;;; bb-tab-bar.el --- Configuration of Tab-Bar -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;;;
+;; An opinionated view of tab-bar
 
 ;;; Code:
 
 (use-package tab-bar
-  :defer 1
-  :config
-  (setq tab-bar-auto-width-max '(220 27) ; tweaked with (string-pixel-width (make-string 27 ?\=))
+  :init
+  (setq tab-bar-auto-width-max `(,(string-pixel-width (make-string 28 ?\=)) 28)
         tab-bar-close-button-show 'selected
         tab-bar-close-last-tab-choice 'delete-frame
         tab-bar-close-tab-select 'left
-        tab-bar-format '(tab-bar-format-history
-                         tab-bar-format-tabs
-                         tab-bar-separator
-                         tab-bar-format-add-tab
+        tab-bar-format '(tab-bar-format-tabs
                          tab-bar-format-align-right
                          notmuch-indicator-tab-bar-format
                          tab-bar-format-global)
@@ -54,14 +70,20 @@
            (string (concat (if tab-bar-tab-hints (format "%d\. " i) "")
                            (alist-get 'name tab)
                            (or (and tab-bar-close-button-show
-                                    (not (eq tab-bar-close-button-show
-                                             (if current-p 'non-selected 'selected)))
+                                    ;; (not (eq tab-bar-close-button-show
+                                    ;;          (if current-p 'non-selected 'selected)))
                                     tab-bar-close-button)
                                "")))
-           (dif-widthmax-widthstring (- (cadr tab-bar-auto-width-max) (string-width string)))
-           (spaces2add (if (<= dif-widthmax-widthstring 0)
-                           0
-                         (floor dif-widthmax-widthstring 2))))
+           (window-system-p (window-system))
+           (dif-widthmax-widthstring (if window-system-p
+                                         (- (car tab-bar-auto-width-max)
+                                            (string-pixel-width string))
+                                       (- (cadr tab-bar-auto-width-max)
+                                          (string-width string))))
+           (space-width (if window-system-p (string-pixel-width " ") 1))
+           (dif-max-string (floor dif-widthmax-widthstring space-width))
+           (spaces2add (if (<= dif-max-string 0) 0
+                         (ash dif-max-string -1))))
       (propertize
        (concat (make-string spaces2add ?\ ) string)
        'face (funcall tab-bar-tab-face-function tab))))
