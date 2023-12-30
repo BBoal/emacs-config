@@ -25,10 +25,78 @@
 
 ;;; Code:
 
+
+;; 2023-12-30  TODO => Take a look to groups.
+
+
+;;;;; Functions
+;; 2023-08-13  TODO => Improve to include choices such as *scratch*
+(defun bb--tab-bar-new-tab-choice ()
+  "Allow the user to choose the type of the next new tab."
+  (scratch-buffer))
+
+(defun bb--tab-bar-new-tab-group ()
+  "Set the group of the new tab to the name of the parent directory of file."
+  (if (buffer-file-name (current-buffer))
+      ;; (file-name-base buffer-file-name)
+      (abbreviate-file-name (file-name-parent-directory buffer-file-name))
+    (buffer-name)))
+
+(defun bb--tab-bar-tab-group-format (tab i &optional current-p)
+  "Default formatting for groups for TAB with number I.
+Optionally CURRENT-P will refer to the current tab."
+  (propertize
+   (concat (if (and tab-bar-tab-hints (not current-p)) (format " [%d]  " i) "")
+           (funcall tab-bar-tab-group-function tab))
+   'face (if current-p 'tab-bar-tab-group-current 'tab-bar-tab-group-inactive)))
+
+
+(defun bb--tab-bar-spaces-string-centering (string)
+  "Calculate num spaces that STRING requires to be centered in tab."
+  (if-let
+      ((str-cols (string-width string))
+       (tab-bar-max-width (cadr tab-bar-auto-width-max))
+       ;; check if inside max boundary or exit
+       ((< str-cols tab-bar-max-width))
+       ;; Notmuch and date strings
+       (cols-str-global-format
+        (string-width
+         (concat (substring-no-properties
+                  (or (car (bound-and-true-p notmuch-indicator--counters)) ""))
+                 (caddar (tab-bar-format-global)))))
+       ;; number of cols available for each tab
+       (effect-cols-per-tab
+        (/
+         (- (frame-text-cols) cols-str-global-format)  ; available cols
+         (length (tab-bar-tabs))))                     ; num tab-bars
+       ;; calculate maximum value allowed
+       (calc-max-str-cols (min effect-cols-per-tab tab-bar-max-width))
+       ((< str-cols calc-max-str-cols)))
+      ;; I'm only adding spaces on the left side hence the division by 2
+      (floor (- calc-max-str-cols str-cols) 2)
+    0))
+
+
+(defun bb--tab-bar-tab-name-format (tab i)
+  "Custom TAB format with number I."
+  (let* ((string (concat (if tab-bar-tab-hints (format "%d\. " i) "")
+                         (alist-get 'name tab)
+                         (or (and tab-bar-close-button-show
+                                  tab-bar-close-button)
+                             "")))
+         ;; 2023-12-30  TODO => Check memoization for usage here
+         (num-spaces-add (bb--tab-bar-spaces-string-centering string)))
+    (propertize
+     (concat (make-string num-spaces-add ?\ ) string)
+     'face (tab-bar-tab-face-default tab))))
+
+
+
+;;;; `tab-bar'
 (use-package tab-bar
   :init
   (setq tab-bar-auto-width-max `(,(string-pixel-width (make-string 28 ?\=)) 28)
-        tab-bar-close-button-show 'selected
+        tab-bar-close-button-show nil
         tab-bar-close-last-tab-choice 'delete-frame
         tab-bar-close-tab-select 'left
         tab-bar-format '(tab-bar-format-tabs
@@ -38,57 +106,15 @@
         tab-bar-new-tab-choice 'bb--tab-bar-new-tab-choice
         tab-bar-new-tab-group 'bb--tab-bar-new-tab-group
         tab-bar-select-tab-modifiers '(super)
-        tab-bar-tab-group-format-function 'bb--tab-bar-tab-group-format-default
+        tab-bar-tab-group-format-function 'bb--tab-bar-tab-group-format
         tab-bar-tab-group-function 'tab-bar-tab-group-default
         tab-bar-tab-hints t
-        tab-bar-tab-name-format-function 'bb--tab-bar-tab-name-format-default
+        tab-bar-tab-name-format-function 'bb--tab-bar-tab-name-format
         tab-bar-tab-name-function 'tab-bar-tab-name-truncated
         tab-bar-tab-name-truncated-max (cadr tab-bar-auto-width-max)
         tab-bar-show t)
 
-;;;;; Functions
-  ;; 2023-08-13  TODO => Improve to include choices such as *scratch*
-  (defun bb--tab-bar-new-tab-choice()
-    "Allows the user to choose the type of the next new tab."
-    (call-interactively 'find-file))
-
-  (defun bb--tab-bar-new-tab-group()
-    "Sets the group of the new tab to the name of the parent directory of file."
-    (if (buffer-file-name (current-buffer))
-        ;; (file-name-base buffer-file-name)
-        (abbreviate-file-name (file-name-parent-directory buffer-file-name))
-      (buffer-name)))
-
-  (defun bb--tab-bar-tab-group-format-default (tab i &optional current-p)
-    (propertize
-     (concat (if (and tab-bar-tab-hints (not current-p)) (format " [%d]  " i) "")
-             (funcall tab-bar-tab-group-function tab))
-     'face (if current-p 'tab-bar-tab-group-current 'tab-bar-tab-group-inactive)))
-
-  (defun bb--tab-bar-tab-name-format-default (tab i)
-    (let* ((current-p (eq (car tab) 'current-tab))
-           (string (concat (if tab-bar-tab-hints (format "%d\. " i) "")
-                           (alist-get 'name tab)
-                           (or (and tab-bar-close-button-show
-                                    ;; (not (eq tab-bar-close-button-show
-                                    ;;          (if current-p 'non-selected 'selected)))
-                                    tab-bar-close-button)
-                               "")))
-           (window-system-p (window-system))
-           (dif-widthmax-widthstring (if window-system-p
-                                         (- (car tab-bar-auto-width-max)
-                                            (string-pixel-width string))
-                                       (- (cadr tab-bar-auto-width-max)
-                                          (string-width string))))
-           (space-width (if window-system-p (string-pixel-width " ") 1))
-           (dif-max-string (floor dif-widthmax-widthstring space-width))
-           (spaces2add (if (<= dif-max-string 0) 0
-                         (ash dif-max-string -1))))
-      (propertize
-       (concat (make-string spaces2add ?\ ) string)
-       'face (funcall tab-bar-tab-face-function tab))))
-
-;;;;; Enable the tab-bar
+  ;;;; Enable the tab-bar
   (add-hook 'after-init-hook  #'tab-bar-mode))
 
 
