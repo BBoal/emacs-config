@@ -1,11 +1,31 @@
 ;;; bb-treesitter-config.el --- treesit configs -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
 ;;; Setup of the various languages available to treesitter
 
 ;;; Code:
 
-(setq treesit-language-source-alist
+(defvar treesit-language-source-alist
    '((bash "https://github.com/tree-sitter/tree-sitter-bash")
      (c "https://github.com/tree-sitter/tree-sitter-c")
      (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
@@ -23,7 +43,8 @@
      (rust "https://github.com/tree-sitter/tree-sitter-rust")
      (ocaml "https://github.com/tree-sitter/tree-sitter-ocaml" "master" "ocaml/src")
      (haskell "https://github.com/tree-sitter/tree-sitter-haskell")
-     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml"))
+   "Alist containing programming major modes with correspondent url repos.")
 
 (setq major-mode-remap-alist
       '((bash-mode . bash-ts-mode)
@@ -49,13 +70,14 @@
         (yaml-mode . yaml-ts-mode)))
 
 
+;; 2024-01-04  TODO => https://www.gnu.org/software/emacs/manual/html_node/elisp/Asynchronous-Processes.html
+
 (defun bb-treesit-install-all-gramars()
-  "Installs all the tree-sitter grammars defined in
-`treesit-language-source-alist'"
+  "Install all grammars defined in `treesit-language-source-alist'."
   (interactive)
-  (let ((num-langs (length treesit-language-source-alist)))
-    (dotimes (n num-langs)
-      (treesit-install-language-grammar (car (nth n treesit-language-source-alist))))))
+  (dolist (grammar treesit-language-source-alist)
+    (treesit-install-language-grammar (car grammar))))
+
 
 
 (provide 'bb-treesitter-config)

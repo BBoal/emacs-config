@@ -1,18 +1,49 @@
 ;;; bb-c-cpp.el --- C and C++ setup -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;;;
+;; Most of these functions and ideas are either from Protesilaos Stavrou config
+;; or made with him during his lessons.  A big thanks to Prot for helping me in
+;; this wonderful journey to the depths of EmacsLisp.
 
 ;;; Code:
 
+(require 'setup-langs)
+(declare-function derived-mode-map-name "derived")
+(declare-function clang-capf "ext:clang-capf")
+(declare-function bb-mode-project-find-function "setup-langs")
+(declare-function project-find-mode-root "setup-langs")
+
 
 ;;;; GDB
-(setq gdb-many-windows t
-      gdb-show-main    t
-      gdb-debug-log    nil)
+(use-package gdb-mi
+  :config
+  (setq gdb-many-windows t
+        gdb-show-main    t
+        gdb-debug-log    nil))
 
 
-(defun bb-setup-cc-project-root()
+(defun bb-setup-cc-project-root ()
+  "Project root setup."
   (interactive)
   (let ((mode major-mode))
     (keymap-set (symbol-value (derived-mode-map-name mode))
@@ -26,7 +57,8 @@
       (prot-find-project-root mode "CMakeList.txt")))))
 
 ;; Setting compile-command
-(defun bb-set-compile-command()
+(defun bb-set-compile-command ()
+  "Check major-mode and set compile command accordingly."
   (interactive)
   (let ((compile-cmd ""))
     (cond
@@ -45,7 +77,8 @@
                           " && ./" filename-bin)))))
 
 
-(defun bb-func-bundle-cc-modes()
+(defun bb-func-bundle-cc-modes ()
+  "Setting the active hooks and comment options."
   (interactive)
   (add-hook 'before-save-hook #'bb-eglot-arrange-file :depth :local)
   (bb-programming-hooks)
@@ -64,9 +97,8 @@
 ;;;;;; `cc-mode'
 (use-package cc-mode
   :config
-  (mapc (lambda (hook)
-          (add-hook hook #'bb-func-bundle-cc-modes))
-        '(c++-mode-hook c-mode-hook)))
+  (dolist (mode '(c++-mode-hook c-mode-hook))
+    (add-hook mode #'bb-func-bundle-cc-modes)))
 
 
 
@@ -74,9 +106,8 @@
 ;;;;;; `c-ts-mode' and `c++-ts-mode'
 (use-package c-ts-mode
   :config
-  (mapc (lambda (hook)
-          (add-hook hook #'bb-func-bundle-cc-modes))
-        '(c++-ts-mode-hook c-ts-mode-hook)))
+  (dolist (mode '(c++-ts-mode-hook c-ts-mode-hook))
+    (add-hook mode #'bb-func-bundle-cc-modes)))
 
 
 
@@ -89,18 +120,19 @@
 
 ;;;;;; `clang-capf'
 (use-package clang-capf
-  :defer 3
   :after cape
-  :hook (c-ts-mode c-mode c++-ts-mode c++-mode objc-mode)
+  :hook
+  ((c-ts-mode c-mode c++-ts-mode c++-mode objc-mode) . clang-capf-init)
   :config
-  (add-to-list 'completion-at-point-functions #'clang-capf))
+  (defun clang-capf-init()
+    "Local hook of clang-capf."
+    (add-hook 'completion-at-point-functions #'clang-capf nil t)))
 
 
 
 
 ;;;; `disaster'
 (use-package disaster
-  :defer 3
   :bind (("C-c d" . disaster)))
 
 
