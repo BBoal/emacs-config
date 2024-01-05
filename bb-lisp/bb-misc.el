@@ -2,7 +2,7 @@
 
 ;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
 ;; Author: Bruno Boal <egomet@bboal.com>
-;; URL: https://github.com/BBoal/emacs-config
+;; URL: https://git.sr.ht/~bboal/emacs-config
 ;; Package-Requires: ((emacs "30.0"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -22,10 +22,12 @@
 
 ;;; Commentary:
 ;; Most of these functions and ideas are either from Protesilaos Stavrou config
-;; or made with him during his lessons. A big thanks to Prot for helping me in
+;; or made with him during his lessons.  A big thanks to Prot for helping me in
 ;; this wonderful journey to the depths of EmacsLisp.
 
 ;;; Code:
+
+(require 'cl-lib)
 
 
 (defconst wrapping-symbols
@@ -34,8 +36,8 @@
     ?\, ?\- ?\. ?\/ ?\' ?\* ?\- ?\=
     ?\: ?\; ?\= ?\? ?\\ ?\@ ?\^ ?\_
     ?\| ?\~ ?\')
-    "List of most common used wrapping symbols. Space and Backspace are used for
-specific options in user defined functions")
+  "List of most common used wrapping symbols.
+Space and Backspace are used for specific options in user defined functions")
 
 (defconst symbol-pairs
   '((?\( . ?\))
@@ -43,7 +45,7 @@ specific options in user defined functions")
     (?\[ . ?\])
     (?\` . ?\')
     (?\< . ?\>))
-  "Most used open and closing symbol pairs")
+  "Most used open and closing symbol pairs.")
 
 
 
@@ -55,8 +57,8 @@ specific options in user defined functions")
 `bb-find-occurrence-direction-kill-around-sexp'
 `bb-zap-from-char-to-end'
 
-Searches for CHAR, COUNTth times. Leaves point in occurrence
-or produces an error. To achieve this effect, the `search-forward'
+Searches for CHAR, COUNTth times.  Leaves point in occurrence
+or produces an error.  To achieve this effect, the `search-forward'
 function is used.
 
 Returns DIR, with possible values of 1, when the search is meant to be
@@ -77,10 +79,10 @@ the values of `pos-bol' or `pos-eol'."
 
 ;;;###autoload
 (defun bb--find-2nd-delimiter(char dir)
-  "This is a helper function called by `bb-change-inside-char-pairs' to get
-the second pair of a delimiter of a given CHAR.
+  "Helper func called by `bb-change-inside-char-pairs'.
+Gets the second pair of the delimiter CHAR.
 
-The delimiter pairs are in an associative list. If CHAR is not present in the
+The delimiter pairs are in an associative list.  If CHAR is not present in the
 list, it is assumed that CHAR is the closing delimiter for CHAR.
 
 DIR will let you work on both directions with open<->closing as well as
@@ -96,18 +98,18 @@ closing<->open delimiters."
 
 ;;;###autoload
 (defun bb-change-inside-char-pairs(char count)
-  "The main goal of this function is to kill the \"inside\" of a CHAR delimiter
-group.
+  "The main goal is to kill the \"inside\" of a CHAR delimiter group.
 Helper function `bb--find-occurrence' and `bb--find-2nd-delimiter' are used for
 that effect. The first will get point to CHAR and returns the direction of
 the search. The latter function gets point to the closing delimiter of CHAR
-"
+With COUNT times to jump over delimiters into specific group."
   (interactive "cChange pair: \np")
 
   (let ((pair-num (cond
                    ((= count 0) 1)
                    (t (abs count))))
-        (abs-count (if (>= count 0) 1 -1)))
+        (abs-count (if (>= count 0) 1 -1))
+        first-char)
 
     (while (> pair-num 1)
       (bb--find-2nd-delimiter char (bb--find-occurrence char abs-count))
@@ -123,19 +125,19 @@ the search. The latter function gets point to the closing delimiter of CHAR
 
 ;;;###autoload
 (defun bb-change-around-char-pairs(char count)
-  "Similiar to `bb-change-inside-char-pairs' but also kills surrounding
-delimiters."
+  "Run `bb-change-inside-char-pairs' but also kill surrounding delimiters.
+Delimiters are obtained from CHAR and specified by COUNT times to jump pairs."
   (interactive "cDelete around pair: \np")
   (bb-change-inside-char-pairs char count)
-  (delete-forward-char 1)
-  (delete-forward-char -1))
+  (delete-char 1)
+  (delete-char -1))
 
 
 
 
 ;;;; Wrap region functions
 (defun bb-wrap-get-exp-fun()
-  "Returns function responsible for region expansion of bb-t"
+  "Return function responsible for region expansion of `bb-t'."
   (cond
    ((fboundp 'bb-expreg-try-expand-symbol)
     'bb-expreg-try-expand-symbol)
@@ -146,7 +148,7 @@ delimiters."
 
 
 (defun bb-wrap-check-pairs(beg end)
-  ""
+  "Compares BEG and END to check for pairing correcteness."
   (let ((open-pair (char-before beg))
         (close-pair (char-after end)))
     (or (and (eq open-pair close-pair)
@@ -155,7 +157,7 @@ delimiters."
 
 
 (defun bb-wrap-clear (beg end)
-  ""
+  "Clear wrapping/surrounding chars defined between BEG and END."
   (save-excursion
     (cl-mapc (lambda (pos dir)
                (goto-char pos)
@@ -163,37 +165,8 @@ delimiters."
              `(,end ,beg) '(1 -1))))
 
 
-(defun bb-wrap-region (beg end)
-  "Wraps the selected region or, the region resulting of `expreg-expand' call, if
-available. Otherwise signal an error."
-  (interactive
-   (let ((exp-fun (bb-wrap-get-exp-fun)))
-     (cond
-      ((use-region-p)
-       (unless (bb-wrap-check-pairs (region-beginning) (region-end))
-         (user-error "ERR: Selected region doesn't have defined delimiters")))
-      (t
-       (funcall exp-fun)
-       (while (not (bb-wrap-check-pairs (region-beginning) (region-end)))
-         (funcall exp-fun))))
-     (list (region-beginning) (region-end))))
-
-  (let ((char (read-char-exclusive
-               "Surrounding options (Backspace[substitution], Spacebar[clear], Delimiter[wrap]): ")))
-    (cond
-     ((eq char 32) ;; spacebar (clear)
-      (bb-wrap-clear beg end))
-     ((eq char 127) ;; backspace (substitution)
-      (bb-wrap-clear beg end)
-      (bb-wrap-around (region-beginning) (region-end) nil))
-     ((eq char 27)
-      (keyboard-quit))
-     (t
-      (bb-wrap-around beg end char)))))
-
-
 (defun bb-wrap-around (beg end char)
-  ""
+  "Effective wrapper, between BEG and END, in search with CHAR."
   (while (not (memq char wrapping-symbols))
     (when char (princ "Char not a member of `wrapping-symbols' list. Try again.")
           (sit-for 1.2 t))
@@ -223,17 +196,44 @@ available. Otherwise signal an error."
     (message "Wrapped region with  %c ... %c" open-pair close-pair)))
 
 
+(defun bb-wrap-region (beg end)
+  "Wraps the region between BEG and END; or, `expreg-expand' when available.
+Signals an error if unsuccessful."
+  (interactive
+   (let ((exp-fun (bb-wrap-get-exp-fun)))
+     (cond
+      ((use-region-p)
+       (unless (bb-wrap-check-pairs (region-beginning) (region-end))
+         (user-error "ERR: Selected region doesn't have defined delimiters")))
+      (t
+       (funcall exp-fun)
+       (while (not (bb-wrap-check-pairs (region-beginning) (region-end)))
+         (funcall exp-fun))))
+     (list (region-beginning) (region-end))))
+
+  (let ((char (read-char-exclusive
+               "Surrounding options (Backspace[substitution], Spacebar[clear], Delimiter[wrap]): ")))
+    (cond
+     ((eq char 32) ;; spacebar (clear)
+      (bb-wrap-clear beg end))
+     ((eq char 127) ;; backspace (substitution)
+      (bb-wrap-clear beg end)
+      (bb-wrap-around (region-beginning) (region-end) nil))
+     ((eq char 27)
+      (keyboard-quit))
+     (t
+      (bb-wrap-around beg end char)))))
+
+
 
 
 ;;;###autoload
 (defun bb-zap-from-char-to-end(char count)
-  "A search is conducted for a specific CHAR, COUNTth times using the
-`bb--find-occurrence' helper function.
-
-DIR is the return value of `bb--find-occurrence'.
+  "A search is conducted for a specific CHAR, COUNTth times.
+The helper function `bb--find-occurrence' is used, returning DIR.
 
 If DIR is 0, then the occurrence matched either `pos-eol' or
-`pos-bol'. On both cases, the function does not interfere
+`pos-bol'.  On both cases, the function does not interfere
 with different lines, meaning that the kill is restricted to the same line
 and nothing gets evaluated.
 

@@ -1,48 +1,69 @@
 ;;; bb-motion.el --- Motion and navegation functions -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License foq more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;;;
+;; Most of these functions and ideas are either from Protesilaos Stavrou config
+;; or made with him during his lessons.  A big thanks to Prot for helping me in
+;; this wonderful journey to the depths of EmacsLisp.
 
 ;;; Code:
 
 
 ;;;; Window Management
-(defun bb-split-window-right-and-focus()
-    "Spawn and focus a new window right of the current where most recent
-hidden buffer is showed."
-  "Spawn a new window right of the current one and focus it."
+(defun bb-split-window-right-and-focus ()
+  "Spawn and focus a new window right of the current.
+In the new window the most recent hidden buffer is showed."
   (interactive)
   (split-window-right)
   (windmove-right)
   (switch-to-buffer (other-buffer)))
 
-(defun bb-split-window-below-and-focus()
-  "Spawn and focus a new window below the current where most recent
-hidden buffer is showed."
+(defun bb-split-window-below-and-focus ()
+  "Spawn and focus a new window below the current.
+In the new window the most recent hidden buffer is showed."
   (interactive)
   (split-window-below)
   (windmove-down)
   (switch-to-buffer (other-buffer)))
 
-(defun bb-kill-buffer-and-delete-window()
+(defun bb-kill-buffer-and-delete-window ()
   "Kill the current buffer and delete its window."
   (interactive)
   (progn
     (kill-this-buffer)
     (delete-window)))
 
-(defun bb-revert-buffer-no-confirm()
+(defun bb-revert-buffer-no-confirm ()
   "Revert buffer without confirmation."
   (interactive) (revert-buffer t t))
 
 (defun bb-push-mark-no-activate ()
-  "Pushes `point' to `mark-ring' and does not activate the region
+  "Pushes `point' to `mark-ring' and does not activate the region.
 Equivalent to \\[set-mark-command] when \\[transient-mark-mode] is disabled"
   (interactive)
   (push-mark (point) t nil)
   (message "Pushed mark to ring"))
 
-(defun bb-jump-to-mark()
+(defun bb-jump-to-mark ()
   "Jumps to the local mark, respecting the `mark-ring' order.
 This is the same as using \\[set-mark-command] with the prefix argument."
   (interactive)
@@ -54,35 +75,24 @@ This is the same as using \\[set-mark-command] with the prefix argument."
   (exchange-point-and-mark)
   (deactivate-mark nil))
 
-;; ;; https://www.emacswiki.org/emacs/BackwardDeleteWord
-;; (defun delete-word (arg)
-;;   "Delete characters forward until encountering the end of a word.
-;; With argument, do this that many times."
-;;   (interactive "p")
-;;   (if (use-region-p)
-;;       (delete-region (region-beginning) (region-end))
-;;     (delete-region (point) (progn (forward-word arg) (point)))))
-
-
-(defun bb-kill-beg-line()
-  "Kills from the beginning of the text in current line.
+(defun bb-kill-beg-line ()
+  "Kill from the beginning of the text in current line until point.
 If no text exists between point and the start of the line,
-kills the text before point."
+kills the white-space before point."
   (interactive)
   (let ((end (point)))
     (beginning-of-line-text)
-    (if (= end (point))
+    (if (= (point) end)
         (kill-line 0)
       (kill-region (point) end))))
 
-(defun bb-kill-ring-save-line(arg)
-  "Save region when selected or, with prefix, ARG number of lines, backward of
-forward"
+(defun bb-kill-ring-save-line (arg)
+  "Save region or, with prefix, ARG number of lines, backward or forward."
   (interactive "p")
   (if (= arg 0) (user-error "ERROR: Invalid numeric prefix"))
-  (if (region-active-p)
+  (if (use-region-p)
       (progn
-        (kill-ring-save (region-beginning) (region-end))
+        (kill-ring-save (use-region-beginning) (use-region-end))
         (message "Region yanked to the kill-ring"))
     (let (beg end real-yanked)
       (if (> arg 0)
@@ -111,10 +121,11 @@ forward"
 
 
 ;;;###autoload
-(defun bb-insert-newline-above(arg)
-  "Inserts a new line before the current one or, with prefix, ARG number of lines.
+(defun bb-insert-newline-above (arg)
+  "Insert a new line before the current or, with prefix, ARG number of lines.
 
-With negative prefix calls mirror function `bb-insert-newline-below' passing ARG."
+With negative prefix calls mirror function `bb-insert-newline-below' passing
+ARG."
   (interactive "p")
   (if (< arg 0) (bb-insert-newline-below (- arg)))
   (goto-char (pos-bol))
@@ -125,10 +136,11 @@ With negative prefix calls mirror function `bb-insert-newline-below' passing ARG
   (indent-according-to-mode))
 
 ;;;###autoload
-(defun bb-insert-newline-below(arg)
-  "Inserts a new line after the current one or, with prefix, ARG number of lines.
+(defun bb-insert-newline-below (arg)
+  "Insert a new line after the current or, with prefix, ARG number of lines.
 
-With negative prefix calls mirror function `bb-insert-newline-above' passing ARG."
+With negative prefix calls mirror function `bb-insert-newline-above' passing
+ARG."
   (interactive "p")
   (if (< arg 0) (bb-insert-newline-above (- arg)))
   (goto-char (pos-eol))
@@ -140,15 +152,14 @@ With negative prefix calls mirror function `bb-insert-newline-above' passing ARG
 
 
 
-(defun bb-duplicate-line-above-dwim(arg)
-  "Duplicate line or region ARGth times below point/region.
-If ARG is nil, do it one time."
+(defun bb-duplicate-line-above-dwim (arg)
+  "Duplicate line or region ARG times below point/region."
   (interactive "p")
   (bb--duplicate-line (abs arg)
                       (if (> arg 0) -1 1)))
 
 
-(defun bb-duplicate-line-below-dwim(arg)
+(defun bb-duplicate-line-below-dwim (arg)
   "Duplicate line or region ARGth times above point/region.
 If ARG is nil, do it one time."
   (interactive "p")
@@ -156,8 +167,8 @@ If ARG is nil, do it one time."
                       (if (> arg 0) 1 -1)))
 
 
-(defun bb--duplicate-line(count dir)
-  "Duplicate line or region COUNTth times in DIRection according to prefix.
+(defun bb--duplicate-line (count dir)
+  "Duplicate line or region COUNT times towards DIR according to prefix.
 A positive prefix leave the duplicates above, a negative, below."
 
   (let ((start (pos-bol))
@@ -214,14 +225,14 @@ A positive prefix leave the duplicates above, a negative, below."
 
 
 (defun bb-transpose-words (arg)
-  "Transpose words around point or around/after point and mark "
+   "Transpose words ARG times from point or between point and mark."
   (interactive "p")
   (transpose-words (if (region-active-p) 0 arg)))
 
 
-(defun bb--move-line(count)
-  "Move line or region COUNTth times in direction according to prefix.
-      A positive prefix moves the line(s) below, a negative, above."
+(defun bb--move-line (count)
+  "Move line or region COUNT times in direction according to prefix.
+A positive prefix moves the line(s) below, a negative, above."
 
   (let ((start (pos-bol))
         (end (pos-eol))
@@ -258,7 +269,7 @@ A positive prefix leave the duplicates above, a negative, below."
 
 (defun bb--move-line-user-error (boundary)
   "Return `user-error' with message accounting for BOUNDARY.
-      BOUNDARY is a buffer position, expected to be `point-min' or `point-max'."
+BOUNDARY is a buffer position, expected to be `point-min' or `point-max'."
   (when-let ((bound (line-number-at-pos boundary))
              (string-bound (if (= boundary (point-min))
                                "first line!"
@@ -294,20 +305,21 @@ A positive prefix leave the duplicates above, a negative, below."
     (user-error (format "WARNING: %salready at the %s" scope string-bound))))
 
 
-(defun bb-move-line-above-dwim(arg)
-  "Move line or region ARGth times up.
-      If ARG is nil, do it one time."
+(defun bb-move-line-above-dwim (arg)
+  "Move line or region ARG times up.
+If ARG is nil, do it one time."
   (interactive "p")
   (unless (bb--move-line-user-error (point-min))
     (bb--move-line (- arg))))
 
 
-(defun bb-move-line-below-dwim(arg)
-  "Move line or region ARGth times down.
-      If ARG is nil, do it one time."
+(defun bb-move-line-below-dwim (arg)
+  "Move line or region ARG times down.
+If ARG is nil, do it one time."
   (interactive "p")
   (unless (bb--move-line-user-error (point-max))
     (bb--move-line arg)))
+
 
 
 (provide 'bb-motion)

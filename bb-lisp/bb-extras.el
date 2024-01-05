@@ -1,7 +1,29 @@
 ;;; bb-extras.el --- Useful extra functions -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;;;
+;; Most of these functions and ideas are either taken or adapted from,
+;; <https://github.com/skeeto/.emacs.d/blob/master/lisp/extras.el>
+;; A word of appreciation for Chris Wellons work and for his sharing.
 
 ;;; Code:
 
@@ -15,8 +37,7 @@
 
 
 (defun numcores ()
-  "Return the number of logical processors on this system.
-Adapter from <https://github.com/skeeto/.emacs.d/blob/master/lisp/extras.el>"
+  "Return the number of logical processors on this system."
   (cond
    ((and (eq system-type 'gnu/linux)
          (file-exists-p "/proc/cpuinfo"))
@@ -29,7 +50,7 @@ Adapter from <https://github.com/skeeto/.emacs.d/blob/master/lisp/extras.el>"
         (when (zerop (call-process "sysctl" nil t nil "-n" "hw.ncpu"))
           (string-to-number (buffer-string))))))
    (t
-    (user-error "System is not Gnu Linux neither BSD based"))))
+    (user-error "System is not GNU Linux neither BSD based"))))
 
 
 (defmacro measure-time (&rest body)
@@ -44,13 +65,13 @@ Adapter from <https://github.com/skeeto/.emacs.d/blob/master/lisp/extras.el>"
 
 
 (defun eval-and-replace (value)
-  "Evaluate the sexp at point and replace it with its VALUE.
-Source <https://github.com/skeeto/.emacs.d/blob/master/lisp/extras.el>"
+  "Evaluate the sexp at point and replace it with its VALUE."
   (interactive (list (eval-last-sexp nil)))
   (kill-sexp -1)
   (insert (format "%S" value)))
 
 
+(declare-function dired-current-directory "ext:dired")
 (defun find-all-files (&optional dir)
   "Visits all the non-hidden files in DIR recursively."
   (interactive)

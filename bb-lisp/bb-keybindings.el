@@ -1,7 +1,29 @@
 ;;; bb-keybindings.el --- Personal preference keybinds -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;;;
+;; Most of these functions and ideas are either from Protesilaos Stavrou config
+;; or made with him during his lessons.  A big thanks to Prot for helping me in
+;; this wonderful journey to the depths of EmacsLisp.
 
 ;;; Code:
 
@@ -34,7 +56,6 @@
     "g" #'consult-grep
     "k" #'consult-keep-lines
     "l" #'consult-line
-    "m" #'consult-multi-occur
     "o" #'occur
     "r" #'consult-ripgrep
     "s" #'consult-isearch-history
@@ -87,6 +108,7 @@
 (defvar-keymap s-x-prefix-map
   "f" #'find-all-files
   "k" #'bb-simple-kill-current-buffer
+  "K" #'kill-buffer-and-window
   "n" #'logos-narrow-dwim
   "m" #'bb-minimap-mode
   "o" #'bb-delete-blank-lines-dwim)
@@ -172,7 +194,7 @@
 (defun bb-notmuch-new-mail ()
   "Open unread email."
   (interactive)
-  (notmuch-tree "tag:new or tag:unread"))
+  (notmuch-search "tag:new or tag:unread"))
 (keymap-global-set "s-m" #'bb-notmuch-new-mail)
 
 
@@ -182,6 +204,12 @@
   (keymap-set dired-mode-map "º" #'dired-up-directory)
   (keymap-unset dired-jump-map "j" :remove))
 
+
+;;;; flymake
+(with-eval-after-load 'flymake
+  (keymap-global-set "s-?" #'flymake-mode)
+  (keymap-global-set "M-s-n" #'flymake-goto-next-error)
+  (keymap-global-set "M-s-p" #'flymake-goto-prev-error))
 
 
 ;;;; other bindings
