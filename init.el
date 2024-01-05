@@ -2,7 +2,7 @@
 
 ;; Copyright (c) 2023  Bruno Boal <egomet@bboal.com>
 ;; Author: Bruno Boal <egomet@bboal.com>
-;; URL: https://github.com/BBoal/emacs-config
+;; URL: https://git.sr.ht/~bboal/emacs-config
 ;; Package-Requires: ((emacs "30.0"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -26,6 +26,7 @@
 
 ;;; Code:
 
+
 ;;;;;;;;;;;;;;;;
 ;;; Settings ;;;
 ;;;;;;;;;;;;;;;;
@@ -33,8 +34,9 @@
 ;;; Set default font
 (set-face-attribute 'default nil
                     :family "Iosevka Zenodotus"
-                    :height 120)
-;; (set-frame-font "FantasqueSansMono Nerd Font Mono 13" nil t t)
+                    :height 110)
+;; (set-frame-font "Iosevka Zenodotus Fixed 11" nil t t)
+;; (set-frame-font "CommitMono-Zenodotus 10" nil t t)
 
 
 ;;;;;; https://www.gnu.org/software/emacs/manual/html_node/efaq/Not-writing-files-to-the-current-directory.html
@@ -46,13 +48,17 @@
 
 
 ;;; Welcome message
-(setq-default initial-scratch-message
-              (let ((emacs-version (replace-regexp-in-string "\s\(.*\)\n" "" (emacs-version))))
-                (format ";; %s\n;; Initialization in %s\n;; %s, be disciplined and maintain focus.\n\n"
-                        emacs-version (emacs-init-time "%.3fs") user-full-name)))
+(setq-default
+ initial-scratch-message
+ (let ((emacs-version (replace-regexp-in-string "\s\(.*\)\n" "" (emacs-version))))
+   (format ";; %s\n;; Initialization in %s\n;; %s, be disciplined and maintain focus.\n\n"
+           emacs-version (emacs-init-time "%.3fs") user-full-name)))
 
 
-;;; User preferences
+(defun bb-maybe-check-parens ()
+  "If derived-mode is Lisp data, check for parenthesis correcteness."
+  (if (derived-mode-p 'lisp-data-mode) (check-parens)))
+
 (setq bidi-inhibit-bpa t
       show-paren-delay 0
       blink-matching-paren nil
@@ -75,14 +81,17 @@
       delete-window-choose-selected 'pos
       switch-to-prev-buffer-skip 'this
       enable-recursive-minibuffers t
+      write-file-functions '(bb-maybe-check-parens)
+      switch-to-buffer-obey-display-actions t
       show-paren-context-when-offscreen 'overlay
+      split-height-threshold 20
+      auto-save-no-message t
       frame-title-format '(multiple-frames "%b"
                                            ("" "Emacs - %b ")))
 
-
 (setq-default fill-column 80
               tab-width 4
-              scroll-margin 4
+              scroll-margin 3
               indent-tabs-mode nil
               comment-fill-column fill-column
               emacs-lisp-docstring-fill-column fill-column
@@ -91,6 +100,7 @@
               tab-always-indent 'complete
               tab-first-completion 'word-or-paren-or-punct
               kill-do-not-save-duplicates t
+              write-contents-functions '(bb-maybe-check-parens)
               cursor-in-non-selected-windows nil
               bidi-paragraph-direction 'left-to-right
               large-file-warning-threshold (* 30 1024 1024)
@@ -103,27 +113,6 @@
                                                "autogen.sh"
                                                "main.*"))
 
-
-(defvar modes-with-autofill-on
-  '(text-mode-hook
-    message-mode-hook
-    markdown-mode-hook
-    adoc-mode-hook
-    emacs-lisp-mode-hook
-    org-mode-hook)
-  "Modes that benefit from auto-fill mode.")
-
-;;; Hooks
-(add-hook 'before-save-hook #'delete-trailing-whitespace)
-(add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
-(add-hook 'org-babel-post-tangle-hook #'executable-make-buffer-file-executable-if-script-p)
-(add-hook 'emacs-lisp-mode-hook
-          (lambda() (setq sentence-end-double-space t) (eldoc-mode 1)))
-(add-hook 'activate-mark-hook (lambda() (setq cursor-type 'bar)))
-(add-hook 'deactivate-mark-hook (lambda() (setq cursor-type t)))
-(mapc (lambda (mode)
-        (add-hook mode #'turn-on-auto-fill))
-      modes-with-autofill-on)
 
 ;; No cursor blinking
 (blink-cursor-mode -1)
@@ -174,7 +163,7 @@
 
 ;; Adding "bb-" dirs to load-path
 (mapc (lambda (dir)
-        (add-to-list 'load-path dir))
+          (cl-pushnew dir load-path))
       (directory-files user-emacs-directory :fullpath "bb-"))
 
 ;; Initialization
@@ -186,10 +175,34 @@
 ;; Loads all "bb-" elisp files from "bb-" dirs
 (bb-require-lisp-files-in-dir-matching user-emacs-directory "bb-")
 
-;; Allow access from emacsclient
+
+(defvar modes-with-autofill
+  '(text-mode-hook
+    message-mode-hook
+    markdown-mode-hook
+    adoc-mode-hook
+    emacs-lisp-mode-hook
+    org-mode-hook)
+  "Modes that benefit from auto-fill mode.")
+
+;;;;;;;;;;;
+;; Hooks ;;
+;;;;;;;;;;;
+
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
+(add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
+(add-hook 'org-babel-post-tangle-hook
+          #'executable-make-buffer-file-executable-if-script-p)
+(add-hook 'emacs-lisp-mode-hook
+          (lambda() (setq sentence-end-double-space t) (eldoc-mode 1)))
+(add-hook 'activate-mark-hook (lambda() (setq cursor-type 'bar)))
+(add-hook 'deactivate-mark-hook (lambda() (setq cursor-type t)))
+(add-hook 'xref-after-jump-hook #'pulsar-recenter-top)
+(mapc (lambda (mode) (add-hook mode #'turn-on-auto-fill)) modes-with-autofill)
+;; access from emacsclient
 (add-hook 'after-init-hook (lambda ()
-                             (unless (server-running-p)
-                               (server-start))))
+                             (unless (server-running-p) (server-start))))
+
 
 
 (provide 'init)

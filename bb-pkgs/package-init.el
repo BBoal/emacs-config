@@ -1,9 +1,32 @@
 ;;; package-init.el --- Package init -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;;;
+;; Most of these functions and ideas are either from Protesilaos Stavrou config
+;; or made with him during his lessons.  A big thanks to Prot for helping me in
+;; this wonderful journey to the depths of EmacsLisp.
 
 ;;; Code:
+
 
 ;;; Initializing
 (require 'package)
@@ -13,9 +36,7 @@
         ("elpa-devel" . "https://elpa.gnu.org/devel/")))
 
 ;; Highest number gets priority (what is not mentioned gets priority 0)
-(setq package-archive-priorities
-      '(("melpa" . 1)
-        ("elpa" . 2)))
+(setq package-archive-priorities '(("melpa" . 1) ("elpa" . 2)))
 
 (package-initialize)
 
@@ -49,14 +70,13 @@
   "List of symbols representing the packages Prot develops/maintains.")
 
 (setq package-pinned-packages
-      `(,@(mapcar
-           (lambda (package)
-             (cons package "elpa-devel"))
-           prot-emacs-packages)))
+      `(,@(mapcar (lambda (package)
+                    (cons package "elpa-devel"))
+                  prot-emacs-packages)))
 
 
 (defun bb-ensure-dir-or-file-exist (arg)
-  "Create ARG if non-existant. Prefix '/' is considered dir otherwise file."
+  "Create ARG if non-existant.  Prefix '/' is considered dir otherwise file."
   (interactive "G")
   (if (or (listp arg) (not (stringp arg)))
     (user-error "ERR: Argument must be a solo string"))
@@ -71,7 +91,7 @@
       (if (called-interactively-p 'any)
           (user-error "Error: Destination already exists")))
      ((not (file-writable-p edir))
-      (user-error "Error: Destination is not writable. Check permissions"))
+      (user-error "Error: Destination is not writable.  Check permissions"))
      ((string-suffix-p "/" arg)
       (message "Creating dir %s" arg)
       (make-directory arg :parents))
