@@ -1,7 +1,29 @@
 ;;; bb-smart-completion.el --- Gnomes and other helpers -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;;;
+;; Most of these functions and ideas are either from Protesilaos Stavrou config
+;; or made with him during his lessons.  A big thanks to Prot for helping me in
+;; this wonderful journey to the depths of EmacsLisp.
 
 ;;; Code:
 
@@ -13,6 +35,12 @@
   ;; root '/' directory, Vertico will clear the old path to keep only
   ;; your current input. Works with pasting as well.
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
+  :defines
+  bb-list-of-hidden-files bb-list-of-hidden-files backup-sort-function
+  :commands vertico-multiform-mode vertico-mode
+  :functions
+  vertico-sort-history-length-alpha vertico-sort-history-alpha
+  vertico-sort-length-alpha vertico-sort-alpha
   :config
   (defun not-current-or-previous-dir-p (str)
     "Return nil if passed argument end in either \"/.\" or \"/..\""
@@ -31,9 +59,11 @@
             (const :tag "Alphabetically" ,#'vertico-sort-alpha)
             (function :tag "Custom function")))
 
-  (defcustom bb-list-of-hidden-files '(".zlua" ".gnupg/" ".Xauthority")
+  (defcustom bb-list-of-hidden-files
+    '(".zlua" ".gnupg/" ".Xauthority" "history" "places" "auto-save-list/")
     "List of files that should not appear when sorted with `vertico-latest-files'
-function")
+function"
+    :type '(list strings))
 
   (defun vertico-latest-files (candidates)
     "CANDIDATES are sorted in last-modified order, `backup-sort-function' is used as
@@ -50,7 +80,7 @@ a fallback."
                             list-attr (cons time
                                             list-attr)))))
                 candidates)
-          (sort list-attr #'time-less-p)
+          (setq list-attr (sort list-attr #'time-less-p))
           (while list-attr
             (setq ordered-files (cons (car (rassq (car list-attr) list-files))
                                       ordered-files)
@@ -58,12 +88,12 @@ a fallback."
           ordered-files)
       (funcall backup-sort-function candidates)))
 
-  (setq vertico-preselect 'prompt
-        vertico-scroll-margin 1
-        vertico-count 5
-        vertico-resize nil
-        vertico-multiform-categories '((file (vertico-sort-function . vertico-latest-files)))
-        vertico-cycle t)
+  (setopt vertico-preselect 'prompt
+          vertico-scroll-margin 1
+          vertico-count 5
+          vertico-resize nil
+          vertico-multiform-categories '((file (vertico-sort-function . vertico-latest-files)))
+          vertico-cycle t)
   (vertico-multiform-mode 1)
 
   :init
@@ -75,19 +105,20 @@ a fallback."
 ;;;; `jinx'
 (use-package jinx
   :after vertico
+  :defines vertico-multiform-categories
   :hook ( emacs-startup . global-jinx-mode )
   :bind (( "M-$"  . jinx-correct )
          ("C-M-$" . jinx-languages))
   :config
-  (setq jinx-languages "en_US pt_PT-preao"
-        jinx-include-faces '((prog-mode font-lock-doc-face)
-                             (conf-mode font-lock-comment-face))
-        jinx-exclude-regexps
-        '((t "[A-Z]+\\>"
-             "\\<[[:upper:]][[:lower:]]+\\>"
-             "\\w*?[0-9\.'\"-]\\w*"
-             "[a-z]+://\\S-+"
-             "<?[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>?")))
+  (setopt jinx-languages "en_US pt_PT-preao"
+          jinx-include-faces '((prog-mode font-lock-doc-face)
+                               (conf-mode font-lock-comment-face))
+          jinx-exclude-regexps
+          '((t "[A-Z]+\\>"
+               "\\<[[:upper:]][[:lower:]]+\\>"
+               "\\w*?[0-9\.'\"-]\\w*"
+               "[a-z]+://\\S-+"
+               "<?[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>?")))
 
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 25))))
@@ -98,6 +129,9 @@ a fallback."
 ;;;; `consult'
 (use-package consult
   :demand t
+  :functions
+  consult-register-format consult-register-window
+  consult-xref consult-customize
   :bind (;; C-c bindings (mode-specific-map)
          ("C-c s" . consult-history)
          ("C-c M-x" . consult-mode-command)
@@ -135,8 +169,8 @@ a fallback."
   (advice-add #'register-preview :override #'consult-register-window)
 
   ;; Use Consult to select xref locations with preview
-  (setq xref-show-xrefs-function #'consult-xref
-        xref-show-definitions-function #'consult-xref)
+  (setopt xref-show-xrefs-function #'consult-xref
+          xref-show-definitions-function #'consult-xref)
 
   :config
   ;; Setting the correct path to the config variable in order to get rid
@@ -161,7 +195,7 @@ a fallback."
 
   ;; Optionally configure the narrowing key.
   ;; Both < and C-+ work reasonably well.
-  (setq consult-narrow-key "<") ;; (kbd "C-+")
+  (setopt consult-narrow-key "<") ;; (kbd "C-+")
 
   ;; Optionally make narrowing help available in the minibuffer.
   ;; You may want to use `embark-prefix-help-command' or which-key instead.
@@ -175,15 +209,16 @@ a fallback."
 (use-package orderless
   :demand t
   :config
-  (setq completion-styles '(basic initials orderless)
-        orderless-matching-styles '(orderless-prefixes orderless-literal orderless-regexp)
-        completion-category-overrides '((file (styles basic partial-completion orderless)))))
+  (setopt completion-styles '(basic initials orderless)
+          orderless-matching-styles '(orderless-prefixes orderless-literal orderless-regexp)
+          completion-category-overrides '((file (styles basic partial-completion orderless)))))
 
 
 
 
 ;;;; `marginalia'
 (use-package marginalia
+  :autoload marginalia-mode
   :init
   (marginalia-mode))
 
@@ -193,6 +228,8 @@ a fallback."
 ;;;; `corfu'
 (use-package corfu
   :demand t
+  :defines corfu-map
+  :autoload corfu-mode global-corfu-mode
   :bind (:map corfu-map
               ("s-SPC" . corfu-insert-separator)
               ("J" . corfu-next)
@@ -208,21 +245,21 @@ Useful for prompts such as `eval-expression' and `shell-command'."
                   corfu-popupinfo-delay nil)
       (corfu-mode 1)))
   :config
-  (setq corfu-min-width 40
-        corfu-max-width 80
-        corfu-cycle t                      ;; Enable cycling for `corfu-next/previous'
-        corfu-auto nil                     ;; Enable auto completion
-        corfu-auto-delay 1
-        corfu-auto-prefix 3
-        corfu-popupinfo-mode t
-        corfu-popupinfo-delay nil
-        corfu-separator ?\s                ;; Orderless field separator
-        corfu-quit-at-boundary 'separator  ;; Never quit at completion boundary
-        corfu-quit-no-match 'separator     ;;  quit, even if there is no match
-        corfu-preview-current t            ;; Disable current candidate preview
-        corfu-preselect 'prompt            ;; Disable candidate preselection
-        corfu-on-exact-match nil           ;; Configure handling of exact matches
-        corfu-scroll-margin 2)             ;; Use scroll margin
+  (setopt corfu-min-width 40
+          corfu-max-width 80
+          corfu-cycle t                      ;; Enable cycling for `corfu-next/previous'
+          corfu-auto nil                     ;; Enable auto completion
+          corfu-auto-delay 0.5
+          corfu-auto-prefix 3
+          corfu-popupinfo-mode t
+          corfu-popupinfo-delay nil
+          corfu-separator ?\s                ;; Orderless field separator
+          corfu-quit-at-boundary 'separator  ;; Never quit at completion boundary
+          corfu-quit-no-match 'separator     ;;  quit, even if there is no match
+          corfu-preview-current t            ;; Disable current candidate preview
+          corfu-preselect 'prompt            ;; Disable candidate preselection
+          corfu-on-exact-match nil           ;; Configure handling of exact matches
+          corfu-scroll-margin 2)             ;; Use scroll margin
 
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since Dabbrev can be used globally (M-/).
@@ -308,14 +345,16 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 ;;;; `yasnippet'
 (use-package yasnippet
+  :defines yas-snippet-dirs
+  :commands yas-reload-all
   :hook ((text-mode prog-mode) . yas-minor-mode)
   :init
   (setq yas-snippet-dirs
         `(,(concat (locate-user-emacs-file "snippets"))))
 
   :config
-  (setq yas-also-auto-indent-first-line t
-        yas-also-indent-empty-lines t)
+  (setopt yas-also-auto-indent-first-line t
+          yas-also-indent-empty-lines t)
   (yas-reload-all))
 
 
@@ -334,18 +373,18 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :defer 1
   :after envrc
   :config
-  (setq corfu-popupinfo-mode t
-        corfu-popupinfo-delay 1.0
-        eglot-sync-connect nil
-        eglot-autoshutdown t
-        eglot-confirm-server-initiated-edits nil))
+  (setopt corfu-popupinfo-mode t
+          corfu-popupinfo-delay 1.0
+          eglot-sync-connect nil
+          eglot-autoshutdown t
+          eglot-confirm-server-initiated-edits nil))
 
 
 
 
 ;;;; `consult-eglot'
 (use-package consult-eglot
-  :defer 3
+  :defer 1
   :after (consult eglot))
 
 
@@ -355,9 +394,10 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package immersive-translate
   :defer 2
   :config
-  (setq immersive-translate-backend 'trans
-        immersive-translate-trans-source-language "de"
-        immersive-translate-trans-target-language "en"))
+  (setopt immersive-translate-backend 'trans
+          immersive-translate-trans-source-language "de"
+          immersive-translate-trans-target-language "en"))
+
 
 
 (provide 'bb-smart-completion)

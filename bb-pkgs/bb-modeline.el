@@ -1,7 +1,29 @@
 ;;; bb-modeline.el --- Configuration of the Mode-Line -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;;;
+;; Most of these functions and ideas are either from Protesilaos Stavrou config
+;; or made with him during his lessons.  A big thanks to Prot for helping me in
+;; this wonderful journey to the depths of EmacsLisp.
 
 ;;; Code:
 
@@ -26,16 +48,16 @@
   "Face for intense mode line constructs.")
 
 (defun bb-modeline--style-major-mode()
-  "Return string referring `major-mode', capitalized and with \"-mode\" deleted."
-  (capitalize
-   (string-replace "-mode" "" (symbol-name major-mode))))
+  "Return capitalized string of `major-mode', with \"-mode\"  deleted."
+  (concat " ["
+          (capitalize
+           (string-replace "-mode" "] " (symbol-name major-mode)))))
 
 (defvar-local bb-modeline-major-mode
   '(:eval
     (list (propertize (bb-modeline--style-major-mode)
                       'mouse-face 'mode-line-highlight)
-          '("" mode-line-process)
-          " "))
+          '("" mode-line-process)))
   "Mode line construct for displaying major modes.")
 
 (defvar-local prot-modeline-vc-branch
@@ -53,7 +75,7 @@
                            ('conflict 'vc-conflict-state)
                            ('locked 'vc-locked-state)
                            (_ 'vc-up-to-date-state))))
-        (propertize (concat "   "  (capitalize branch))
+        (propertize (concat "   "  (capitalize branch) " ")
                     'face vcface
                     'mouse-face 'mode-line-highlight)))
   "Mode line construct to return propertized VC branch.")
@@ -88,7 +110,7 @@ Specific to the current window's mode line.")
                  (sep (if icrumbs " : ")))
             (setq-local header-line-format nil)
             (delq nil (list pcrumbs sep icrumbs)))
-        (propertized-buffer-identification "%b")))
+        (propertized-buffer-identification " %b")))
   "Mode line construct for identifying the buffer being displayed.")
 
 
@@ -140,7 +162,7 @@ Specific to the current window's mode line.")
                (mode-line-window-selected-p))
       ;;(flatten-tree (cons flymake-mode-line-format "  "))))
       ;;flymake-mode-line-format))
-      (list flymake-mode-line-exception flymake-mode-line-counters " ")))
+      (list flymake-mode-line-exception flymake-mode-line-counters)))
   "Mode line construct displaying `flymake-mode-line-format'.
 Specific to the current window's mode line.")
 
@@ -154,25 +176,22 @@ Specific to the current window's mode line.")
                 mode-line-modified
                 mode-line-remote
                 prot-modeline-vc-branch
-                "  "
+                " "
                 prot-modeline-buffer-identification
                 mode-line-format-right-align
                 prot-modeline-flymake
-                " "
                 bb-modeline-major-mode
-                " "
                 prot-modeline-position
                 prot-modeline-misc-info ;; everything else not defined particularly
                 mode-line-end-spaces))
 
 (defcustom bb--mode-line-defining-strings
   '(prot-modeline-kbd-macro
-    prot-modeline-buffer-identification
-    bb-modeline-major-mode
-    prot-modeline-flymake
-    prot-modeline-position
     prot-modeline-vc-branch
-    mode-line-format-right-align
+    prot-modeline-buffer-identification
+    prot-modeline-flymake
+    bb-modeline-major-mode
+    prot-modeline-position
     prot-modeline-misc-info)
   "List of variables that compose and define the `mode-line-format'."
   :type '(repeat symbol)

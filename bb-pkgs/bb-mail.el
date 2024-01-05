@@ -1,5 +1,25 @@
 ;;; bb-mail.el --- Mail setup -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
 ;;; Mainly notmuch package and its dependencies
 
@@ -8,20 +28,24 @@
 (require 'message)
 
 
-(defun bb-sets-union-apairs (base-set addon-set &rest more-addons)
+(defun bb-sets-union-apairs (base-set addon-set &optional ordered-elems &rest more-elems)
   "Combines all apairs from BASE-SET and ADDON-SET, updating duplicate entries.
-MORE-ADDONS allows for additional sets of elements to be added."
-  (let ((minimal-set (if (and base-set (sequencep base-set))
-                         (copy-tree base-set)))
+If the order of sets is required, optional ORDERED-ELEMS should be non-nil.
+MORE-ELEMS allows for additional elements to be added."
+  (unless (and (sequencep base-set) (sequencep addon-set))
+    (user-error "Both set arguments must be either a list or an array"))
+  (let ((minimal-set (if ordered-elems (copy-tree base-set) base-set))
         final-set)
-    (if more-addons
-        (setq addon-set (append addon-set more-addons)))
+    (if more-elems
+        (setq addon-set (append addon-set more-elems)))
     (mapc (lambda (addon)
             (let ((key (assoc (car-safe addon) minimal-set)))
               (if key (setq minimal-set (delete key minimal-set)))
               (push addon final-set)))
           addon-set)
-    (nconc minimal-set (nreverse final-set))))
+    (if ordered-elems
+        (nconc minimal-set (nreverse final-set))
+      (nconc final-set minimal-set))))
 
 
 (defvar message-cite-style-minimal
@@ -47,10 +71,11 @@ MORE-ADDONS allows for additional sets of elements to be added."
 
 
 
+
 ;;;; `smtpmail'
 (use-package smtpmail
   :demand t
-  :init
+  :config
   (setq smtpmail-default-smtp-server "smtp.mailbox.org"
         smtpmail-stream-type 'ssl
         smtpmail-smtp-service 465
@@ -63,9 +88,9 @@ MORE-ADDONS allows for additional sets of elements to be added."
 
 ;;;; `sendmail'
 (use-package sendmail
-  :init
-  ;; Ensuring that `message-send-mail-hook' is run with `send-mail-function'
-  (setq send-mail-function 'message-use-send-mail-function))
+  :config
+  (setq send-mail-function 'smtpmail-send-it
+        message-send-mail-function 'message-use-send-mail-function))
 
 
 
@@ -75,10 +100,9 @@ MORE-ADDONS allows for additional sets of elements to be added."
   :demand t
   :functions (notmuch-show-get-tags message-recipients)
   :load-path "/usr/share/emacs/site-lisp/"
-  :hook
-  (message-send . message-sign-encrypt-if-all-keys-available)
-  (message-send . notmuch-mua-empty-subject-check)
-  (message-send . notmuch-mua-attachment-check)
+  :hook ((message-send . message-sign-encrypt-if-all-keys-available)
+         (message-send . notmuch-mua-empty-subject-check)
+         (message-send . notmuch-mua-attachment-check))
 
   :init
   (defun message-recipients ()
@@ -98,7 +122,7 @@ Each recipient is in the format of `mail-extract-address-components'."
       (catch 'break
         (dolist (recipient (message-recipients))
           (let ((recipient-email (cadr recipient)))
-            (when (and recipient-email (not (epg-list-keys context recipient-email)))
+            (unless (and recipient-email (epg-list-keys context recipient-email))
               (throw 'break nil))))
         t)))
 
@@ -116,7 +140,6 @@ encrypted emails when possible."
                 (y-or-n-p "Subject is empty, send anyway? "))
       (user-error "Sending message cancelled: empty subject")))
 
-  :config
   (setq-default notmuch-mua-attachment-regexp
                 "\\b\\(attach\\|attachment\\|attached\\|anexo\\|anexado\\)\\b")
   (setq notmuch-identities '("Bruno Boal <egomet@bboal.com>")
@@ -131,16 +154,17 @@ encrypted emails when possible."
 (use-package notmuch-indicator
   :demand t
   :functions notmuch-indicator-mode
-  :preface
-  (setq notmuch-indicator-args
-        '((:terms "tag:unread" :label " U:" :face success)
-          (:terms "tag:_BB_" :label " BB:" :face success))
-        notmuch-indicator-refresh-count 120
-        notmuch-indicator-hide-empty-counters t
-        notmuch-indicator-force-refresh-commands '(notmuch-refresh-this-buffer)
-        notmuch-indicator-add-to-mode-line-misc-info nil)
+  :init
+  (setopt notmuch-indicator-args
+          '((:terms "tag:unread" :label " U:" :face warning)
+            (:terms "tag:_BB_" :label " BB:" :face success))
+          notmuch-indicator-refresh-count 120
+          notmuch-indicator-hide-empty-counters t
+          notmuch-indicator-force-refresh-commands '(notmuch-refresh-this-buffer)
+          notmuch-indicator-add-to-mode-line-misc-info nil)
   :config
   (notmuch-indicator-mode 1))
+
 
 
 (provide 'bb-mail)

@@ -1,29 +1,51 @@
 ;;; bb-enhanced-edit.el --- Add-on functions to supercharge Emacs -*- lexical-binding: t -*-
 
+;; Copyright (c) 2023    Bruno Boal <egomet@bboal.com>
+;; Author: Bruno Boal <egomet@bboal.com>
+;; URL: https://git.sr.ht/~bboal/emacs-config
+;; Package-Requires: ((emacs "30.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the
+;; Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;;;
+;; Most of these functions and ideas are either from Protesilaos Stavrou config
+;; or made with him during his lessons.  A big thanks to Prot for helping me in
+;; this wonderful journey to the depths of EmacsLisp.
 
 ;;; Code:
 
 
-;;;; `persistent-scratch'
-(use-package persistent-scratch
-  :init
-  (defvar persistent-scratch-dir
-    (expand-file-name "persistent-scratch/" user-emacs-directory)
-    "Directory where persistent-scratch files should be saved.")
-  (bb-ensure-dir-or-file-exist persistent-scratch-dir)
+;;;; `dictionary'
+(with-eval-after-load 'dictionary
+  (setopt dictionary-server "dict.org"))
 
-  (defun bb-persistent-scratch-set-filename(_temp)
-    (setq persistent-scratch-save-file
-          (concat persistent-scratch-dir
-                  (format-time-string "%F_%T"))))
-  :config
-  (bb-persistent-scratch-set-filename ())
-  (setq persistent-scratch-autosave-interval 3600
-        persistent-scratch-before-save-commit-functions
-        '(bb-persistent-scratch-set-filename))
-  (persistent-scratch-autosave-mode))
+
+
+;;;; `imenu'
+(with-eval-after-load 'imenu
+  (setopt imenu-auto-rescan t))
+
+
+
+
+;;;; `ibuffer'
+(with-eval-after-load 'ibuffer
+  (setopt ibuffer-default-shrink-to-minimum-size t
+          ibuffer-expert t
+          ibuffer-use-other-window t))
 
 
 
@@ -38,9 +60,8 @@
         repeat-keep-prefix nil
         repeat-check-key t
         repeat-echo-function 'ignore
-        ;; Technically, this is not in repeat.el, though it is the
-        ;; same idea.
-        set-mark-command-repeat-pop t)
+        ;; Technically, this is not in repeat.el, though it is the same idea.
+        set-mark-command-repeat-pop t) ;; C-u C-SPC once, then C-SPC, C-SPC, ...
   (repeat-mode))
 
 
@@ -56,7 +77,8 @@
 
 ;;;; `ediff'
 (use-package ediff
-  :defer 3
+  :defer 1
+  :functions ediff-setup-windows-plain
   :config
   (setq ediff-split-window-function #'split-window-horizontally
         ediff-window-setup-function #'ediff-setup-windows-plain))
@@ -67,56 +89,49 @@
 ;;;; `wgrep'
 ;; Make grep buffers editable
 (use-package wgrep
-  :defer 3
+  :defer 1
+  :defines grep-mode-map
   :bind (:map grep-mode-map
               ("e" . wgrep-change-to-wgrep-mode)
               ("C-x C-q" . wgrep-change-to-wgrep-mode)
               ("C-c C-c" . wgrep-finish-edit))
   :config
-  (setq wgrep-auto-save-buffer t
-        wgrep-change-readonly-file t))
+  (setopt wgrep-auto-save-buffer t
+          wgrep-change-readonly-file t))
 
 
 
 
-;;;; `beframe'
-(use-package beframe
-  :demand t
-  :bind ("C-x f" . other-frame-prefix)    ; override `set-fill-column'
-  ;; Replace the generic `buffer-menu'.  With a prefix argument, this
-  ;; commands prompts for a frame.  Call the `buffer-menu' via M-x if
-  ;; you absolutely need the global list of buffers.
-  ;;("C-x C-b" . beframe-buffer-menu)
-  :config
-  (setq beframe-functions-in-frames '(project-prompt-project-dir))
-  (defvar consult-buffer-sources)
-  (declare-function consult--buffer-state "consult")
-
-  (with-eval-after-load 'consult
-    (defface beframe-buffer
-      '((t :inherit font-lock-string-face))
-      "Face for `consult' framed buffers.")
-
-    (defvar beframe--consult-source
-      `( :name     "Frame-specific buffers (current frame)"
-         :narrow   ?F
-         :category buffer
-         :face     beframe-buffer
-         :history  beframe-history
-         :items    ,#'beframe--buffer-names
-         :action   ,#'switch-to-buffer
-         :state    ,#'consult--buffer-state))
-
-    (add-to-list 'consult-buffer-sources 'beframe--consult-source))
-  (beframe-mode))
-
-
-
-
-;;;; `bufler'
-(use-package bufler
-  :defer 1
-  :bind ("C-x C-b" . bufler-list))
+;; ;;;; `beframe'
+;; (use-package beframe
+;;   :demand t
+;;   :bind ("C-x f" . other-frame-prefix)    ; override `set-fill-column'
+;;   ;; Replace the generic `buffer-menu'.  With a prefix argument, this
+;;   ;; commands prompts for a frame.  Call the `buffer-menu' via M-x if
+;;   ;; you absolutely need the global list of buffers.
+;;   ;;("C-x C-b" . beframe-buffer-menu)
+;;   :config
+;;   (setopt beframe-functions-in-frames '(project-prompt-project-dir))
+;;   ;;(defvar consult-buffer-sources)
+;;   (declare-function consult--buffer-state "consult")
+;;
+;;   (with-eval-after-load 'consult
+;;     (defface beframe-buffer
+;;       '((t :inherit font-lock-string-face))
+;;       "Face for `consult' framed buffers.")
+;;
+;;     (defvar beframe--consult-source
+;;       `( :name     "Frame-specific buffers (current frame)"
+;;          :narrow   ?F
+;;          :category buffer
+;;          :face     beframe-buffer
+;;          :history  beframe-history
+;;          :items    ,#'beframe--buffer-names
+;;          :action   ,#'switch-to-buffer
+;;          :state    ,#'consult--buffer-state))
+;;
+;;     (add-to-list 'consult-buffer-sources 'beframe--consult-source))
+;;   (beframe-mode))
 
 
 
@@ -140,6 +155,9 @@
 ;;;; `expreg'
 (use-package expreg
   :demand t
+  :commands expreg-expand
+  :functions expreg--sentence
+  :defines expreg-functions
   :hook (text-mode . add-expreg-sentence)
   :bind (("C-«" . bb-expreg-try-expand-symbol)
          ("C-»" . expreg-contract))
@@ -161,7 +179,7 @@
     (expreg-expand))
 
   (defun add-expreg-sentence()
-    (add-to-list 'expreg-functions #'expreg--sentence)))
+    (cl-pushnew #'expreg--sentence expreg-functions)))
 
 
 
@@ -170,8 +188,8 @@
 ;;;; `multiple-cursors'
 (use-package multiple-cursors
   :bind (("C-S-c C-S-c" . mc/edit-lines)
-         ( "C-<" . mc/mark-next-like-this)
-         ( "C->" . mc/mark-previous-like-this)
+         ("C-<" . mc/mark-next-like-this)
+         ("C->" . mc/mark-previous-like-this)
          ("C-c s-<" . mc/mark-more-like-this-extended)))
 
 

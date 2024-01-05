@@ -94,7 +94,7 @@ Optionally CURRENT-P will refer to the current tab."
 
 ;;;; `tab-bar'
 (use-package tab-bar
-  :init
+  :config
   (setq tab-bar-auto-width-max `(,(string-pixel-width (make-string 28 ?\=)) 28)
         tab-bar-close-button-show nil
         tab-bar-close-last-tab-choice 'delete-frame
@@ -115,7 +115,7 @@ Optionally CURRENT-P will refer to the current tab."
         tab-bar-show t)
 
   ;;;; Enable the tab-bar
-  (add-hook 'after-init-hook  #'tab-bar-mode))
+  :hook (after-init . tab-bar-mode))
 
 
 
