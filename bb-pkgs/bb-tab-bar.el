@@ -62,7 +62,7 @@ Optionally CURRENT-P will refer to the current tab."
        (cols-str-global-format
         (string-width
          (concat (substring-no-properties
-                  (or (car (bound-and-true-p notmuch-indicator--counters)) ""))
+                  (or (car-safe (bound-and-true-p notmuch-indicator--counters)) ""))
                  (caddar (tab-bar-format-global)))))
        ;; number of cols available for each tab
        (effect-cols-per-tab
