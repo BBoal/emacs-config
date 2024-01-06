@@ -297,16 +297,22 @@
 ;;;; `pulsar'
 (use-package pulsar
   :demand t
+  :hook ((xref-after-return xref-after-jump) . pulsar-recenter-quarter)
   :commands pulsar-global-mode
+  :functions pulsar-recenter-center pulsar-pulse-line
   :defines pulsar-pulse-functions
+  :init
+  (defun pulsar-recenter-quarter ()
+    "Reposition point at 25% or in the 20th line of window and pulse line."
+    (interactive)
+    (recenter (max (ceiling (window-height) 4) 20))
+    (pulsar-pulse-line))
   :config
   (setopt pulsar-pulse t
-          pulsar-delay 0.03
-          pulsar-iterations 40
+          pulsar-delay 0.05
+          pulsar-iterations 50
           pulsar-face 'pulsar-green)
-  ;; 2024-01-04  FIXME => Candidate for deletion init.el has the xref-after-jump-hook
-  ;;(dolist (func '(xref-find-definitions xref-go-back set-mark-command))
-  ;;              (cl-pushnew func pulsar-pulse-functions))
+  (cl-pushnew 'find-file pulsar-pulse-functions)
   (pulsar-global-mode 1))
 
 
