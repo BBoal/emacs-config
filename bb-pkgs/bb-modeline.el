@@ -28,16 +28,38 @@
 ;;; Code:
 
 
-;; Clock in the modeline
-(use-package time
+(require 'json)
+
+;;;; `mlscroll'
+(use-package mlscroll
+  :after (modus-themes ef-themes)
   :demand t
-  :init
-  (setq display-time-string-forms
-        '((capitalize (format-time-string "  %a,%d %b %R "))))
+  :commands mlscroll-mode
   :config
+  (setopt mlscroll-right-align nil
+          mlscroll-alter-percent-position nil
+          mlscroll-border 5
+          mlscroll-minimum-current-width 2
+          mlscroll-width-chars 15
+          modus-themes-common-palette-overrides
+          '((border-mode-line-active unspecified)
+            (border-mode-line-inactive unspecified))
+          ef-themes-common-palette-overrides
+          '((border-mode-line-active unspecified)
+            (border-mode-line-inactive unspecified)))
+  (mlscroll-mode 1))
+
+
+;;;; Clock
+(with-eval-after-load 'time
+  (setopt display-time-string-forms
+          '((capitalize (format-time-string "  %a,%d %b %R "))))
   (display-time-mode 1))
 
 
+;;; Modeline setup
+
+;;;; Keyboard Macro
 (defface prot-modeline-intense
   '((default :inherit bold)
     (((class color) (min-colors 88) (background light))
@@ -47,20 +69,20 @@
     (t :inverse-video t))
   "Face for intense mode line constructs.")
 
-(defun bb-modeline--style-major-mode()
-  "Return capitalized string of `major-mode', with \"-mode\"  deleted."
-  (concat " ["
-          (capitalize
-           (string-replace "-mode" "] " (symbol-name major-mode)))))
+(setq mode-line-defining-kbd-macro
+      (propertize " KMacro " 'face 'prot-modeline-intense))
 
-(defvar-local bb-modeline-major-mode
+(defvar-local bb-modeline-kbd-macro
   '(:eval
-    (list (propertize (bb-modeline--style-major-mode)
-                      'mouse-face 'mode-line-highlight)
-          '("" mode-line-process)))
-  "Mode line construct for displaying major modes.")
+    (when (and defining-kbd-macro (mode-line-window-selected-p))
+      mode-line-defining-kbd-macro))
+  "Mode line construct displaying `mode-line-defining-kbd-macro'.
+Specific to the current window's mode line.")
 
-(defvar-local prot-modeline-vc-branch
+
+
+;;;; VC
+(defvar-local bb-modeline-vc-branch
     '(:eval
       (when-let (((mode-line-window-selected-p))
                  (filename (buffer-file-name))
@@ -75,32 +97,56 @@
                            ('conflict 'vc-conflict-state)
                            ('locked 'vc-locked-state)
                            (_ 'vc-up-to-date-state))))
-        (propertize (concat "   "  (capitalize branch) " ")
+        (propertize (concat "  "  (capitalize branch) " ")
                     'face vcface
                     'mouse-face 'mode-line-highlight)))
   "Mode line construct to return propertized VC branch.")
 
 
-(defvar-local prot-modeline-misc-info
+
+;;;; Major mode
+(defconst base-icons-alist
+  (let ((assets-dir "~/CustomBuilds/nerdfont.vim/assets/json/"))
+    (json-read-file
+     (expand-file-name "basename.json" assets-dir)))
+  "Basename icons for major-mode")
+
+(defconst ext-icons-alist
+  (let ((assets-dir "~/CustomBuilds/nerdfont.vim/assets/json/"))
+    (json-read-file
+     (expand-file-name "extension.json" assets-dir)))
+    "Extension icons for major-mode")
+
+(defun bb-modeline--style-major-mode()
+  "Define symbols/icons to indicate major-mode in use."
+  (let* ((file (if buffer-file-name (file-name-nondirectory buffer-file-name)))
+         (known-icon
+          (and file
+               (or
+                (alist-get (intern file) base-icons-alist)  ; Basename known
+                (when-let ((file-ext (file-name-extension file)))  ; check for extension
+                  (alist-get (intern file-ext) ext-icons-alist))))))
+    (cond
+     (known-icon (concat " " known-icon " "))
+     ((string-match-p "^\\*[[:alnum:]]+\\*$" (buffer-name)) "   ")
+     (t "  "))))
+
+(defun bb-short-str-major-mode ()
+  "Return capitalized string of `major-mode', with \"-mode\"  deleted."
+  (capitalize (string-remove-suffix "-mode" (symbol-name major-mode))))
+
+(defvar-local bb-modeline-major-mode
   '(:eval
-    (when (mode-line-window-selected-p)
-       mode-line-misc-info))
-  "Mode line construct displaying `mode-line-misc-info'.
-Specific to the current window's mode line.")
+    (list (propertize (bb-modeline--style-major-mode)
+                      'local-map nil
+                      'help-echo (bb-short-str-major-mode)
+                      'mouse-face 'mode-line-highlight)))
+    "Mode line construct for displaying major modes.")
 
 
-(setq mode-line-defining-kbd-macro
-      (propertize " KMacro " 'face 'prot-modeline-intense))
-
-(defvar-local prot-modeline-kbd-macro
-  '(:eval
-    (when (and defining-kbd-macro (mode-line-window-selected-p))
-      mode-line-defining-kbd-macro))
-  "Mode line construct displaying `mode-line-defining-kbd-macro'.
-Specific to the current window's mode line.")
-
-
-(defvar-local prot-modeline-buffer-identification
+
+;;;; Buffer Identification
+(defvar-local bb-modeline-buffer-identification
     '(:eval
       (if (and (mode-line-window-selected-p)
                (bound-and-true-p breadcrumb-mode)
@@ -114,85 +160,108 @@ Specific to the current window's mode line.")
   "Mode line construct for identifying the buffer being displayed.")
 
 
-(defvar-local prot-modeline--line-and-column
-    `((line-number-mode
-       (column-number-mode
-        (column-number-indicator-zero-based
-         (:propertize
-          mode-line-position-column-line-format
-          ,@mode-line-position--column-line-properties)
-         (:propertize
-          (:eval (string-replace
-                  "%c" "%C" (car mode-line-position-column-line-format)))
-          ,@mode-line-position--column-line-properties))
-        (:propertize
-         mode-line-position-line-format
-         ,@mode-line-position--column-line-properties))
-       (column-number-mode
-        (:propertize
-         mode-line-position-column-format
-         ,@mode-line-position--column-line-properties)
-        (:propertize
-         (:eval (string-replace
-                 "%c" "%C" (car mode-line-position-column-format)))
-         ,@mode-line-position--column-line-properties)))
-      " "
-      (:propertize
-       ("" mode-line-percent-position)
-       mouse-face mode-line-highlight)
-      " ")
-  "Mode line construct for formatting `prot-modeline-position'.")
-
-
-(defvar-local prot-modeline-position
-  '(:eval
-    (when (mode-line-window-selected-p)
-      prot-modeline--line-and-column))
-  "Mode line construct for the buffer position.")
-
-;; Line/Column Pos%
-(setq mode-line-position-column-line-format '("%l:%c "))
-(setq mode-line-percent-position '(-3 "%o"))
-(column-number-mode 1)
-
-
-(defvar-local prot-modeline-flymake
+
+;;;; Flymake
+(defvar-local bb-modeline-flymake
   '(:eval
     (when (and (bound-and-true-p flymake-mode)
                (mode-line-window-selected-p))
-      ;;(flatten-tree (cons flymake-mode-line-format "  "))))
-      ;;flymake-mode-line-format))
       (list flymake-mode-line-exception flymake-mode-line-counters)))
   "Mode line construct displaying `flymake-mode-line-format'.
 Specific to the current window's mode line.")
 
 
-;; Final assembly for the mode-line
+
+;;;; Misc Info
+(defvar-local bb-modeline-misc-info
+  '(:eval
+    (when (mode-line-window-selected-p)
+      mode-line-misc-info))
+  "Mode line construct displaying `mode-line-misc-info'.
+Specific to the current window's mode line.")
+
+
+
+;;;; Modeline scroll bar
+;; 2024-02-19  TODO => Hover action on scroll to compute (count-words--buffer-format)
+(defvar-local bb-modeline-scroll
+    '(:eval
+      (and-let* (((bound-and-true-p mlscroll-mode))
+                 ((mode-line-window-selected-p))
+                 (ml (mlscroll-mode-line)))
+        (put-text-property 0 (length ml) 'help-echo nil ml)
+        ml))
+  "Custom help-echo setup.")
+
+
+
+;;;; Line/Column Pos%
+(setq mode-line-position-column-line-format '("%l:%C ")
+      mode-line-percent-position nil)  ; was '(-3 "%o")
+(column-number-mode 1)
+
+(defvar-local bb-modeline--position-col-line-props
+  (list 'local-map nil
+        'mouse-face 'unspecified
+        'help-echo nil))
+
+(defvar-local bb-modeline--line-and-column
+    `((line-number-mode
+       (column-number-mode
+        (:propertize
+         mode-line-position-column-line-format
+         ,@bb-modeline--position-col-line-props)
+        (:propertize
+         mode-line-position-line-format
+         ,@bb-modeline--position-col-line-props)
+        (column-number-mode
+         (:propertize
+          mode-line-position-column-format
+          ,@bb-modeline--position-col-line-props))))
+      (:propertize
+       (" " mode-line-percent-position)
+       mouse-face 'unspecified))
+  "Mode line construct for formatting `bb-modeline-position'.")
+
+(defvar-local bb-modeline-position
+    '(:eval
+      (when (mode-line-window-selected-p)
+        bb-modeline--line-and-column))
+  "Mode line construct for the buffer position.")
+
+
+
+;; 2024-02-19  TODO => Change modified, remote
+
+;;;; Final modeline assembly
 (setq-default mode-line-format
               '("%e"
-                prot-modeline-kbd-macro
+                bb-modeline-kbd-macro
                 " "
-                mode-line-mule-info
+                ;; mode-line-mule-info
                 mode-line-modified
-                mode-line-remote
-                prot-modeline-vc-branch
+                ;; mode-line-remote
+                "  "
+                bb-modeline-vc-branch
                 " "
-                prot-modeline-buffer-identification
-                mode-line-format-right-align
-                prot-modeline-flymake
                 bb-modeline-major-mode
-                prot-modeline-position
-                prot-modeline-misc-info ;; everything else not defined particularly
+                bb-modeline-buffer-identification
+                mode-line-format-right-align
+                bb-modeline-flymake
+                bb-modeline-misc-info ;; everything else
+                bb-modeline-scroll
+                bb-modeline-position
                 mode-line-end-spaces))
 
 (defcustom bb--mode-line-defining-strings
-  '(prot-modeline-kbd-macro
-    prot-modeline-vc-branch
-    prot-modeline-buffer-identification
-    prot-modeline-flymake
+  '(bb-modeline-kbd-macro
+    bb-modeline-vc-branch
     bb-modeline-major-mode
-    prot-modeline-position
-    prot-modeline-misc-info)
+    bb-modeline-buffer-identification
+    bb-modeline-flymake
+    bb-modeline-misc-info
+    bb-modeline-scroll
+    bb-modeline-position)
   "List of variables that compose and define the `mode-line-format'."
   :type '(repeat symbol)
   :group 'mode-line)
