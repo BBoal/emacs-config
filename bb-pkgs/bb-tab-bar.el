@@ -26,7 +26,63 @@
 ;;; Code:
 
 
-;; 2023-12-30  TODO => Take a look to groups.
+(defun prot-project-in-tab--get-tab-names (&optional frame)
+  "Return list of tab names associated with FRAME.
+If FRAME is nil, use the current frame."
+  (setq frame (or frame (selected-frame)))
+  (mapcar
+   (lambda (tab)
+     (alist-get 'name tab))
+   (frame-parameter frame 'tabs)))
+
+(defun prot-project-in-tab--switch (directory)
+  "Do the work of `project-switch-project' in the given DIRECTORY."
+  (let ((command (if (symbolp project-switch-commands)
+                     project-switch-commands
+                   (project--switch-project-command)))
+        (buffer (current-buffer)))
+    (unwind-protect
+        (progn
+          (setq-local project-current-directory-override directory)
+          (call-interactively command))
+      (with-current-buffer buffer
+        (kill-local-variable 'project-current-directory-override)))))
+
+(defun prot-project-in-tab--create-tab (directory name)
+  "Create new tab visiting DIRECTORY and named NAME."
+  (tab-new)
+  (find-file directory)
+  (prot-project-in-tab--switch directory)
+  (tab-rename name)
+  ;; NOTE 2024-01-15 06:52 +0200: I am adding this because
+  ;; `tab-rename' is not persistent for some reason. Probably a bug...
+  (let* ((tabs (funcall tab-bar-tabs-function))
+         (tab-to-rename (nth (tab-bar--current-tab-index) tabs)))
+    (setf (alist-get 'explicit-name tab-to-rename) name)))
+
+;;;###autoload
+(defun prot-project-in-tab (directory)
+  "Switch to project DIRECTORY in a tab.
+If a tab is named after the non-directory component of DIRECTORY,
+switch to it. Otherwise, create a new tab and name it after the
+non-directory component of DIRECTORY.
+
+Use this as an alternative to `project-switch-project'."
+  (interactive (list (funcall project-prompter)))
+  (project--remember-dir directory)
+  (let ((name (file-name-nondirectory (directory-file-name directory))))
+    (if (member name (prot-project-in-tab--get-tab-names))
+        (tab-switch name)
+      (prot-project-in-tab--create-tab directory name))))
+
+
+
+
+
+
+
+
+;; 2023-12-30  TODO => Take a look at groups.
 
 
 ;;;;; Functions
@@ -51,6 +107,15 @@ Optionally CURRENT-P will refer to the current tab."
    'face (if current-p 'tab-bar-tab-group-current 'tab-bar-tab-group-inactive)))
 
 
+(defun bb-notmuch-indicator--global-string ()
+  "Return the non-properties string of the concatenated notmuch indicators."
+  (if (bound-and-true-p notmuch-indicator--counters)
+      (mapconcat
+       (lambda (field)
+         (if (stringp field)
+             (substring-no-properties field)))
+       notmuch-indicator--counters)))
+
 (defun bb--tab-bar-spaces-string-centering (string)
   "Calculate num spaces that STRING requires to be centered in tab."
   (if-let
@@ -61,8 +126,7 @@ Optionally CURRENT-P will refer to the current tab."
        ;; Notmuch and date strings
        (cols-str-global-format
         (string-width
-         (concat (substring-no-properties
-                  (or (car-safe (bound-and-true-p notmuch-indicator--counters)) ""))
+         (concat (bb-notmuch-indicator--global-string)
                  (caddar (tab-bar-format-global)))))
        ;; number of cols available for each tab
        (effect-cols-per-tab
@@ -73,13 +137,13 @@ Optionally CURRENT-P will refer to the current tab."
        (calc-max-str-cols (min effect-cols-per-tab tab-bar-max-width))
        ((< str-cols calc-max-str-cols)))
       ;; I'm only adding spaces on the left side hence the division by 2
-      (floor (- calc-max-str-cols str-cols) 2)
+      (ash (- calc-max-str-cols str-cols) -1)
     0))
 
 
 (defun bb--tab-bar-tab-name-format (tab i)
   "Custom TAB format with number I."
-  (let* ((string (concat (if tab-bar-tab-hints (format "%d\. " i) "")
+  (let* ((string (concat (if tab-bar-tab-hints (format "%d " i) "")
                          (alist-get 'name tab)
                          (or (and tab-bar-close-button-show
                                   tab-bar-close-button)
