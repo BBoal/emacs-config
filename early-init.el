@@ -27,21 +27,27 @@
 ;;; Code:
 
 
+;; Set eln-cache dir
+(startup-redirect-eln-cache ".cache/eln-cache/")
+
+
 ;; Disabling the custom file.
 (setq-default custom-file (make-temp-file "emacs-custom-"))
 
 
 ;; Tweaking some variables for improved startup time
-(let ((normal-gc-cons-threshold (* 1024 1024 1024))
-      ;; (normal-vc-handled-backends vc-handled-backends)
+(let ((normal-gc-cons-threshold (expt 1024 3))  ; 1Gb memory
+      (normal-gc-cons-percentage gc-cons-percentage)
       (normal-file-name-handler-alist file-name-handler-alist))
   ;; Initial values
-  (setq gc-cons-threshold (* 8 1024 1024 1024)
+  (setq gc-cons-threshold most-positive-fixnum
+        gc-cons-percentage 1
         file-name-handler-alist nil
         vc-handled-backends nil)
   (add-hook 'emacs-startup-hook
             (lambda ()
               (setq gc-cons-threshold `,normal-gc-cons-threshold
+                    gc-cons-percentage `,normal-gc-cons-percentage
                     file-name-handler-alist `,normal-file-name-handler-alist
                     vc-handled-backends '(Git)))))
 
@@ -91,8 +97,19 @@
              frame-inhibit-implied-resize              t
              garbage-collection-messages               t
              mode-line-format                          nil
+             server-client-instructions                nil
              package-native-compile                    t))
 
+
+
+(defvar-local bb-flymake-assoc-buffer ""
+  "Name of the buffer that is associated with flymake diagnostic window.")
+
+(defun bb-flymake-win-param (window)
+  "Associate name of buffer to flymake diagnostic recent created WINDOW."
+  (let ((name (buffer-name (window-buffer (get-mru-window)))))
+    (with-current-buffer (window-buffer window)
+      (setq-local bb-flymake-assoc-buffer name))))
 
 ;; Through `display-buffer-alist' we can configure specific options for windows
 ;; Thanks to Prot for teaching me to successfully silence Warnings/Compile errors
@@ -101,6 +118,14 @@
  '(("\\`\\*\\(Warnings\\|vc-git\s.*\\|Compile-Log\\|Org Links\\)\\*\\'"
     (display-buffer-no-window)
     (allow-no-window . t))
+   ("\\*Help\\*"
+    (display-buffer-reuse-window display-buffer-in-direction)
+    (inhibit-same-window . t)
+    (direction . bottom)
+    (reusable-frames . 0)
+    (window-min-width . 60)
+    (window-width . fit-window-to-buffer)
+    (window-height . full-height))
    ("\\*Ibuffer\\*"
     (display-buffer-reuse-window display-buffer-at-bottom)
     (inhibit-same-window . t)
@@ -108,11 +133,12 @@
     (window-min-height . 14)
     (window-height . fit-window-to-buffer))
    ("\\*Flymake.*\\*"
-    (display-buffer-below-selected display-buffer-at-bottom)
+    (display-buffer-reuse-window display-buffer-below-selected)
     (inhibit-same-window . t)
     (dedicated . t)
+    (body-function . bb-flymake-win-param)
     (reusable-frames . 0)
-    (window-min-height . 12)
+    (window-min-height . 18)
     (window-height . shrink-window-if-larger-than-buffer))))
 
 

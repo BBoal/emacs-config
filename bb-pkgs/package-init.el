@@ -33,12 +33,17 @@
 (setq package-archives
       '(("elpa" . "https://elpa.gnu.org/packages/")
         ("melpa" . "https://melpa.org/packages/")
-        ("elpa-devel" . "https://elpa.gnu.org/devel/")))
+        ("elpa-devel" . "https://elpa.gnu.org/devel/"))
+      package-quickstart-file (concat user-emacs-directory "var/package-quickstart.el"))
 
 ;; Highest number gets priority (what is not mentioned gets priority 0)
-(setq package-archive-priorities '(("melpa" . 1) ("elpa" . 2)))
+(setq package-archive-priorities '(("elpa" . 1) ("melpa" . 2)))
 
 (package-initialize)
+
+;; Git is the only backend I use
+(with-eval-after-load 'package-vc
+  (setcdr package-vc-heuristic-alist nil))
 
 
 ;;;; `use-package'

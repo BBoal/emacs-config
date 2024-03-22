@@ -32,20 +32,23 @@
 ;;;;;;;;;;;;;;;;
 
 ;;; Set default font
-(set-face-attribute 'default nil
-                    :family "Iosevka Zenodotus"
-                    :height 110)
-;; (set-frame-font "Iosevka Zenodotus Fixed 11" nil t t)
-;; (set-frame-font "CommitMono-Zenodotus 10" nil t t)
-
+(if (display-graphic-p) (setq-default line-spacing 0.1))
+;; (set-fontset-font t 'symbol (font-spec :family "Symbols Nerd Font" :size 24))
+;; (set-face-attribute 'default nil :family "Fantasque Sans Mono" :height 125)
+;; (set-face-attribute 'default nil :family "D2CodingLigature Nerd Font" :height 120)
+;; (set-face-attribute 'default nil :family "Sudo" :height 150)
+;; (set-face-attribute 'default nil :family "CommitMonoZenodotus" :height 120)
+;; (set-face-attribute 'default nil :family "Iosevka Zenodotus" :height 130)
+;; (set-face-attribute 'default nil :family "JetBrainsMono" :height 110)
 
 ;;;;;; https://www.gnu.org/software/emacs/manual/html_node/efaq/Not-writing-files-to-the-current-directory.html
 (setq create-lockfiles nil
       make-backup-files nil
+      auto-save-list-file-prefix (concat user-emacs-directory
+                                         ".cache/auto-save-list/saves-")
       auto-save-file-name-transforms
       `(("\\`/.*/\\([^/]+\\)\\'"
          ,(concat (locate-user-emacs-file ".tmp/")"\\1") t)))
-
 
 ;;; Welcome message
 (setq-default
@@ -82,12 +85,19 @@
       switch-to-prev-buffer-skip 'this
       enable-recursive-minibuffers t
       write-file-functions '(bb-maybe-check-parens)
-      switch-to-buffer-obey-display-actions t
+      ;; switch-to-buffer-obey-display-actions t
       show-paren-context-when-offscreen 'overlay
       split-height-threshold 20
       auto-save-no-message t
-      frame-title-format '(multiple-frames "%b"
-                                           ("" "Emacs - %b ")))
+      uniquify-buffer-name-style 'forward
+      uniquify-ignore-buffers-re "^\\*"
+      window-combination-resize t
+      ;; window-combination-limit 'display-buffer
+      describe-bindings-outline-rules nil
+      read-file-name-completion-ignore-case t
+      read-buffer-completion-ignore-case t
+      frame-title-format '(multiple-frames
+                           "%b" ("" "Emacs - %b ")))
 
 (setq-default fill-column 80
               tab-width 4
@@ -97,6 +107,7 @@
               emacs-lisp-docstring-fill-column fill-column
               sentence-end-double-space nil
               eval-expression-print-length nil
+              ;; case-fold-search nil
               tab-always-indent 'complete
               tab-first-completion 'word-or-paren-or-punct
               kill-do-not-save-duplicates t
@@ -104,14 +115,9 @@
               cursor-in-non-selected-windows nil
               bidi-paragraph-direction 'left-to-right
               large-file-warning-threshold (* 30 1024 1024)
-              project-vc-extra-root-markers '( ".dir-locals.el"
-                                               "package.json"
-                                               "Makefile"
-                                               "Gemfile"
-                                               "Dockerfile"
-                                               "CMakeLists.txt"
-                                               "autogen.sh"
-                                               "main.*"))
+              project-vc-extra-root-markers
+              '( ".dir-locals.el" "package.json" "Makefile" "Gemfile"
+                 "Dockerfile" "CMakeLists.txt" "autogen.sh" "main.*"))
 
 
 ;; No cursor blinking
@@ -130,6 +136,8 @@
 (file-name-shadow-mode t)
 
 ;; Remember last position on file
+(with-eval-after-load 'saveplace
+  (setopt save-place-file (concat user-emacs-directory "var/places")))
 (save-place-mode t)
 
 
@@ -169,6 +177,9 @@
 ;; Initialization
 (require 'package-init)
 (require 'project)
+(with-eval-after-load 'project
+  (setq project-list-file (concat user-emacs-directory "var/projects"))
+  (setcdr project-vc-backend-markers-alist nil))
 (require 'setup-langs)
 (require 'server)
 
