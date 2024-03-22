@@ -66,8 +66,9 @@
 
 ;;;; "s-c" s-change-prefix-map
 (defvar-keymap s-change-prefix-map
-  "i" #'bb-change-inside-char-pairs
   "a" #'bb-change-around-char-pairs
+  "i" #'bb-change-inside-char-pairs
+  "m" #'bb-cut-marks
   "w" #'bb-wrap-region
   "u" #'bb-simple-escape-url-dwim)
 (keymap-global-set "s-c" s-change-prefix-map)
@@ -99,7 +100,8 @@
 (defvar-keymap s-org-prefix-map
   "a" #'org-agenda
   "c" #'org-capture
-  "l" #'org-store-link)
+  "l" #'org-store-link
+  "m" #'org-cmenu)
 (keymap-global-set "s-o" s-org-prefix-map)
 
 
@@ -107,8 +109,8 @@
 ;;;; "s-x" s-x-prefix-map
 (defvar-keymap s-x-prefix-map
   "f" #'find-all-files
-  "k" #'bb-simple-kill-current-buffer
-  "K" #'kill-buffer-and-window
+  "k" #'bb-assassinate-buffer
+  "K" #'bb-assassinate-buffer-and-window
   "n" #'logos-narrow-dwim
   "m" #'bb-minimap-mode
   "o" #'bb-delete-blank-lines-dwim)
@@ -176,6 +178,8 @@
 (keymap-global-set "s-*" #'isearch-forward-thing-at-point)
 (keymap-global-set "s-p" #'bb-move-line-above-dwim)
 (keymap-global-set "s-n" #'bb-move-line-below-dwim)
+(keymap-global-set "M-<up>" #'bb-scroll-other-window-down)
+(keymap-global-set "M-<down>" #'bb-scroll-other-window)
 
 
 
