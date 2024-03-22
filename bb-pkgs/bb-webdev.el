@@ -28,8 +28,10 @@
 
 ;;;; `deno-bridge'
 (use-package deno-bridge
-  :ensure websocket
-  :vc (:url "https://github.com/manateelazycat/deno-bridge.git"))
+  :vc (:url "https://github.com/manateelazycat/deno-bridge.git")
+  :config
+  (use-package websocket
+    :demand t))
 
 
 
@@ -38,7 +40,9 @@
 (use-package emmet2-mode
   :after deno-bridge
   :hook ((mhtml-mode html-ts-mode sgml-mode css-mode) . emmet2-mode)
-  :vc (:url "https://github.com/P233/emmet2-mode.git"))
+  :vc (:url "https://github.com/P233/emmet2-mode.git")
+  :config
+  (require 'deno-bridge))
 
 
 

@@ -27,11 +27,37 @@
 
 ;;; Code:
 
+;;;; `xref'
+(with-eval-after-load 'xref
+  (setopt xref-search-program 'ripgrep))
+
+
+;;;; `autorevert'
+(with-eval-after-load 'autorevert
+  (setopt auto-revert-avoid-polling t))
+
+
+;;;; `tramp'
+(with-eval-after-load 'tramp
+  (setopt tramp-histfile-override t
+          tramp-completion-use-cache nil
+          tramp-persistency-file-name (concat user-emacs-directory
+                                              "var/tramp")))
+
+;;;; `nsm'
+(with-eval-after-load 'nsm
+  (setopt nsm-settings-file (concat user-emacs-directory
+                                    "var/network-security.data")))
+
+
+;;;; `url'
+(with-eval-after-load 'url
+  (setopt url-configuration-directory (concat user-emacs-directory
+                                              "var/url/")))
+
 
 ;;;; `calendar'
-(use-package calendar
-  :demand t
-  :config
+(with-eval-after-load 'calendar
   (setopt calendar-date-style 'iso
           calendar-week-start-day 1))
 
@@ -51,11 +77,11 @@
 
 
 
-;;;; `pdf-tools'
-;; (use-package pdf-tools
-;;   :defer 2
-;;   :config
-;;   (setq pdf-view-use-scaling nil))
+;;;; `doc-view'
+(with-eval-after-load 'doc-view
+  (setopt doc-view-continuous t
+          doc-view-imenu-enabled t
+          doc-view-resolution 300))
 
 
 

@@ -47,7 +47,8 @@
   :functions bb-ensure-dir-or-file-exist
   :autoload bb--choose-dir-desktop-save bb-last-modified-in-dir desktop-release-lock
   :config
-  (setq desktop-dirname (bb-ensure-dir-or-file-exist default-desktop-dirname)
+  (setq desktop-restore-forces-onscreen nil
+        desktop-dirname (bb-ensure-dir-or-file-exist default-desktop-dirname)
         desktop-path `(,desktop-dirname) ;; 2023-09-02 TODO => Use this var to check for desktop-mode savefile
 
         desktop-file-name-format 'absolute

@@ -64,7 +64,7 @@ If FRAME is nil, use the current frame."
 (defun prot-project-in-tab (directory)
   "Switch to project DIRECTORY in a tab.
 If a tab is named after the non-directory component of DIRECTORY,
-switch to it. Otherwise, create a new tab and name it after the
+switch to it.  Otherwise, create a new tab and name it after the
 non-directory component of DIRECTORY.
 
 Use this as an alternative to `project-switch-project'."
@@ -143,11 +143,11 @@ Optionally CURRENT-P will refer to the current tab."
 
 (defun bb--tab-bar-tab-name-format (tab i)
   "Custom TAB format with number I."
-  (let* ((string (concat (if tab-bar-tab-hints (format "%d " i) "")
-                         (alist-get 'name tab)
-                         (or (and tab-bar-close-button-show
-                                  tab-bar-close-button)
-                             "")))
+  (let* ((tab-num (and tab-bar-tab-hints (format "%d " i)))
+         (tab-name (alist-get 'name tab))
+         (maybe-close-btn (and tab-bar-close-button-show
+                               tab-bar-close-button))
+         (string (concat tab-num tab-name maybe-close-btn))
          ;; 2023-12-30  TODO => Check memoization for usage here
          (num-spaces-add (bb--tab-bar-spaces-string-centering string)))
     (propertize

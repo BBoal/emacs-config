@@ -36,38 +36,35 @@
   ;; your current input. Works with pasting as well.
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
   :defines
-  bb-list-of-hidden-files bb-list-of-hidden-files backup-sort-function
+  bb-list-of-hidden-files +vertico-fallback-sort
   :commands vertico-multiform-mode vertico-mode
   :functions
   vertico-sort-history-length-alpha vertico-sort-history-alpha
   vertico-sort-length-alpha vertico-sort-alpha
   :config
-  (defun not-current-or-previous-dir-p (str)
-    "Return nil if passed argument end in either \"/.\" or \"/..\""
-    (let ((final-dir (car (last (file-name-split str)))))
-      (not (or (string-equal "." final-dir)
-               (string-equal ".." final-dir)))))
-
-
-  (defcustom backup-sort-function #'vertico-sort-history-length-alpha
-    "Default backup sorting function, identical to vertico-sort-function."
+  (defcustom +vertico-fallback-sort #'vertico-sort-history-length-alpha
+    "Copy of original sorting variable for when `vertico-latest-files' fails.
+We need a fallback since `vertico-sort-function' is bound to the
+`+vertico-latest-files'. A loop would occur otherwise."
     :type `(choice
             (const :tag "No sorting" nil)
             (const :tag "By history, length and alpha" ,#'vertico-sort-history-length-alpha)
             (const :tag "By history and alpha" ,#'vertico-sort-history-alpha)
             (const :tag "By length and alpha" ,#'vertico-sort-length-alpha)
             (const :tag "Alphabetically" ,#'vertico-sort-alpha)
-            (function :tag "Custom function")))
+            (function :tag "Custom function"))
+    :group 'vertico)
 
   (defcustom bb-list-of-hidden-files
     '(".zlua" ".gnupg/" ".Xauthority" "history" "places" "auto-save-list/")
     "List of files that should not appear when sorted with `vertico-latest-files'
 function"
-    :type '(list strings))
+    :type '(list strings)
+    :group 'vertico)
 
-  (defun vertico-latest-files (candidates)
-    "CANDIDATES are sorted in last-modified order, `backup-sort-function' is used as
-a fallback."
+  (defun +vertico-latest-files (candidates)
+    "CANDIDATES are sorted in last-modified order, `+vertico-fallback-sort' is used
+as a fallback."
     (if-let ((input (file-name-directory (minibuffer-contents-no-properties)))
              ((file-directory-p input)))
         (let (list-files list-attr ordered-files)
@@ -86,18 +83,38 @@ a fallback."
                                       ordered-files)
                   list-attr (cdr list-attr)))
           ordered-files)
-      (funcall backup-sort-function candidates)))
+      (funcall +vertico-fallback-sort candidates)))
 
   (setopt vertico-preselect 'prompt
           vertico-scroll-margin 1
           vertico-count 5
           vertico-resize nil
-          vertico-multiform-categories '((file (vertico-sort-function . vertico-latest-files)))
+          vertico-multiform-categories '((file (vertico-sort-function
+                                                . +vertico-latest-files))
+                                         (buffer flat (vertico-cycle . t)))
           vertico-cycle t)
   (vertico-multiform-mode 1)
 
+  ;; Cleaning the UI of ffap-menu-ask
+  (declare-function ffap-menu-ask "ffap")
+  (advice-add #'ffap-menu-ask :around
+              (lambda (&rest args)
+                (cl-letf (((symbol-function #'minibuffer-completion-help)
+                           #'ignore))
+                  (apply args))))
+
   :init
   (vertico-mode))
+
+
+
+;;;; `text menu bar'
+(declare-function tmm-add-prompt "tmm")
+;; More UI cleanup
+(with-eval-after-load 'tmm
+  (setopt tmm-completion-prompt nil)
+  ;; Taking *Completions* buffer
+  (advice-add #'tmm-add-prompt :after #'minibuffer-hide-completions))
 
 
 
@@ -175,7 +192,9 @@ a fallback."
   :config
   ;; Setting the correct path to the config variable in order to get rid
   ;; of ripgrep errors during execution
-  (setenv "RIPGREP_CONFIG_PATH" "/home/bb/.config/ripgrep/ripgreprc")
+  (setenv "RIPGREP_CONFIG_PATH"
+          (expand-file-name "ripgrep/ripgreprc" (getenv "XDG_CONFIG_HOME")))
+
 
   ;; Optionally configure preview. The default value
   ;; is 'any, such that any key triggers the preview.
@@ -184,23 +203,18 @@ a fallback."
   ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
   ;; For some commands and buffer sources it is useful to configure the
   ;; :preview-key on a per-command basis using the `consult-customize' macro.
-  (consult-customize
-   consult-theme
-   :preview-key '(:debounce 0.2 any)
-   consult-ripgrep consult-git-grep consult-grep
-   consult-bookmark consult-recent-file consult-xref
-   consult--source-bookmark consult--source-recent-file
-   consult--source-project-recent-file
-   :preview-key "M-.")
+      ;;; (consult-customize
+      ;;;  consult-theme
+      ;;;  :preview-key '(:debounce 0.2 any)
+      ;;;  consult-ripgrep consult-git-grep consult-grep
+      ;;;  consult-bookmark consult-recent-file consult-xref
+      ;;;  consult--source-bookmark consult--source-recent-file
+      ;;;  consult--source-project-recent-file
+      ;;;  :preview-key "M-.")
 
   ;; Optionally configure the narrowing key.
-  ;; Both < and C-+ work reasonably well.
-  (setopt consult-narrow-key "<") ;; (kbd "C-+")
-
-  ;; Optionally make narrowing help available in the minibuffer.
-  ;; You may want to use `embark-prefix-help-command' or which-key instead.
-  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
-  )
+  ;; Both < and or (kbd "C-+") work reasonably well.
+  (setopt consult-narrow-key "<"))
 
 
 
@@ -208,10 +222,41 @@ a fallback."
 ;;;; `orderless'
 (use-package orderless
   :demand t
+  :functions +orderless--consult-suffix +orderless-consult-dispatch
+  orderless-affix-dispatch
   :config
-  (setopt completion-styles '(basic initials orderless)
-          orderless-matching-styles '(orderless-prefixes orderless-literal orderless-regexp)
-          completion-category-overrides '((file (styles basic partial-completion orderless)))))
+  (defun +orderless--consult-suffix ()
+    "Regexp which matches the end of string with Consult tofu support."
+    (if (and (boundp 'consult--tofu-char) (boundp 'consult--tofu-range))
+        (format "[%c-%c]*$"
+                consult--tofu-char
+                (+ consult--tofu-char consult--tofu-range -1))
+      "$"))
+
+  ;; Recognizes the following patterns:
+  ;; * .ext (file extension)
+  ;; * regexp$ (regexp matching at end)
+  (defun +orderless-consult-dispatch (word _index _total)
+    (cond
+     ;; Ensure that $ works with Consult commands, which add disambiguation suffixes
+     ((string-suffix-p "$" word)
+      `(orderless-regexp . ,(concat (substring word 0 -1) (+orderless--consult-suffix))))
+     ;; File extensions
+     ((and (or minibuffer-completing-file-name
+               (derived-mode-p 'eshell-mode))
+           (string-match-p "\\`\\.." word))
+      `(orderless-regexp . ,(concat "\\." (substring word 1) (+orderless--consult-suffix))))))
+
+  (setopt completion-styles '(orderless initials basic)
+          completion-category-defaults nil
+          orderless-matching-styles '(orderless-initialism
+                                      orderless-literal
+                                      orderless-regexp)
+          completion-category-overrides '((file (styles partial-completion orderless))
+                                          (eglot (styles orderless))
+                                          (eglot-capf (styles orderless)))
+          orderless-style-dispatchers (list #'+orderless-consult-dispatch
+                                            #'orderless-affix-dispatch)))
 
 
 
@@ -228,14 +273,34 @@ a fallback."
 ;;;; `corfu'
 (use-package corfu
   :demand t
-  :defines corfu-map
+  :defines corfu-map corfu-separator
+  :commands corfu-quit corfu-insert corfu-insert-separator
   :autoload corfu-mode global-corfu-mode
   :bind (:map corfu-map
-              ("s-SPC" . corfu-insert-separator)
+              ("s-SPC" . double-space-separator)
               ("J" . corfu-next)
               ("K" . corfu-previous))
   :hook (minibuffer-setup . contrib/corfu-enable-always-in-minibuffer)
-  :init
+  :config
+  (defun double-space-separator ()
+    "One press of SPC to self-insert, two for selecting the candidate."
+    (interactive)
+    (if current-prefix-arg              ; C-u prefixes SPC
+        ;;we suppose that we want leave the word like that, so do a space
+        (progn
+          (corfu-quit)
+          (insert " "))
+      (if (and (= (char-before) corfu-separator)
+               (or
+                ;; check if space, return or nothing after
+                (not (char-after))
+                (= (char-after) ?\s)
+                (= (char-after) ?\n)))
+          (progn
+            (corfu-insert)
+            (insert " "))
+        (corfu-insert-separator))))
+
   ;; Adapted from Corfu's manual.
   (defun contrib/corfu-enable-always-in-minibuffer ()
     "Enable Corfu in the minibuffer if Vertico is not active.
@@ -244,7 +309,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
       (setq-local corfu-echo-delay nil     ;; Disable automatic echo and popup
                   corfu-popupinfo-delay nil)
       (corfu-mode 1)))
-  :config
+
   (setopt corfu-min-width 40
           corfu-max-width 80
           corfu-cycle t                      ;; Enable cycling for `corfu-next/previous'
@@ -252,10 +317,10 @@ Useful for prompts such as `eval-expression' and `shell-command'."
           corfu-auto-delay 0.5
           corfu-auto-prefix 3
           corfu-popupinfo-mode t
-          corfu-popupinfo-delay nil
-          corfu-separator ?\s                ;; Orderless field separator
+          corfu-popupinfo-delay 0.1
+          corfu-separator ?\s                ;; Orderless field separator "SPC"
           corfu-quit-at-boundary 'separator  ;; Never quit at completion boundary
-          corfu-quit-no-match 'separator     ;;  quit, even if there is no match
+          corfu-quit-no-match 'separator     ;; quit, even if there is no match
           corfu-preview-current t            ;; Disable current candidate preview
           corfu-preselect 'prompt            ;; Disable candidate preselection
           corfu-on-exact-match nil           ;; Configure handling of exact matches
@@ -295,7 +360,8 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 (define-abbrev-table
   'global-abbrev-table '(("BB" "Bruno Boal")
-                         ("bmail" "<egomet@bboal.com>")
+                         ("bboal" "<egomet@bboal.com>")
+                         ("btut" "<bruno.boal@tutanota.com>")
                          ("bberg" "<https://codeberg.org/BBoal>")
                          ("bhut"  "<https://git.sr.ht/~bboal>")
                          ("blab"  "<https://gitlab.com/bboal>")
@@ -319,8 +385,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package cape
   ;; Bind dedicated completion commands
   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-  :bind (("M-ç" . completion-at-point) ;; capf
-         ("M-p t" . complete-tag)        ;; etags
+  :bind (("M-ç"   . completion-at-point) ;; capf
          ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
          ("M-p h" . cape-history)
          ("M-p f" . cape-file)
@@ -329,16 +394,18 @@ Useful for prompts such as `eval-expression' and `shell-command'."
          ("M-p a" . cape-abbrev)
          ("M-p &" . cape-sgml))
   :init
-  (mapc (lambda (functions)
-          (add-to-list 'completion-at-point-functions functions))
-        '(cape-dabbrev
-          cape-file
-          cape-history
-          cape-keyword
-          cape-elisp-block
-          cape-sgml
-          cape-abbrev
-          cape-symbol)))
+  (mapc (lambda (function)
+          (cl-pushnew function completion-at-point-functions))
+        '(cape-symbol cape-dabbrev cape-sgml cape-elisp-block cape-keyword
+                      cape-history cape-file cape-abbrev)))
+        ;; '(cape-dabbrev
+        ;;   cape-file
+        ;;   cape-history
+        ;;   cape-keyword
+        ;;   cape-elisp-block
+        ;;   cape-sgml
+        ;;   cape-abbrev
+        ;;   cape-symbol)))
 
 
 
@@ -350,7 +417,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :hook ((text-mode prog-mode) . yas-minor-mode)
   :init
   (setq yas-snippet-dirs
-        `(,(concat (locate-user-emacs-file "snippets"))))
+        `(,(concat user-emacs-directory "snippets")))
 
   :config
   (setopt yas-also-auto-indent-first-line t
@@ -373,9 +440,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :defer 1
   :after envrc
   :config
-  (setopt corfu-popupinfo-mode t
-          corfu-popupinfo-delay 1.0
-          eglot-sync-connect nil
+  (setopt eglot-sync-connect nil
           eglot-autoshutdown t
           eglot-confirm-server-initiated-edits nil))
 

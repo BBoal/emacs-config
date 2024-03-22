@@ -28,6 +28,12 @@
 ;;; Code:
 
 
+;;;; `bookmark'
+(with-eval-after-load 'bookmark
+  (setopt bookmark-default-file (concat user-emacs-directory "var/bookmarks")))
+
+
+
 ;;;; `dictionary'
 (with-eval-after-load 'dictionary
   (setopt dictionary-server "dict.org"))
@@ -37,7 +43,6 @@
 ;;;; `imenu'
 (with-eval-after-load 'imenu
   (setopt imenu-auto-rescan t))
-
 
 
 
@@ -139,15 +144,15 @@
 ;;;; `savehist'
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
+  :demand t
   :config
-  (setq savehist-file (locate-user-emacs-file "history")
+  (setq savehist-file (concat user-emacs-directory "var/history")
         history-delete-duplicates t
         savehist-save-minibuffer-history t
         savehist-additional-variables '(register-alist kill-ring)
         savehist-ignored-variables '(org-tags-history read-char-history)
         history-length 1000)
-  :init
-  (savehist-mode))
+  (savehist-mode t))
 
 
 
@@ -190,7 +195,9 @@
   :bind (("C-S-c C-S-c" . mc/edit-lines)
          ("C-<" . mc/mark-next-like-this)
          ("C->" . mc/mark-previous-like-this)
-         ("C-c s-<" . mc/mark-more-like-this-extended)))
+         ("C-c s-<" . mc/mark-more-like-this-extended))
+  :config
+  (setopt mc/list-file (concat user-emacs-directory "var/mc-lists.el")))
 
 
 

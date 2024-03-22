@@ -25,7 +25,71 @@
 
 ;;; Code:
 
+;;;; Font Configuration
+(defvar bb-set-font--favorites
+  '(("JetBrainsMono" . 110)
+    ("Fantasque Sans Mono" . 130)
+    ("Iosevka Zenodotus" . 130)
+    ("Sudo" . 150)
+    ("D2CodingLigature Nerd Font" . 120)
+    ("CommitMonoZenodotus" . 120))
+  "The list is organized for readability having in consideration that the time
+  periods start from 00h00.")
 
+(defun bb-set-font-name-size (font size)
+  "Set FONT with SIZE using `set-face-attribute'.
+
+FONT is the font name as a string with and SIZE an integer.
+E.g. (bb-set-font-with-size \"Iosevka Zenodotus\" 120).
+
+When called through Lisp, the values are tested for maximum and minimum accepted
+  values (Max:190 and Min:110). If the user decides to ignore these values the
+  program sets the SIZE to the aforementioned top or bottom values, warning the
+  user of the fact."
+  (interactive
+   (let* ((font (completing-read
+                 "Insert font: " (mapcar #'car bb-set-font--favorites)
+                 nil :req-match))
+          (size (string-to-number
+                 (completing-read "Insert size: "
+                                  (mapcar #'number-to-string
+                                          (number-sequence 110 190 10))
+                                  nil :req-match nil nil
+                                  (number-to-string
+                                   (map-elt bb-set-font--favorites font))))))
+     (list font size)))
+  (let ((max-size 190) (min-size 110) action threshold)
+    (cond
+     ((> size max-size)
+      (setq size max-size action "reduced" threshold "max"))
+     ((< size min-size)
+      (setq size min-size action "increased" threshold "min")))
+    (set-face-attribute 'default nil :family font :height size)
+    (if action
+        (message "Size was %s to %s value of %d" action threshold size))))
+
+(defun bb-set-font-current-period (&rest _)
+  "Get current period of the day and call `set-font-name-size'."
+  (if-let* (((consp bb-set-font--favorites))
+            (num-fonts (length bb-set-font--favorites))
+            (present-hour (elt (decode-time) 2))
+            (period-bounds (/ 24.0 num-fonts))
+            (cur-period (truncate
+                         (/ present-hour period-bounds))) ; 0 based math
+            (attr-period (elt bb-set-font--favorites cur-period))
+            (font (car attr-period))
+            (size (cdr attr-period)))
+      (progn
+        (message "Loading font:  %s, size %d" font size)
+        (bb-set-font-name-size font size))
+    (message "Unable to proceed. Is 'bb-set-font--favorites' properly defined?")))
+
+;; Set current font
+(bb-set-font-current-period)
+
+
+
+
 ;;;; modus-themes personal preferences
 (with-eval-after-load 'modus-themes
   (defvar modus-operandi-tinted-palette-overrides
@@ -38,7 +102,7 @@
 
 ;;;; `theme-buffet'
 (use-package theme-buffet
-  :demand 1
+  :demand t
   :functions calendar-current-time-zone
   theme-buffet-modus-ef theme-buffet-timer-hours
   :config
@@ -286,10 +350,8 @@
   :bind (:map outline-minor-mode-map
               ("C-<tab>" . bicycle-cycle)
               ("<backtab>" . bicycle-cycle-global))
-  :hook ((prog-mode elisp-mode) .
-         (lambda()
-           (outline-minor-mode)
-           (hs-minor-mode))))
+  :hook ((prog-mode . outline-minor-mode)
+         (prog-mode . hs-minor-mode)))
 
 
 

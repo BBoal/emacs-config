@@ -29,6 +29,7 @@
 (require 'gnus-dired)
 
 
+;;;; `wdired'
 (use-package wdired
   :demand t
   :functions bb-set-track-eol
@@ -47,6 +48,12 @@
 
 (use-package emacs
   :demand t
+  ;; :bind ((:map image-mode-map
+  ;;              ("q" . image-kill-buffer)
+  ;;              ("n" . image-next-file)
+  ;;              ("p" . image-previous-file))
+  ;;        (:map dired-mode-map
+  ;;              ("o" . image-dired-dired-display-external)))
   :config
   ;; When there are two Dired buffers side-by-side make Emacs automatically
   ;; suggest the other one as the target of copy or rename operations.  Remember
@@ -92,6 +99,19 @@
   ;; default).
   (add-hook 'dired-mode-hook #'dired-hide-details-mode))
 
+
+
+;; 2024-02-11  TODO => Configure image-dired and emacs above
+
+
+;;;; `image-dired'
+;; (use-package image-dired
+;;   :bind ((:map image-dired-thumbnail-mode-map
+;;                ("j"  . image-dired-display-next)
+;;                ("k"  . image-dired-display-previous)))
+;;   :config
+;;   (setopt image-dired-external-viewer (if (display-graphic-p) "nsxiv" "imgcat")
+;;           image-dired-thumb-margin 4))
 
 
 

@@ -81,6 +81,44 @@ Specific to the current window's mode line.")
 
 
 
+;;;; Modified Buffer
+(defun mode-line-toggle-modified (event)
+  "Toggle the buffer-modified flag from the mode-line."
+  (interactive "e")
+  (with-selected-window (posn-window (event-start event))
+    (set-buffer-modified-p (not (buffer-modified-p)))
+    (force-mode-line-update)))
+
+(defun mode-line-read-only-help-echo (window _object _point)
+  "Return help text specifying WINDOW's buffer read-only status."
+  (format "Buffer is %s\nmouse-1: Toggle"
+	  (if (buffer-local-value 'buffer-read-only (window-buffer window))
+	      "read-only"
+	    "writable")))
+
+(defun bb-mode-line-modified-help-echo (window _object _point)
+  "Return help text specifying WINDOW's buffer modification status."
+  (format "Buffer is %smodified\nmouse-1: Toggle modification state"
+	  (if (buffer-modified-p (window-buffer window)) "" "not ")))
+
+(defvar-local bb-mode-line-modified
+    (list
+     (propertize
+	  "%1*"
+	  'help-echo 'mode-line-read-only-help-echo
+	  'local-map (purecopy (make-mode-line-mouse-map
+			                'mouse-1 #'mode-line-toggle-read-only))
+	  'mouse-face 'mode-line-highlight)
+	 (propertize
+	  "%1+"
+	  'help-echo 'mode-line-modified-help-echo
+	  'local-map (purecopy (make-mode-line-mouse-map
+			                'mouse-1 #'mode-line-toggle-modified))
+	  'mouse-face 'mode-line-highlight))
+  "Mode line construct for displaying whether current buffer is modified.")
+
+
+
 ;;;; VC
 (defvar-local bb-modeline-vc-branch
     '(:eval
@@ -99,7 +137,7 @@ Specific to the current window's mode line.")
                            (_ 'vc-up-to-date-state))))
         (propertize (concat "  "  (capitalize branch) " ")
                     'face vcface
-                    'mouse-face 'mode-line-highlight)))
+                    'mouse-face nil)))
   "Mode line construct to return propertized VC branch.")
 
 
@@ -122,26 +160,39 @@ Specific to the current window's mode line.")
   (let* ((file (if buffer-file-name (file-name-nondirectory buffer-file-name)))
          (known-icon
           (and file
-               (or
-                (alist-get (intern file) base-icons-alist)  ; Basename known
-                (when-let ((file-ext (file-name-extension file)))  ; check for extension
-                  (alist-get (intern file-ext) ext-icons-alist))))))
-    (cond
-     (known-icon (concat " " known-icon " "))
-     ((string-match-p "^\\*[[:alnum:]]+\\*$" (buffer-name)) "   ")
-     (t "  "))))
+               (or (alist-get (intern file) base-icons-alist)  ; Basename known
+                   (when-let ((file-ext (file-name-extension file)))  ; check for extension
+                     (alist-get (intern file-ext) ext-icons-alist))))))
+    (cond (known-icon (concat " " known-icon " "))
+          ((string-match-p "^\\**.*$" (buffer-name)) "  ")
+          (t "  "))))
 
 (defun bb-short-str-major-mode ()
-  "Return capitalized string of `major-mode', with \"-mode\"  deleted."
-  (capitalize (string-remove-suffix "-mode" (symbol-name major-mode))))
+  "Return capitalized string of `major-mode', with \"-mode\" deleted."
+  (format "Major mode: %s\nmouse-1: get parent modes"
+          (capitalize (string-remove-suffix "-mode" (symbol-name major-mode)))))
+
+
+(defun bb-parent-modes-major-mode (click)
+  "Echo the derived modes of current `major-mode'."
+  (interactive "e")
+  (with-selected-window (posn-window (event-start click))
+    (let ((parents (cdr (derived-mode-all-parents major-mode))))
+      (if parents (message "Parent modes:%s"
+                           (mapconcat (lambda (mode)
+                                        (format "\s%s" mode))
+                                      parents))
+        (message "%s doesn't have parent modes" major-mode)))))
 
 (defvar-local bb-modeline-major-mode
-  '(:eval
-    (list (propertize (bb-modeline--style-major-mode)
-                      'local-map nil
-                      'help-echo (bb-short-str-major-mode)
-                      'mouse-face 'mode-line-highlight)))
-    "Mode line construct for displaying major modes.")
+    '(:eval (list
+             (propertize
+              (bb-modeline--style-major-mode)
+              'local-map (purecopy (make-mode-line-mouse-map
+                                    'mouse-1 #'bb-parent-modes-major-mode))
+              'help-echo (bb-short-str-major-mode)
+              'mouse-face 'mode-line-highlight)))  ; no button capabilities
+  "Mode line construct for displaying major modes.")
 
 
 
@@ -183,7 +234,6 @@ Specific to the current window's mode line.")
 
 
 ;;;; Modeline scroll bar
-;; 2024-02-19  TODO => Hover action on scroll to compute (count-words--buffer-format)
 (defvar-local bb-modeline-scroll
     '(:eval
       (and-let* (((bound-and-true-p mlscroll-mode))
@@ -200,10 +250,22 @@ Specific to the current window's mode line.")
       mode-line-percent-position nil)  ; was '(-3 "%o")
 (column-number-mode 1)
 
+
+;; 2024-02-19  TODO => Improve word counter to check if major-mode is prog-mode
+;; derived. In this case, give a function counter and variable counter according
+;; to syntax table or equivalent.
+
+(defun bb-echo-word-counter (click)
+    "Short summary of file stats."
+  (interactive "e")
+  (with-selected-window (posn-window (event-start click))
+    (message (count-words--buffer-format))))
+
 (defvar-local bb-modeline--position-col-line-props
-  (list 'local-map nil
-        'mouse-face 'unspecified
-        'help-echo nil))
+    (list 'local-map (purecopy (make-mode-line-mouse-map
+			                    'mouse-1 #'bb-echo-word-counter))
+          'mouse-face 'mode-line-highlight
+          'help-echo "mouse-1: buffer/file statistics"))
 
 (defvar-local bb-modeline--line-and-column
     `((line-number-mode
@@ -239,7 +301,7 @@ Specific to the current window's mode line.")
                 bb-modeline-kbd-macro
                 " "
                 ;; mode-line-mule-info
-                mode-line-modified
+                bb-mode-line-modified
                 ;; mode-line-remote
                 "  "
                 bb-modeline-vc-branch
@@ -255,6 +317,7 @@ Specific to the current window's mode line.")
 
 (defcustom bb--mode-line-defining-strings
   '(bb-modeline-kbd-macro
+    bb-mode-line-modified
     bb-modeline-vc-branch
     bb-modeline-major-mode
     bb-modeline-buffer-identification
