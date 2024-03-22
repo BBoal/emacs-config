@@ -201,28 +201,22 @@ Delimiters are obtained from CHAR and specified by COUNT times to jump pairs."
 Signals an error if unsuccessful."
   (interactive
    (let ((exp-fun (bb-wrap-get-exp-fun)))
-     (cond
-      ((use-region-p)
-       (unless (bb-wrap-check-pairs (region-beginning) (region-end))
-         (user-error "ERR: Selected region doesn't have defined delimiters")))
-      (t
+     (if (use-region-p)
+         (unless (bb-wrap-check-pairs (region-beginning) (region-end))
+           (user-error "ERR: Selected region doesn't have defined delimiters"))
        (funcall exp-fun)
        (while (not (bb-wrap-check-pairs (region-beginning) (region-end)))
-         (funcall exp-fun))))
+         (funcall exp-fun)))
      (list (region-beginning) (region-end))))
 
   (let ((char (read-char-exclusive
                "Surrounding options (Backspace[substitution], Spacebar[clear], Delimiter[wrap]): ")))
-    (cond
-     ((eq char 32) ;; spacebar (clear)
-      (bb-wrap-clear beg end))
-     ((eq char 127) ;; backspace (substitution)
-      (bb-wrap-clear beg end)
-      (bb-wrap-around (region-beginning) (region-end) nil))
-     ((eq char 27)
-      (keyboard-quit))
-     (t
-      (bb-wrap-around beg end char)))))
+    (cl-case char
+      (32 (bb-wrap-clear beg end))  ; spacebar (clear)
+      (127 (bb-wrap-clear beg end)  ; backspace (substitution)
+           (bb-wrap-around (region-beginning) (region-end) nil))
+      (27 (keyboard-quit))
+      (t (bb-wrap-around beg end char)))))
 
 
 
@@ -245,7 +239,20 @@ Analogously, if DIR is -1, the kill goes to `pos-bol'."
     (unless (= dir 0)
       (delete-region (point) (if (= dir 1)
                                (pos-eol)
-                             (pos-bol))))))
+                               (pos-bol))))))
+
+
+
+
+;;;###autoload
+(defun bb-cut-marks (&optional beg end)
+  "Use \'cut-marks\' within BEG and END.
+If no region is selected `mark-defun' is used to select a region to operate on."
+  (interactive)
+  (unless (use-region-p) (mark-defun))
+  (let* ((beg (use-region-beginning))
+         (end (use-region-end)))
+    (message-mark-inserted-region beg end)))
 
 
 

@@ -169,8 +169,7 @@ If ARG is nil, do it one time."
 
 (defun bb--duplicate-line (count dir)
   "Duplicate line or region COUNT times towards DIR according to prefix.
-A positive prefix leave the duplicates above, a negative, below."
-
+A positive prefix leaves the duplicates above, a negative, below."
   (let ((start (pos-bol))
         (end (pos-eol))
         (opoint (point))
@@ -233,7 +232,6 @@ A positive prefix leave the duplicates above, a negative, below."
 (defun bb--move-line (count)
   "Move line or region COUNT times in direction according to prefix.
 A positive prefix moves the line(s) below, a negative, above."
-
   (let ((start (pos-bol))
         (end (pos-eol))
         diff-eol-point
@@ -320,6 +318,15 @@ If ARG is nil, do it one time."
   (unless (bb--move-line-user-error (point-max))
     (bb--move-line arg)))
 
+(defun bb-scroll-other-window (arg)
+  "Scrolls other window line by line in upward motion."
+  (interactive "p")
+  (scroll-other-window 1))
+
+(defun bb-scroll-other-window-down (arg)
+  "Scrolls other window line by line in downward motion."
+  (interactive "p")
+  (scroll-other-window-down 1))
 
 
 (provide 'bb-motion)

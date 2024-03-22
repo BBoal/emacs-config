@@ -219,7 +219,7 @@ The DWIM behavior of this command is as follows:
 According to a specific regexp described in \\='bb-prog-langs-list\\=' related
 to the major-mode, the user can \"jump\" to designated chars to quickly re-edit
 the current paragraph."
-  (interactive "p")
+  (interactive)
   (let ((regexp (or (alist-get major-mode bb-prog-langs-alist)
                     bb--regex-general-f))
         (bound (save-excursion
@@ -367,11 +367,42 @@ Symbols are also taken into consideration and proper evaluated."
 
 
 
-;;;###autoload
-(defun bb-simple-kill-current-buffer()
-  "Kill the current buffer if saved, otherwise prompt you."
+(defun bb-assassinate-buffer (&optional buffer)
+  "A fast and stealthy kill.  BUFFER never stood a chance.
+When non specified the `current-buffer' is used."
   (interactive)
-  (kill-buffer (current-buffer)))
+  (let ((kill-buffer-query-functions nil))
+    (kill-buffer (or buffer
+                     (window-buffer (minibuffer-selected-window))
+                     (current-buffer)))))
+
+
+
+
+(defun bb-assassinate-buffer-and-window(&optional buffer)
+  "Merciful kill of BUFFER and window without questioning."
+  (interactive)
+  ;; (let*
+  ;;     ((win-filtered (seq-filter #'window-live-p (window-list nil :no-minibuf)))
+  ;;      (buf-obj (mapcar #'window-buffer win-filtered))
+  ;;      (buf-collection (mapcar #'buffer-name buf-obj))
+  ;;      (prompt "Choose buffer: "))
+  ;;   (list (completing-read prompt buf-collection nil t))))
+
+  (let* ((kill-buffer-query-functions nil)
+         (buf (or buffer (current-buffer)))
+         (win (or (minibuffer-selected-window)
+                  (get-buffer-window buf))))
+    (with-selected-window win
+      (cond
+       ((not (one-window-p))
+        (kill-buffer-and-window))
+       ((window-prev-buffers)
+        (kill-buffer buf))
+       (t
+        (scratch-buffer)
+        (switch-to-prev-buffer win 'kill))))))
+
 
 
 (provide 'bb-simple)
