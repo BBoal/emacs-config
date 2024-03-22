@@ -30,24 +30,39 @@
 (require 'setup-langs)
 
 ;;;; `rust-mode'
-(use-package rust-mode)
+;(use-package rust-mode)
 
 
 ;;;; `rust-ts-mode'
 (use-package rust-ts-mode
-  :functions bb-rust-ts-mode-project-find-function project-find-rust-ts-mode-root
+  :defines eglot-stay-out-of
+  :functions  bb-rust-ts-mode-project-find-function
+              project-find-rust-ts-mode-root
+              eglot-flymake-backend
   :bind (:map rust-ts-mode-map
               ("C-c C-d" . rust-dbg-wrap-or-unwrap)
               ("C-c C-c" . compile))
+  :init
+  (defun manually-activate-flymake ()
+    (add-hook 'flymake-diagnostic-functions #'eglot-flymake-backend nil t)
+    (flymake-mode t))
   :hook ((rust-ts-mode .
                   (lambda()
                     (add-hook 'before-save-hook #'bb-eglot-arrange-file :depth :local)
                     (eglot-ensure)
                     (bb-programming-hooks)
+                    (add-to-list 'eglot-stay-out-of 'flymake)
                     (setq-local compile-command "cargo run"
-                                indent-tabs-mode nil))))
+                                indent-tabs-mode nil)))
+         (eglot-managed-mode . manually-activate-flymake))
   :config
   (prot-find-project-root rust-ts-mode "Cargo.toml"))
+
+
+
+;;;; `flymake-clippy
+(use-package flymake-clippy
+  :hook (rust-ts-mode . flymake-clippy-setup-backend))
 
 
 

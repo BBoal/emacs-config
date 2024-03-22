@@ -30,7 +30,21 @@
 
 ;;;; `racket-mode'
 (use-package racket-mode
-  :hook (racket-mode . eglot-ensure))
+  :mode "\\.rkt\\'"
+  :hook (racket-mode . eglot-ensure)
+  :config
+  (setopt racket-repl-history-directory (concat user-emacs-directory
+                                                ".cache/racket-repl/")))
+
+
+
+
+;;;; `geiser-racket'
+(use-package geiser-racket
+  :defer 1
+  :after racket-mode
+  :vc (:url "https://gitlab.com/emacs-geiser/racket"))
+
 
 
 (provide 'bb-racket)
